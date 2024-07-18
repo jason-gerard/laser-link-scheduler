@@ -10,7 +10,7 @@ class Contact:
     start_time: int
     end_time: int
     # The context attribute can be any additional information associated with the contact. For example this could
-    # include the range or distance between the contacts, data rate, BER, etc
+    # include the range or distance between the contacts, one way light time (OWLT), data rate, BER, etc
     context: dict
 
 
