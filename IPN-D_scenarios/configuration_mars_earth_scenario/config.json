@@ -1,0 +1,789 @@
+{
+    "Time": {
+        "SimulationStartTime": 725803264.184,
+        "SimulationEndTime": 725889664.184,
+        "Step": 100.0
+    },
+    "Star": {
+        "Name": "Sun",
+        "Radius": 696340.0
+    },
+    "Planets": [
+        {
+            "Name": "Mercury",
+            "Radius": 2439.7,
+            "OrbitPeriod": 7600525.218770206,
+            "Nodes": []
+        },
+        {
+            "Name": "Venus",
+            "Radius": 6051.8,
+            "OrbitPeriod": 19414161.92269385,
+            "Nodes": []
+        },
+        {
+            "Name": "Earth",
+            "Radius": 6371.0,
+            "OrbitPeriod": 31558863.596656324,
+            "Nodes": [
+                {
+                    "ID": 1001,
+                    "Name": "c1o1",
+                    "OrbitPeriod": 15165.2763671875
+                },
+                {
+                    "ID": 1002,
+                    "Name": "c1o2",
+                    "OrbitPeriod": 15165.2763671875
+                },
+                {
+                    "ID": 1003,
+                    "Name": "c1o3",
+                    "OrbitPeriod": 15165.2763671875
+                },
+                {
+                    "ID": 1004,
+                    "Name": "c1o4",
+                    "OrbitPeriod": 15165.2763671875
+                },
+                {
+                    "ID": 1005,
+                    "Name": "c1o5",
+                    "OrbitPeriod": 15165.2763671875
+                },
+                {
+                    "ID": 1006,
+                    "Name": "c1o6",
+                    "OrbitPeriod": 15165.2763671875
+                },
+                {
+                    "ID": 1007,
+                    "Name": "c1o7",
+                    "OrbitPeriod": 15165.2763671875
+                },
+                {
+                    "ID": 1008,
+                    "Name": "c1o8",
+                    "OrbitPeriod": 15165.2763671875
+                }
+            ]
+        },
+        {
+            "Name": "Mars",
+            "Radius": 3389.5,
+            "OrbitPeriod": 59353338.82413626,
+            "Nodes": [
+                {
+                    "ID": 2001,
+                    "Name": "c2o1",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2002,
+                    "Name": "c2o2",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2003,
+                    "Name": "c2o3",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2004,
+                    "Name": "c2o4",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2005,
+                    "Name": "c2o5",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2006,
+                    "Name": "c2o6",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2007,
+                    "Name": "c2o7",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2008,
+                    "Name": "c2o8",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2009,
+                    "Name": "c2o9",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2010,
+                    "Name": "c2o10",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2011,
+                    "Name": "c2o11",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2012,
+                    "Name": "c2o12",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2013,
+                    "Name": "c2o13",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2014,
+                    "Name": "c2o14",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2015,
+                    "Name": "c2o15",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2016,
+                    "Name": "c2o16",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2017,
+                    "Name": "c2o17",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2018,
+                    "Name": "c2o18",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2019,
+                    "Name": "c2o19",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2020,
+                    "Name": "c2o20",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2021,
+                    "Name": "c2o21",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2022,
+                    "Name": "c2o22",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2023,
+                    "Name": "c2o23",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2024,
+                    "Name": "c2o24",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2025,
+                    "Name": "c2o25",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2026,
+                    "Name": "c2o26",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2027,
+                    "Name": "c2o27",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2028,
+                    "Name": "c2o28",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2029,
+                    "Name": "c2o29",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2030,
+                    "Name": "c2o30",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2031,
+                    "Name": "c2o31",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2032,
+                    "Name": "c2o32",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2033,
+                    "Name": "c2o33",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2034,
+                    "Name": "c2o34",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2035,
+                    "Name": "c2o35",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2036,
+                    "Name": "c2o36",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2037,
+                    "Name": "c2o37",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2038,
+                    "Name": "c2o38",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2039,
+                    "Name": "c2o39",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2040,
+                    "Name": "c2o40",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2041,
+                    "Name": "c2o41",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2042,
+                    "Name": "c2o42",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2043,
+                    "Name": "c2o43",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2044,
+                    "Name": "c2o44",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2045,
+                    "Name": "c2o45",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2046,
+                    "Name": "c2o46",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2047,
+                    "Name": "c2o47",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2048,
+                    "Name": "c2o48",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2049,
+                    "Name": "c2o49",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2050,
+                    "Name": "c2o50",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2051,
+                    "Name": "c2o51",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2052,
+                    "Name": "c2o52",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2053,
+                    "Name": "c2o53",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2054,
+                    "Name": "c2o54",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2055,
+                    "Name": "c2o55",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2056,
+                    "Name": "c2o56",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2057,
+                    "Name": "c2o57",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2058,
+                    "Name": "c2o58",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2059,
+                    "Name": "c2o59",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2060,
+                    "Name": "c2o60",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2061,
+                    "Name": "c2o61",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2062,
+                    "Name": "c2o62",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2063,
+                    "Name": "c2o63",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2064,
+                    "Name": "c2o64",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2065,
+                    "Name": "c2o65",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2066,
+                    "Name": "c2o66",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2067,
+                    "Name": "c2o67",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2068,
+                    "Name": "c2o68",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2069,
+                    "Name": "c2o69",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2070,
+                    "Name": "c2o70",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2071,
+                    "Name": "c2o71",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2072,
+                    "Name": "c2o72",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2073,
+                    "Name": "c2o73",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2074,
+                    "Name": "c2o74",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2075,
+                    "Name": "c2o75",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2076,
+                    "Name": "c2o76",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2077,
+                    "Name": "c2o77",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2078,
+                    "Name": "c2o78",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2079,
+                    "Name": "c2o79",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2080,
+                    "Name": "c2o80",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2081,
+                    "Name": "c2o81",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2082,
+                    "Name": "c2o82",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2083,
+                    "Name": "c2o83",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2084,
+                    "Name": "c2o84",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2085,
+                    "Name": "c2o85",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2086,
+                    "Name": "c2o86",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2087,
+                    "Name": "c2o87",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2088,
+                    "Name": "c2o88",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2089,
+                    "Name": "c2o89",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2090,
+                    "Name": "c2o90",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2091,
+                    "Name": "c2o91",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2092,
+                    "Name": "c2o92",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2093,
+                    "Name": "c2o93",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2094,
+                    "Name": "c2o94",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2095,
+                    "Name": "c2o95",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2096,
+                    "Name": "c2o96",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2097,
+                    "Name": "c2o97",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2098,
+                    "Name": "c2o98",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2099,
+                    "Name": "c2o99",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2100,
+                    "Name": "c2o100",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2101,
+                    "Name": "c2o101",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2102,
+                    "Name": "c2o102",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2103,
+                    "Name": "c2o103",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2104,
+                    "Name": "c2o104",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2105,
+                    "Name": "c2o105",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2106,
+                    "Name": "c2o106",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2107,
+                    "Name": "c2o107",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2108,
+                    "Name": "c2o108",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2109,
+                    "Name": "c2o109",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2110,
+                    "Name": "c2o110",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2111,
+                    "Name": "c2o111",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2112,
+                    "Name": "c2o112",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2113,
+                    "Name": "c2o113",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2114,
+                    "Name": "c2o114",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2115,
+                    "Name": "c2o115",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2116,
+                    "Name": "c2o116",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2117,
+                    "Name": "c2o117",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2118,
+                    "Name": "c2o118",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2119,
+                    "Name": "c2o119",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2120,
+                    "Name": "c2o120",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2121,
+                    "Name": "c2o121",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2122,
+                    "Name": "c2o122",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2123,
+                    "Name": "c2o123",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2124,
+                    "Name": "c2o124",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2125,
+                    "Name": "c2o125",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2126,
+                    "Name": "c2o126",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2127,
+                    "Name": "c2o127",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2128,
+                    "Name": "c2o128",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 3001,
+                    "Name": "c3o1",
+                    "OrbitPeriod": 22870.94921875
+                },
+                {
+                    "ID": 3002,
+                    "Name": "c3o2",
+                    "OrbitPeriod": 22870.94921875
+                },
+                {
+                    "ID": 3003,
+                    "Name": "c3o3",
+                    "OrbitPeriod": 22870.94921875
+                },
+                {
+                    "ID": 3004,
+                    "Name": "c3o4",
+                    "OrbitPeriod": 22870.94921875
+                },
+                {
+                    "ID": 3005,
+                    "Name": "c3o5",
+                    "OrbitPeriod": 22870.94921875
+                },
+                {
+                    "ID": 3006,
+                    "Name": "c3o6",
+                    "OrbitPeriod": 22870.94921875
+                },
+                {
+                    "ID": 3007,
+                    "Name": "c3o7",
+                    "OrbitPeriod": 22870.94921875
+                },
+                {
+                    "ID": 3008,
+                    "Name": "c3o8",
+                    "OrbitPeriod": 22870.94921875
+                }
+            ]
+        },
+        {
+            "Name": "Jupiter",
+            "Radius": 69911.0,
+            "OrbitPeriod": 374574590.65238,
+            "Nodes": []
+        },
+        {
+            "Name": "Saturn",
+            "Radius": 58232.0,
+            "OrbitPeriod": 929468310.8340454,
+            "Nodes": []
+        },
+        {
+            "Name": "Uranus",
+            "Radius": 25362.0,
+            "OrbitPeriod": 2653184548.008957,
+            "Nodes": []
+        },
+        {
+            "Name": "Neptune",
+            "Radius": 24622.0,
+            "OrbitPeriod": 5203430210.566864,
+            "Nodes": []
+        },
+        {
+            "Name": "Pluto",
+            "Radius": 1188.3,
+            "OrbitPeriod": 7828994679.44458,
+            "Nodes": []
+        }
+    ]
+}
