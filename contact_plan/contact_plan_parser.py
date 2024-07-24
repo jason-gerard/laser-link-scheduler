@@ -22,7 +22,8 @@ class IONContactPlanParser(ContactPlanParser):
     CONTACT_PREFIX = ["a", "contact"]
     TIMESTAMP_PREFIX = "+"
     BIT_RATE_CONTEXT = "bit_rate"
-    
+    RANGE_CONTEXT = "range"
+
     def read(self, file_name: str) -> ContactPlan:
         contacts = []
 
@@ -30,7 +31,10 @@ class IONContactPlanParser(ContactPlanParser):
         with open(path, "r") as f:
             reader = csv.reader(f, delimiter=" ")
             for row in reader:
-                ion_start_time, ion_end_time, tx_node, rx_node, bit_rate = row[2:]
+                if not row:
+                    continue
+                
+                ion_start_time, ion_end_time, tx_node, rx_node, bit_rate, contact_range = row[2:]
 
                 contact = Contact(
                     tx_node=tx_node,
@@ -38,7 +42,8 @@ class IONContactPlanParser(ContactPlanParser):
                     start_time=int(ion_start_time[1:]),
                     end_time=int(ion_end_time[1:]),
                     context={
-                        IONContactPlanParser.BIT_RATE_CONTEXT: float(bit_rate)
+                        IONContactPlanParser.BIT_RATE_CONTEXT: float(bit_rate),
+                        IONContactPlanParser.RANGE_CONTEXT: float(contact_range)
                     }
                 )
 
@@ -59,7 +64,8 @@ class IONContactPlanParser(ContactPlanParser):
                 ion_end_time,
                 contact.tx_node,
                 contact.rx_node,
-                contact.context[IONContactPlanParser.BIT_RATE_CONTEXT]
+                contact.context[IONContactPlanParser.BIT_RATE_CONTEXT],
+                contact.context[IONContactPlanParser.RANGE_CONTEXT],
             ]
             
             rows.append(IONContactPlanParser.CONTACT_PREFIX + row)
