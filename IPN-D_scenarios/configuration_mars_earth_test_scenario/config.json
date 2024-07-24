@@ -1,0 +1,99 @@
+{
+    "Time": {
+        "SimulationStartTime": 725803264.184,
+        "SimulationEndTime": 725889664.184,
+        "Step": 100.0
+    },
+    "Star": {
+        "Name": "Sun",
+        "Radius": 696340.0
+    },
+    "Planets": [
+        {
+            "Name": "Mercury",
+            "Radius": 2439.7,
+            "OrbitPeriod": 7600525.218770206,
+            "Nodes": []
+        },
+        {
+            "Name": "Venus",
+            "Radius": 6051.8,
+            "OrbitPeriod": 19414161.92269385,
+            "Nodes": []
+        },
+        {
+            "Name": "Earth",
+            "Radius": 6371.0,
+            "OrbitPeriod": 31558863.596656324,
+            "Nodes": [
+                {
+                    "ID": 1001,
+                    "Name": "c1o1",
+                    "OrbitPeriod": 15165.2763671875
+                }
+            ]
+        },
+        {
+            "Name": "Mars",
+            "Radius": 3389.5,
+            "OrbitPeriod": 59353338.82413626,
+            "Nodes": [
+                {
+                    "ID": 2001,
+                    "Name": "c2o1",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2002,
+                    "Name": "c2o2",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2003,
+                    "Name": "c2o3",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2004,
+                    "Name": "c2o4",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 3001,
+                    "Name": "c3o1",
+                    "OrbitPeriod": 22870.94921875
+                }
+            ]
+        },
+        {
+            "Name": "Jupiter",
+            "Radius": 69911.0,
+            "OrbitPeriod": 374574590.65238,
+            "Nodes": []
+        },
+        {
+            "Name": "Saturn",
+            "Radius": 58232.0,
+            "OrbitPeriod": 929468310.8340454,
+            "Nodes": []
+        },
+        {
+            "Name": "Uranus",
+            "Radius": 25362.0,
+            "OrbitPeriod": 2653184548.008957,
+            "Nodes": []
+        },
+        {
+            "Name": "Neptune",
+            "Radius": 24622.0,
+            "OrbitPeriod": 5203430210.566864,
+            "Nodes": []
+        },
+        {
+            "Name": "Pluto",
+            "Radius": 1188.3,
+            "OrbitPeriod": 7828994679.44458,
+            "Nodes": []
+        }
+    ]
+}
