@@ -115,6 +115,10 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
 
     # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
     # We are defining this as any contact with a range greater than 100,000 km.
+    # A non-ipn node can receive across interplanetary distances, but cannot transmit across interplanetary
+    # distances. We are defining interplanetary nodes here as nodes that can transmit and receive across interplanetary
+    # distances. This depends on the scenario. Some definitions say that a non-ipn node cannot receive or transmit
+    # across interplanetary distances, the code below supports both use cases.
     interplanetary_contacts = [contact for contact in contact_plan.contacts if contact.context["range"] > 100_000]
     interplanetary_tx_nodes = [contact.tx_node for contact in interplanetary_contacts]
     interplanetary_rx_nodes = [contact.rx_node for contact in interplanetary_contacts]
@@ -140,12 +144,12 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
         [contact.rx_node for contact in contact_plan.contacts] + [contact.tx_node for contact in
                                                                   contact_plan.contacts]))
     node_map = {node: idx for idx, node in enumerate(unique_nodes)}
-    interplanetary_nodes = [idx for idx, node in enumerate(unique_nodes) if node in interplanetary_nodes]
+    interplanetary_node_ids = [idx for idx, node in enumerate(unique_nodes) if node in interplanetary_nodes]
 
     builder \
         .with_nodes(unique_nodes) \
         .with_node_map(node_map) \
-        .with_interplanetary_nodes(interplanetary_nodes)
+        .with_interplanetary_nodes(interplanetary_node_ids)
 
     for index, time_step in enumerate(time_steps[:-1]):
         state_start_time = time_step.t
@@ -155,6 +159,7 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
         included_contacts = [contact for contact in contact_plan.contacts if
                              include_contact(contact, state_start_time, state_duration)]
 
+        # The index here will map the node name to its index in the adjacency matrix
         adj_matrix = [[-1 for _ in range(len(unique_nodes))] for _ in range(len(unique_nodes))]
         for tx_idx, tx_node in enumerate(unique_nodes):
             # List of rx_nodes that have a contact with the tx_node in this time step
