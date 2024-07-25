@@ -24,7 +24,7 @@ class Graph:
     contacts: list[Contact]
     adj_matrix: list[list[int]]
     k: int
-    state_duration: int
+    state_duration: int  # seconds
     state_start_time: int
 
     def __repr__(self):
@@ -52,6 +52,7 @@ class TimeExpandedGraph:
     nodes: list[str]
     node_map: dict[str, int]
     interplanetary_nodes: list[int]
+    # dst_interplanetary_nodes: list[int]
     start_time: int
     end_time: int
 
@@ -60,7 +61,8 @@ class TimeExpandedGraph:
         rep += f"num_k={len(self.graphs)}\n"
         rep += f"num_nodes={len(self.nodes)}\n"
         rep += f"duration={(self.end_time - self.start_time) / 60 / 60} hours\n"
-        rep += f"interplanetary_nodes={self.interplanetary_nodes}\n"
+        rep += f"src_interplanetary_nodes={self.interplanetary_nodes}\n"
+        # rep += f"dst_interplanetary_nodes={self.dst_interplanetary_nodes}\n"
         rep += "\n"
         for graph in self.graphs:
             rep += f"{graph}\n"
@@ -72,6 +74,7 @@ class TimeExpandedGraph:
         nodes: list[str]
         node_map: dict[str, int]
         interplanetary_nodes: list[int]
+        dst_interplanetary_nodes: list[int]
         start_time: int
         end_time: int
 
@@ -89,6 +92,10 @@ class TimeExpandedGraph:
 
         def with_interplanetary_nodes(self, interplanetary_nodes: list[int]):
             self.interplanetary_nodes = interplanetary_nodes
+            return self
+
+        def with_dst_interplanetary_nodes(self, dst_interplanetary_nodes: list[int]):
+            self.dst_interplanetary_nodes = dst_interplanetary_nodes
             return self
 
         def with_start_time(self, start_time: int):
@@ -137,12 +144,11 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
         .with_end_time(max(end_times))
 
     time_steps = sorted(start_time_steps + end_time_steps)
-    # print(time_steps)
 
     # Create a unique list of node ids and map them to array index for the adjacency matrix graph
     unique_nodes = sorted(set(
-        [contact.rx_node for contact in contact_plan.contacts] + [contact.tx_node for contact in
-                                                                  contact_plan.contacts]))
+        [contact.rx_node for contact in contact_plan.contacts]
+        + [contact.tx_node for contact in contact_plan.contacts]))
     node_map = {node: idx for idx, node in enumerate(unique_nodes)}
     interplanetary_node_ids = [idx for idx, node in enumerate(unique_nodes) if node in interplanetary_nodes]
 
@@ -156,8 +162,8 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
         state_duration = time_steps[index + 1].t - state_start_time
 
         # There is a bug if start and end time is equal for a new contact
-        included_contacts = [contact for contact in contact_plan.contacts if
-                             include_contact(contact, state_start_time, state_duration)]
+        included_contacts = [contact for contact in contact_plan.contacts
+                             if include_contact(contact, state_start_time, state_duration)]
 
         # The index here will map the node name to its index in the adjacency matrix
         adj_matrix = [[-1 for _ in range(len(unique_nodes))] for _ in range(len(unique_nodes))]
