@@ -1,7 +1,7 @@
 num_k=58
 num_nodes=6
 duration=24.0 hours
-interplanetary_nodes=[0, 5]
+src_interplanetary_nodes=[0, 5]
 
 *,0,0,0,0,1,
 0,*,0,0,1,0,
