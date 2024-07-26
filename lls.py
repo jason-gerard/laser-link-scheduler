@@ -1,10 +1,9 @@
+import argparse
 import pprint
 from dataclasses import dataclass
 
-import argparse
-
-from contact_plan.contact_plan_parser import IONContactPlanParser
-from time_expanded_graph.time_expanded_graph import build_time_expanded_graph, write_time_expanded_graph, \
+from contact_plan import IONContactPlanParser
+from time_expanded_graph import build_time_expanded_graph, write_time_expanded_graph, \
     TimeExpandedGraph
 
 

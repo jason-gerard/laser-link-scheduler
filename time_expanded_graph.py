@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from enum import Enum
 
-from contact_plan.contact_plan import ContactPlan, Contact
+from contact_plan import ContactPlan, Contact
 
 
 class StepType(Enum):
