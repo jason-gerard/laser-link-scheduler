@@ -153,23 +153,21 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
         state_start_time = time_step
         state_duration = time_steps[index + 1] - state_start_time
 
-        # There is a bug if start and end time is equal for a new contact
+        # TODO: There is a bug if start and end time is equal for a new contact
+        # For each time step get a list of contacts that exist within that time step
         included_contacts = [contact for contact in contact_plan.contacts
                              if include_contact(contact, state_start_time, state_duration)]
 
-        # The index here will map the node name to its index in the adjacency matrix
-        adj_matrix = [[-1 for _ in range(len(unique_nodes))] for _ in range(len(unique_nodes))]
+        # The index here will map the node name to its index in the adjacency matrix, by default the values are set to 0
+        # which indicates there is no contact between the two nodes
+        adj_matrix = [[0 for _ in range(len(unique_nodes))] for _ in range(len(unique_nodes))]
         for tx_idx, tx_node in enumerate(unique_nodes):
             # List of rx_nodes that have a contact with the tx_node in this time step
             rx_nodes = [contact.rx_node for contact in included_contacts if contact.tx_node == tx_node]
-
-            for rx_idx, rx_node in enumerate(unique_nodes):
-                if tx_node == rx_node:
-                    adj_matrix[tx_idx][rx_idx] = 0
-                elif rx_node in rx_nodes:  # Check if there exists a contact between these two nodes
-                    adj_matrix[tx_idx][rx_idx] = 1
-                else:  # There is no contact between the two nodes in this time step
-                    adj_matrix[tx_idx][rx_idx] = 0
+            rx_idxs = [node_map[rx_node] for rx_node in rx_nodes]
+            
+            for rx_idx in rx_idxs:
+                adj_matrix[tx_idx][rx_idx] = 1
 
         builder.with_graph(Graph(
             contacts=included_contacts,
