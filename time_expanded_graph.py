@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 
 from contact_plan import ContactPlan, Contact
@@ -185,6 +186,52 @@ def include_contact(contact: Contact, state_start_time: int, state_duration: int
     # The current state should include contacts that start before the state start time, inclusive, and end after the
     # start end time, inclusive
     return contact.start_time <= state_start_time and contact.end_time >= state_end_time
+
+
+def convert_time_expanded_graph_to_contact_plan(time_expanded_graph: TimeExpandedGraph) -> ContactPlan:
+    contacts: list[Contact] = []
+    in_progress_contacts: list[list[Contact]] = \
+        [[None for _ in range(len(time_expanded_graph.nodes))] for _ in range(len(time_expanded_graph.nodes))]
+    
+    rolling_start_time = 0
+    
+    for graph in time_expanded_graph.graphs:
+        for tx_idx in range(len(graph.adj_matrix)):
+            for rx_idx in range(len(graph.adj_matrix[tx_idx])):
+                # We have 4 different cases depending on the state of the in_progress_contacts and graph at index
+                # tx_idx and rx_idx
+                if graph.adj_matrix[tx_idx][rx_idx] == 0 and not in_progress_contacts[tx_idx][rx_idx]:
+                    continue
+                elif (graph.adj_matrix[tx_idx][rx_idx] == 0 and in_progress_contacts[tx_idx][rx_idx]):
+                    # End the contact
+                    contacts.append(copy.deepcopy(in_progress_contacts[tx_idx][rx_idx]))
+                    in_progress_contacts[tx_idx][rx_idx] = None
+                elif graph.adj_matrix[tx_idx][rx_idx] == 1 and not in_progress_contacts[tx_idx][rx_idx]:
+                    # Start the contact
+                    in_progress_contacts[tx_idx][rx_idx] = Contact(
+                        tx_node=time_expanded_graph.nodes[tx_idx],
+                        rx_node=time_expanded_graph.nodes[rx_idx],
+                        start_time=rolling_start_time,
+                        # We can only assume the contact will be there for a single state, so set the end_time to the
+                        # duration of the current state, this will be updated as it appears in later graphs
+                        end_time=rolling_start_time+graph.state_duration,
+                        context={},
+                    )
+                elif graph.adj_matrix[tx_idx][rx_idx] == 1 and in_progress_contacts[tx_idx][rx_idx]:
+                    # Update the in progress contact but extending its end time to the end of the current state
+                    in_progress_contacts[tx_idx][rx_idx].end_time += graph.state_duration
+                    
+        # For each graph we traverse add the duration of that state to the rolling start time that new contacts use
+        rolling_start_time += graph.state_duration
+    
+    # Cleanup the in progress contacts that start in the last state or last until the last state
+    for contact_row_idx in range(len(in_progress_contacts)):
+        for contact_col_idx in range(len(in_progress_contacts[contact_row_idx])):
+            if in_progress_contacts[contact_row_idx][contact_col_idx]:
+                contacts.append(copy.deepcopy(in_progress_contacts[contact_row_idx][contact_col_idx]))
+                in_progress_contacts[contact_row_idx][contact_col_idx] = None
+
+    return ContactPlan(contacts)
 
 
 def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExpandedGraph):

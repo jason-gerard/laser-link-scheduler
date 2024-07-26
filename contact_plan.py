@@ -79,9 +79,13 @@ class IONContactPlanParser(ContactPlanParser):
                 ion_end_time,
                 contact.tx_node,
                 contact.rx_node,
-                contact.context[IONContactPlanParser.DURATION_CONTEXT],
-                contact.context[IONContactPlanParser.RANGE_CONTEXT],
             ]
+            
+            # Add optional context values to the row
+            if IONContactPlanParser.DURATION_CONTEXT in contact.context:
+                rows.append(contact.context[IONContactPlanParser.DURATION_CONTEXT])
+            if IONContactPlanParser.RANGE_CONTEXT in contact.context:
+                rows.append(contact.context[IONContactPlanParser.RANGE_CONTEXT])
             
             rows.append(IONContactPlanParser.CONTACT_PREFIX + row)
 

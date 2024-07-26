@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 
 from contact_plan import IONContactPlanParser
 from time_expanded_graph import build_time_expanded_graph, write_time_expanded_graph, \
-    TimeExpandedGraph
+    TimeExpandedGraph, convert_time_expanded_graph_to_contact_plan
 
 
 def get_args():
@@ -38,7 +38,7 @@ def main(experiment_name):
     # Convert split contact plan into a time expanded graph (TEG)
     time_expanded_graph = build_time_expanded_graph(contact_plan)
     write_time_expanded_graph(experiment_name, time_expanded_graph)
-    print("Finished building time expanded graph")
+    print("Finished converting contact plan to time expanded graph")
 
     # Iterate through each of the k graphs and compute the maximal matching
     # As we step through the k graphs we want to optimize for our metric
@@ -60,10 +60,11 @@ def main(experiment_name):
     print("wasted cap", wasted_network_capacity)
 
     # Convert the TEG back to a contact plan
-    # TODO
+    scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(time_expanded_graph)
+    print("Finished converting time expanded graph to contact plan")
 
     # Write scheduled contact plan to disk
-    contact_plan_parser.write(experiment_name, contact_plan)
+    contact_plan_parser.write(experiment_name, scheduled_contact_plan)
     print("Finished writing scheduled contact plan")
     
     end = timer()
