@@ -1,6 +1,7 @@
 import argparse
 import pprint
 from dataclasses import dataclass
+from timeit import default_timer as timer
 
 from contact_plan import IONContactPlanParser
 from time_expanded_graph import build_time_expanded_graph, write_time_expanded_graph, \
@@ -9,11 +10,11 @@ from time_expanded_graph import build_time_expanded_graph, write_time_expanded_g
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file_name', help='Contact plan file input name ')
+    parser.add_argument('-f', '--experiment_name', help='Contact plan file input name ')
     return parser.parse_args()
 
 
-def main(file_name):
+def main(experiment_name):
     """
     Assumptions: A key assumption we make is that contacts are bidirectional i.e. if there is a contact from A -> B
     then there is also a contact from B -> A. These contacts can also exist at the same time. Since we are dealing
@@ -22,10 +23,13 @@ def main(file_name):
     as the scenarios become more complex. This data is embedded in the contact plan and not the code, so the code should
     already be written to support unidirectional contacts but logically, for now, all contacts are bidirectional.
     """
+    
+    start = timer()
 
     # Read contact plan from disk
     contact_plan_parser = IONContactPlanParser()
-    contact_plan = contact_plan_parser.read(file_name)
+    contact_plan = contact_plan_parser.read(experiment_name)
+    print("Finished reading contact plan")
 
     # Split long contacts into multiple smaller contacts, a maximum duration of 100s
     # Write split contact plan back to disk
@@ -33,7 +37,8 @@ def main(file_name):
 
     # Convert split contact plan into a time expanded graph (TEG)
     time_expanded_graph = build_time_expanded_graph(contact_plan)
-    write_time_expanded_graph(time_expanded_graph, file_name)
+    write_time_expanded_graph(experiment_name, time_expanded_graph)
+    print("Finished building time expanded graph")
 
     # Iterate through each of the k graphs and compute the maximal matching
     # As we step through the k graphs we want to optimize for our metric
@@ -58,7 +63,11 @@ def main(file_name):
     # TODO
 
     # Write scheduled contact plan to disk
-    contact_plan_parser.write(file_name, contact_plan)
+    contact_plan_parser.write(experiment_name, contact_plan)
+    print("Finished writing scheduled contact plan")
+    
+    end = timer()
+    print(f"Elapsed time: {end - start} seconds")
 
 
 @dataclass
@@ -168,4 +177,4 @@ def compute_wasted_capacity(capacities: list[NodeCapacity]) -> float:
 
 if __name__ == "__main__":
     args = get_args()
-    main(args.file_name)
+    main(args.experiment_name)

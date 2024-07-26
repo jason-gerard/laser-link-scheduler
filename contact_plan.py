@@ -1,7 +1,7 @@
-import os
 import csv
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from utils import get_experiment_file, FileType
 
 
 @dataclass
@@ -23,9 +23,6 @@ class ContactPlan:
 
 
 class ContactPlanParser(ABC):
-    SOURCES_ROOT = "experiments"
-    OUTPUT_SUFFIX = "scheduled"
-
     @abstractmethod
     def read(self, file_name: str) -> ContactPlan:
         pass
@@ -42,10 +39,10 @@ class IONContactPlanParser(ContactPlanParser):
     DURATION_CONTEXT = "duration"
     RANGE_CONTEXT = "range"
 
-    def read(self, file_name: str) -> ContactPlan:
+    def read(self, experiment_name: str) -> ContactPlan:
         contacts = []
 
-        path = os.path.join(ContactPlanParser.SOURCES_ROOT, file_name)
+        path = get_experiment_file(experiment_name, FileType.CONTACT_PLAN)
         with open(path, "r") as f:
             reader = csv.reader(f, delimiter=" ")
             for row in reader:
@@ -69,10 +66,10 @@ class IONContactPlanParser(ContactPlanParser):
 
         return ContactPlan(contacts)
 
-    def write(self, file_name: str, contact_plan: ContactPlan):
-        path = os.path.join(ContactPlanParser.SOURCES_ROOT, f"{file_name}_{ContactPlanParser.OUTPUT_SUFFIX}")
-        
+    def write(self, experiment_name: str, contact_plan: ContactPlan):
         rows = []
+
+        path = get_experiment_file(experiment_name, FileType.SCHEDULED)
         for contact in contact_plan.contacts:
             ion_start_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.start_time}"
             ion_end_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.end_time}"

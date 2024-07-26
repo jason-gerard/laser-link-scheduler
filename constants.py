@@ -1,2 +1,1 @@
-SRC_PLANET = "Mars"
-DST_PLANET = "Earth"
+SOURCES_ROOT = "experiments"

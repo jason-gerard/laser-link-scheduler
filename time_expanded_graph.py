@@ -1,8 +1,8 @@
-import os
 from dataclasses import dataclass
 from enum import Enum
 
 from contact_plan import ContactPlan, Contact
+from utils import get_experiment_file, FileType
 
 
 class StepType(Enum):
@@ -10,6 +10,7 @@ class StepType(Enum):
     END = 2
 
 
+# TODO remove this, not needed anymore with simpler calculation
 @dataclass
 class TimeStep:
     t: int
@@ -208,7 +209,7 @@ def include_contact(contact: Contact, state_start_time: int, state_duration: int
     return contact.start_time <= state_start_time and contact.end_time >= state_end_time
 
 
-def write_time_expanded_graph(time_expanded_graph: TimeExpandedGraph, file_name: str):
-    path = os.path.join("experiments", f"{file_name}_teg")
+def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExpandedGraph):
+    path = get_experiment_file(experiment_name, FileType.TEG)
     with open(path, "w") as f:
         f.write(str(time_expanded_graph))
