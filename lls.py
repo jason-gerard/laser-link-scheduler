@@ -74,7 +74,11 @@ class NodeCapacity:
 def compute_node_capacities(time_expanded_graph: TimeExpandedGraph) -> list[NodeCapacity]:
     # For each graph in the TEG, compute the capacity
     node_capacities_by_graph = [
-        compute_node_capacity_by_graph(graph.adj_matrix, graph.state_duration, time_expanded_graph.interplanetary_nodes)
+        compute_node_capacity_by_graph(
+            graph.adj_matrix,
+            graph.state_duration,
+            time_expanded_graph.interplanetary_nodes,
+            time_expanded_graph.ipn_node_to_planet_map)
         for graph
         in time_expanded_graph.graphs]
 
@@ -105,7 +109,8 @@ def merge_node_capacities(capacities: list[NodeCapacity]) -> NodeCapacity:
 def compute_node_capacity_by_graph(
         adj_matrix: list[list[int]],
         duration: int,
-        interplanetary_nodes: list[int]
+        interplanetary_nodes: list[int],
+        ipn_node_to_planet_map: dict[int, str]
 ) -> list[NodeCapacity]:
     # For now, we are assuming a constant and symmetric bitrate across all links at 100 mbps.
     BIT_RATE = 100
@@ -130,8 +135,10 @@ def compute_node_capacity_by_graph(
                     # Compute the amount of data transmitted to the IPN node from a non-IPN node.
                     # ipn node == rx_node
                     node_capacity.capacity_in += duration * BIT_RATE
-                elif tx_idx == ipn_node_idx and rx_idx in interplanetary_nodes:
-                    # TODO Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
+                elif (tx_idx == ipn_node_idx
+                      and rx_idx in interplanetary_nodes
+                      and ipn_node_to_planet_map[tx_idx] != ipn_node_to_planet_map[rx_idx]):
+                    # Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
                     # destination planet.
                     # ipn node == tx_node
                     node_capacity.capacity_out += duration * BIT_RATE

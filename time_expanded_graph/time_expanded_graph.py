@@ -52,7 +52,7 @@ class TimeExpandedGraph:
     nodes: list[str]
     node_map: dict[str, int]
     interplanetary_nodes: list[int]
-    # dst_interplanetary_nodes: list[int]
+    ipn_node_to_planet_map: dict[int, str]
     start_time: int
     end_time: int
 
@@ -62,7 +62,7 @@ class TimeExpandedGraph:
         rep += f"num_nodes={len(self.nodes)}\n"
         rep += f"duration={(self.end_time - self.start_time) / 60 / 60} hours\n"
         rep += f"src_interplanetary_nodes={self.interplanetary_nodes}\n"
-        # rep += f"dst_interplanetary_nodes={self.dst_interplanetary_nodes}\n"
+        rep += f"ipn_node_to_planet_map={self.ipn_node_to_planet_map}\n"
         rep += "\n"
         for graph in self.graphs:
             rep += f"{graph}\n"
@@ -74,7 +74,7 @@ class TimeExpandedGraph:
         nodes: list[str]
         node_map: dict[str, int]
         interplanetary_nodes: list[int]
-        dst_interplanetary_nodes: list[int]
+        ipn_node_to_planet_map: dict[int, str]
         start_time: int
         end_time: int
 
@@ -94,8 +94,8 @@ class TimeExpandedGraph:
             self.interplanetary_nodes = interplanetary_nodes
             return self
 
-        def with_dst_interplanetary_nodes(self, dst_interplanetary_nodes: list[int]):
-            self.dst_interplanetary_nodes = dst_interplanetary_nodes
+        def with_ipn_node_to_planet_map(self, ipn_node_to_planet_map: dict[int, str]):
+            self.ipn_node_to_planet_map = ipn_node_to_planet_map
             return self
 
         def with_start_time(self, start_time: int):
@@ -111,6 +111,7 @@ class TimeExpandedGraph:
                 graphs=self.graphs,
                 nodes=self.nodes,
                 interplanetary_nodes=self.interplanetary_nodes,
+                ipn_node_to_planet_map=self.ipn_node_to_planet_map,
                 node_map=self.node_map,
                 start_time=self.start_time,
                 end_time=self.end_time,
@@ -150,12 +151,22 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
         [contact.rx_node for contact in contact_plan.contacts]
         + [contact.tx_node for contact in contact_plan.contacts]))
     node_map = {node: idx for idx, node in enumerate(unique_nodes)}
+
+    # We want to split the list of interplanetary nodes into different sets of nodes for each planet. We can do this
+    # by using the first digit of each node id to identify its constellation. We make the assumption that each planet
+    # has at most a single interplanetary constellation
+    ipn_node_to_planet_map = {}  # ipn_node_id -> planet_id
+    for idx, node in enumerate(unique_nodes):
+        if node in interplanetary_nodes:
+            ipn_node_to_planet_map[idx] = node[0]
+
     interplanetary_node_ids = [idx for idx, node in enumerate(unique_nodes) if node in interplanetary_nodes]
 
     builder \
         .with_nodes(unique_nodes) \
         .with_node_map(node_map) \
-        .with_interplanetary_nodes(interplanetary_node_ids)
+        .with_interplanetary_nodes(interplanetary_node_ids) \
+        .with_ipn_node_to_planet_map(ipn_node_to_planet_map)
 
     for index, time_step in enumerate(time_steps[:-1]):
         state_start_time = time_step.t
