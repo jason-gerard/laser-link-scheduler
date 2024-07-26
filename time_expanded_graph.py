@@ -136,7 +136,7 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
     # We want to split the list of interplanetary nodes into different sets of nodes for each planet. We can do this
     # by using the first digit of each node id to identify its constellation. We make the assumption that each planet
     # has at most a single interplanetary constellation
-    ipn_node_to_planet_map = {}  # ipn_node_id -> planet_id
+    ipn_node_to_planet_map = {}  # ipn_node_idx -> planet_id
     for idx, node in enumerate(unique_nodes):
         if node in interplanetary_nodes:
             ipn_node_to_planet_map[idx] = node[0]
