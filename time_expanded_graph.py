@@ -1,23 +1,7 @@
 from dataclasses import dataclass
-from enum import Enum
 
 from contact_plan import ContactPlan, Contact
 from utils import get_experiment_file, FileType
-
-
-class StepType(Enum):
-    START = 1
-    END = 2
-
-
-# TODO remove this, not needed anymore with simpler calculation
-@dataclass
-class TimeStep:
-    t: int
-    step_type: StepType
-
-    def __lt__(self, other):
-        return self.t < other.t
 
 
 @dataclass
@@ -135,17 +119,13 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
                             if node in interplanetary_tx_nodes and node in interplanetary_rx_nodes]
 
     # Create a sets of all start times and end times, the combined length will equal numK
-    start_times = set([contact.start_time for contact in contact_plan.contacts])
-    start_time_steps = [TimeStep(time, StepType.START) for time in start_times]
-
-    end_times = set([contact.end_time for contact in contact_plan.contacts])
-    end_time_steps = [TimeStep(time, StepType.END) for time in end_times]
+    start_times = list(set([contact.start_time for contact in contact_plan.contacts]))
+    end_times = list(set([contact.end_time for contact in contact_plan.contacts]))
+    time_steps = sorted(start_times + end_times)
 
     builder \
         .with_start_time(min(start_times)) \
         .with_end_time(max(end_times))
-
-    time_steps = sorted(start_time_steps + end_time_steps)
 
     # Create a unique list of node ids and map them to array index for the adjacency matrix graph
     unique_nodes = sorted(set(
@@ -170,8 +150,8 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
         .with_ipn_node_to_planet_map(ipn_node_to_planet_map)
 
     for index, time_step in enumerate(time_steps[:-1]):
-        state_start_time = time_step.t
-        state_duration = time_steps[index + 1].t - state_start_time
+        state_start_time = time_step
+        state_duration = time_steps[index + 1] - state_start_time
 
         # There is a bug if start and end time is equal for a new contact
         included_contacts = [contact for contact in contact_plan.contacts
