@@ -6,8 +6,10 @@ from constants import SOURCES_ROOT
 
 class FileType(Enum):
     CONTACT_PLAN = "contact_plan"
+    SPLIT = "contact_plan_split"
     SCHEDULED = "contact_plan_scheduled"
     TEG = "teg"
+    SCHEDULED_TEG = "scheduled_teg"
 
 
 def get_experiment_file(experiment_name, file_type: FileType) -> str:

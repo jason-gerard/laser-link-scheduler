@@ -32,6 +32,7 @@ class Graph:
         return rep
 
 
+# TODO update this DS to match the parameter values from the FCP paper
 @dataclass
 class TimeExpandedGraph:
     graphs: list[Graph]
@@ -166,8 +167,13 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
             # List of rx_nodes that have a contact with the tx_node in this time step
             rx_nodes = [contact.rx_node for contact in included_contacts if contact.tx_node == tx_node]
             rx_idxs = [node_map[rx_node] for rx_node in rx_nodes]
-            
+
             for rx_idx in rx_idxs:
+                # Each laser communication interface is associated in an integer ID, a, where a >= 1. For now we are
+                # assuming there is only a single interface and so the value of a for all nodes is set to 1. The matrix
+                # I contains the list of integer IDs for available communication interfaces for each node.
+                # For nodes 0, 1, 2
+                # I = [[1, 2], [1], [1, 2, 3, 4]]
                 adj_matrix[tx_idx][rx_idx] = 1
 
         builder.with_graph(Graph(
@@ -192,9 +198,9 @@ def convert_time_expanded_graph_to_contact_plan(time_expanded_graph: TimeExpande
     contacts: list[Contact] = []
     in_progress_contacts: list[list[Contact]] = \
         [[None for _ in range(len(time_expanded_graph.nodes))] for _ in range(len(time_expanded_graph.nodes))]
-    
+
     rolling_start_time = 0
-    
+
     for graph in time_expanded_graph.graphs:
         for tx_idx in range(len(graph.adj_matrix)):
             for rx_idx in range(len(graph.adj_matrix[tx_idx])):
@@ -214,16 +220,16 @@ def convert_time_expanded_graph_to_contact_plan(time_expanded_graph: TimeExpande
                         start_time=rolling_start_time,
                         # We can only assume the contact will be there for a single state, so set the end_time to the
                         # duration of the current state, this will be updated as it appears in later graphs
-                        end_time=rolling_start_time+graph.state_duration,
+                        end_time=rolling_start_time + graph.state_duration,
                         context={},
                     )
                 elif graph.adj_matrix[tx_idx][rx_idx] == 1 and in_progress_contacts[tx_idx][rx_idx]:
                     # Update the in progress contact but extending its end time to the end of the current state
                     in_progress_contacts[tx_idx][rx_idx].end_time += graph.state_duration
-                    
+
         # For each graph we traverse add the duration of that state to the rolling start time that new contacts use
         rolling_start_time += graph.state_duration
-    
+
     # Cleanup the in progress contacts that start in the last state or last until the last state
     for contact_row_idx in range(len(in_progress_contacts)):
         for contact_col_idx in range(len(in_progress_contacts[contact_row_idx])):
@@ -234,7 +240,7 @@ def convert_time_expanded_graph_to_contact_plan(time_expanded_graph: TimeExpande
     return ContactPlan(contacts)
 
 
-def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExpandedGraph):
-    path = get_experiment_file(experiment_name, FileType.TEG)
+def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExpandedGraph, file_type: FileType):
+    path = get_experiment_file(experiment_name, file_type)
     with open(path, "w") as f:
         f.write(str(time_expanded_graph))

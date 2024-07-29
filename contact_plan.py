@@ -28,7 +28,7 @@ class ContactPlanParser(ABC):
         pass
 
     @abstractmethod
-    def write(self, file_name: str, contact_plan: ContactPlan):
+    def write(self, file_name: str, contact_plan: ContactPlan, file_type: FileType):
         pass
 
 
@@ -66,10 +66,10 @@ class IONContactPlanParser(ContactPlanParser):
 
         return ContactPlan(contacts)
 
-    def write(self, experiment_name: str, contact_plan: ContactPlan):
+    def write(self, experiment_name: str, contact_plan: ContactPlan, file_type: FileType):
         rows = []
 
-        path = get_experiment_file(experiment_name, FileType.SCHEDULED)
+        path = get_experiment_file(experiment_name, file_type)
         for contact in contact_plan.contacts:
             ion_start_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.start_time}"
             ion_end_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.end_time}"
@@ -92,3 +92,7 @@ class IONContactPlanParser(ContactPlanParser):
         with open(path, "w") as f:
             writer = csv.writer(f, delimiter=" ")
             writer.writerows(rows)
+
+
+def contact_plan_splitter(contact_plan: ContactPlan) -> ContactPlan:
+    return contact_plan
