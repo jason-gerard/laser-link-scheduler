@@ -1,6 +1,7 @@
 import copy
 from dataclasses import dataclass
 
+import constants
 from contact_plan import ContactPlan, Contact
 from utils import get_experiment_file, FileType
 
@@ -169,12 +170,8 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
             rx_idxs = [node_map[rx_node] for rx_node in rx_nodes]
 
             for rx_idx in rx_idxs:
-                # Each laser communication interface is associated in an integer ID, a, where a >= 1. For now we are
-                # assuming there is only a single interface and so the value of a for all nodes is set to 1. The matrix
-                # I contains the list of integer IDs for available communication interfaces for each node.
-                # For nodes 0, 1, 2
-                # I = [[1, 2], [1], [1, 2, 3, 4]]
-                adj_matrix[tx_idx][rx_idx] = 1
+                # For now, we assume all satellites only have a single default interface.
+                adj_matrix[tx_idx][rx_idx] = constants.default_a
 
         builder.with_graph(Graph(
             contacts=included_contacts,

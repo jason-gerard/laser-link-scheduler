@@ -12,8 +12,8 @@ t_min = 5
 # to improve the fairness.
 t_max = 100
 
-# The maximum number of simultaneous interfaces. For this work interfaces corresponds to the number of lasers onboard
-# the satellite. In future work if we want to model satellites with multiple lasers, this value can be adjusted. If we
-# want to model satellites with varying number of lasers this should be dynamically read by the input file for each
-# satellite.
-I = 1
+# This list A, contains the integer IDs of all the different available communication interfaces. Each laser
+# communication interface is associated in an integer ID, a, where a >= 1.
+A = [1]
+# The default communication interface to use.
+default_a = A[0]
