@@ -83,9 +83,9 @@ class IONContactPlanParser(ContactPlanParser):
             
             # Add optional context values to the row
             if IONContactPlanParser.DURATION_CONTEXT in contact.context:
-                rows.append(contact.context[IONContactPlanParser.DURATION_CONTEXT])
+                row.append(contact.context[IONContactPlanParser.DURATION_CONTEXT])
             if IONContactPlanParser.RANGE_CONTEXT in contact.context:
-                rows.append(contact.context[IONContactPlanParser.RANGE_CONTEXT])
+                row.append(contact.context[IONContactPlanParser.RANGE_CONTEXT])
             
             rows.append(IONContactPlanParser.CONTACT_PREFIX + row)
 

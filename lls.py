@@ -59,18 +59,41 @@ def main(experiment_name):
 
 
 def lls(time_expanded_graph) -> TimeExpandedGraph:
+    # Max-weight maximal matching
     # Inputs: contact topology [P] of size K x N x N
     #         state durations [T] of size K
     # Outputs: contact plan [L] of size K x N x N
-    # Initialize matrix [C] containing the weights, [C]_i,j <- 0 for all i,j
+    #
+    # DCT_i,j <- 0 for all i,j
     # for k <- 0 to K do
-    #   [W]_k,i,j <- [C]_i,j for all i,j
+    #   [W]_k,i,j <- DCT_i,j for all i,j
     #   Blossom([P]_k, [L]_k, [W]_k)
     #   if [L]_k,i,j = 0 then
-    #     [C]_i,j <- [C]_i,j + t_k for all i,j
+    #     DCT_i,j <- DCT_i,j + [T]_k for all i,j
+
+    # Max-weight maximal matching
+    # Inputs: contact topology [P] of size K x N x N
+    #         state durations [T] of size K
+    # Outputs: contact plan [L] of size K x N x N
+    #
+    # for k <- 0 to K do
+    #   [W]_k,i,j <- delta_capacity([P]_k, [L])
+    #                + delta_time([L], [T]) for all i,j
+    #   Blossom([P]_k, [L]_k, [W]_k)
     
-    # TODO: we need to modify this algorithm such that after each iteration of blossom we update the matrix of weights
-    # with the node capacity values
+    # delta_cap -> the increased network capacity if the edge i,j is selected for step k
+    # delta_time -> the disabled contact time for an edge i,j, or the sum of the duration that edge i,j could have
+    #               been enabled but was not
+    
+    # The weights should be calculated as follows 1) Evaluate capacity (max weight maximal matching) or wasted
+    # capacity (min weight maximal matching) 2) If the capacities are equal then evaluate fairness The matrix [W]_k,
+    # i,j should be constructed such that each edge holds the delta capacity or delta wasted capacity if that edge
+    # was selected
+    # Fairness and capacity will always be 0 when k = 1
+    
+    # Note on topology optimization: If we restrict orbiter -> orbiter contacts then we don't even need the blossom
+    # algorithm, this might actually perform better while not sacrificing anything for our use case. this would only
+    # contain orbiter -> relay and relay -> relay contacts.
     
     capacities = compute_node_capacities(time_expanded_graph)
     pprint.pprint(capacities)
