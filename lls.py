@@ -79,7 +79,7 @@ def lls(time_expanded_graph) -> TimeExpandedGraph:
     #
     # for k <- 0 to K do
     #   [W]_k,i,j <- delta_capacity([P]_k, [L], [X])
-    #                + delta_time([L], [T]) for all i,j
+    #                + alpha * delta_time([L], [T]) for all i,j
     #   Blossom([P]_k, [L]_k, [W]_k)
     
     # delta_cap -> the increased network capacity if the edge i,j is selected for step k

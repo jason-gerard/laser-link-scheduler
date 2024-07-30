@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import constants
 from time_expanded_graph import TimeExpandedGraph
 
 
@@ -53,9 +54,6 @@ def compute_node_capacity_by_graph(
         interplanetary_nodes: list[int],
         ipn_node_to_planet_map: dict[int, str]
 ) -> list[NodeCapacity]:
-    # For now, we are assuming a constant and symmetric bitrate across all links at 100 mbps.
-    BIT_RATE = 100
-
     capacities = []
     for ipn_node_idx in interplanetary_nodes:
         node_capacity = NodeCapacity(
@@ -70,19 +68,23 @@ def compute_node_capacity_by_graph(
                 if adj_matrix[tx_idx][rx_idx] == 0:
                     continue
 
+                # Get the bit_rate from the communication interface ID
+                a = adj_matrix[tx_idx][rx_idx]
+                bit_rate = constants.B[a]
+
                 # Only one of these two conditions can ever be true since we don't count contacts with the same node as
                 # the tx and rx
                 if tx_idx not in interplanetary_nodes and rx_idx == ipn_node_idx:
                     # Compute the amount of data transmitted to the IPN node from a non-IPN node.
                     # ipn node == rx_node
-                    node_capacity.capacity_in += duration * BIT_RATE
+                    node_capacity.capacity_in += duration * bit_rate
                 elif (tx_idx == ipn_node_idx
                       and rx_idx in interplanetary_nodes
                       and ipn_node_to_planet_map[tx_idx] != ipn_node_to_planet_map[rx_idx]):
                     # Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
                     # destination planet.
                     # ipn node == tx_node
-                    node_capacity.capacity_out += duration * BIT_RATE
+                    node_capacity.capacity_out += duration * bit_rate
 
         capacities.append(node_capacity)
 
