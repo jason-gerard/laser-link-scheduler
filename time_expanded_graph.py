@@ -205,7 +205,7 @@ def convert_time_expanded_graph_to_contact_plan(time_expanded_graph: TimeExpande
                 # tx_idx and rx_idx
                 if graph.adj_matrix[tx_idx][rx_idx] == 0 and not in_progress_contacts[tx_idx][rx_idx]:
                     continue
-                elif (graph.adj_matrix[tx_idx][rx_idx] == 0 and in_progress_contacts[tx_idx][rx_idx]):
+                elif graph.adj_matrix[tx_idx][rx_idx] == 0 and in_progress_contacts[tx_idx][rx_idx]:
                     # End the contact
                     contacts.append(copy.deepcopy(in_progress_contacts[tx_idx][rx_idx]))
                     in_progress_contacts[tx_idx][rx_idx] = None
