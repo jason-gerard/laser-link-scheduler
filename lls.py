@@ -73,11 +73,12 @@ def lls(time_expanded_graph) -> TimeExpandedGraph:
 
     # Max-weight maximal matching
     # Inputs: contact topology [P] of size K x N x N
+    #         IPN node mappings [X] of size N
     #         state durations [T] of size K
     # Outputs: contact plan [L] of size K x N x N
     #
     # for k <- 0 to K do
-    #   [W]_k,i,j <- delta_capacity([P]_k, [L])
+    #   [W]_k,i,j <- delta_capacity([P]_k, [L], [X])
     #                + delta_time([L], [T]) for all i,j
     #   Blossom([P]_k, [L]_k, [W]_k)
     
