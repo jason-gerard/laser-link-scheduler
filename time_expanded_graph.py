@@ -43,6 +43,8 @@ class TimeExpandedGraph:
     ipn_node_to_planet_map: dict[int, str]
     start_time: int
     end_time: int
+    
+    
 
     def __repr__(self):
         rep = ""
@@ -58,13 +60,14 @@ class TimeExpandedGraph:
         return rep
 
     class Builder:
-        graphs: list[Graph] = []
-        nodes: list[str]
-        node_map: dict[str, int]
-        interplanetary_nodes: list[int]
-        ipn_node_to_planet_map: dict[int, str]
-        start_time: int
-        end_time: int
+        def __init__(self):
+            self.graphs: list[Graph] = []
+            self.nodes: list[str] = []
+            self.node_map: dict[str, int] = {}
+            self.interplanetary_nodes: list[int] = []
+            self.ipn_node_to_planet_map: dict[int, str] = {}
+            self.start_time: int = -1
+            self.end_time: int = -1
 
         def with_graph(self, graph: Graph):
             self.graphs.append(graph)
@@ -95,15 +98,19 @@ class TimeExpandedGraph:
             return self
 
         def build(self):
-            return TimeExpandedGraph(
-                graphs=self.graphs,
-                nodes=self.nodes,
-                interplanetary_nodes=self.interplanetary_nodes,
-                ipn_node_to_planet_map=self.ipn_node_to_planet_map,
-                node_map=self.node_map,
+            teg = TimeExpandedGraph(
+                graphs=copy.deepcopy(self.graphs),
+                nodes=copy.deepcopy(self.nodes),
+                interplanetary_nodes=copy.deepcopy(self.interplanetary_nodes),
+                ipn_node_to_planet_map=copy.deepcopy(self.ipn_node_to_planet_map),
+                node_map=copy.deepcopy(self.node_map),
                 start_time=self.start_time,
                 end_time=self.end_time,
             )
+            
+            self.graphs = []
+            
+            return teg
 
 
 def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:

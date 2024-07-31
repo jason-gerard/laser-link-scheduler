@@ -1,7 +1,56 @@
+import copy
+import numpy as np
+import constants
+from time_expanded_graph import Graph, TimeExpandedGraph
 from dataclasses import dataclass
 
-import constants
-from time_expanded_graph import TimeExpandedGraph
+
+def delta_capacity(contact_topology_k: Graph, contact_plan_builder: TimeExpandedGraph.Builder, num_nodes: int) -> np.ndarray:
+    # Compute the network capacity of the contact plans
+    capacities = compute_node_capacities(copy.deepcopy(contact_plan_builder).build())
+    network_capacity = compute_capacity(capacities)
+
+    delta_capacities = np.zeros((num_nodes, num_nodes), dtype=int)
+    for tx_idx in range(num_nodes):
+        for rx_idx in range(num_nodes):
+            # For each i,j that is active i.e. adj_matrix[i][j] >= 1, compute the capacity if that edge was selected
+            if contact_topology_k.adj_matrix[tx_idx][rx_idx] >= 1:
+                # Create a new contact topology where there is only a single active contact between the current tx_idx
+                # and rx_idx. Append this to the contact plan and use that to compute the new network capacity.
+                # TODO there is a lot of copying going on here. I think we can refactor the way we compute the capacity
+                # metric so that we don't have to do this
+                contact_plan_builder_copy = copy.deepcopy(contact_plan_builder)
+                contact_topology_k_copy = copy.deepcopy(contact_topology_k)
+
+                zero_contact_topology = np.zeros((num_nodes, num_nodes), dtype=int)
+                zero_contact_topology[tx_idx][rx_idx] = 1
+                
+                contact_topology_k_copy.adj_matrix = zero_contact_topology
+                
+                contact_plan_builder_copy.with_graph(contact_topology_k_copy)
+                
+                possible_capacities = compute_node_capacities(contact_plan_builder_copy.build())
+                possible_network_capacity = compute_capacity(possible_capacities)
+
+                # Take the difference between the capacities
+                delta_capacities[tx_idx][rx_idx] = possible_network_capacity - network_capacity
+    
+    return delta_capacities
+
+
+def delta_time(contact_topology: TimeExpandedGraph, contact_plan: TimeExpandedGraph, num_nodes: int) -> np.ndarray:
+    disabled_contact_times = np.zeros((num_nodes, num_nodes), dtype=int)
+    for k in range(len(contact_plan.graphs)):
+        for tx_idx in range(num_nodes):
+            for rx_idx in range(num_nodes):
+                # If the contact in the contact topology was >= 1, then there was a possible contact, but if in the
+                # contact plan it is equal to 0 it means it was not enabled for the kth state.
+                if contact_topology.graphs[k].adj_matrix[tx_idx][rx_idx] >= 1 and contact_plan.graphs[k].adj_matrix[tx_idx][rx_idx] == 0:
+                    # Increment the disabled contact time by the state duration i.e. the amount of time it was turned
+                    # off
+                    disabled_contact_times[tx_idx][rx_idx] += contact_topology.graphs[k].state_duration
+    
+    return disabled_contact_times
 
 
 @dataclass
@@ -32,17 +81,17 @@ def compute_node_capacities(time_expanded_graph: TimeExpandedGraph) -> list[Node
 
     # Merge node capacities calculated over all graphs in the TEG to a single capacity, this gives a list of node
     # capacities where each is the total capacity in and out over all graphs for a single IPN node
-    return [merge_node_capacities(node_capacities) for node_capacities in node_capacities_dict.values()]
+    return [merge_node_capacities(node_capacities, node_idx) for node_idx, node_capacities in node_capacities_dict.items()]
 
 
-def merge_node_capacities(capacities: list[NodeCapacity]) -> NodeCapacity:
+def merge_node_capacities(capacities: list[NodeCapacity], node_idx: int) -> NodeCapacity:
     # Sum the capacity in and capacity out for the IPN node
     total_capacity_in = sum([capacity.capacity_in for capacity in capacities])
     total_capacity_out = sum([capacity.capacity_out for capacity in capacities])
 
     # We will assume all the capacities in the list are for the same node
     return NodeCapacity(
-        id=capacities[0].id,
+        id=node_idx,
         capacity_in=total_capacity_in,
         capacity_out=total_capacity_out,
     )
