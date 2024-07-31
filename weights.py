@@ -1,39 +1,49 @@
-import copy
 import numpy as np
 import constants
-from time_expanded_graph import Graph, TimeExpandedGraph
+from time_expanded_graph import TimeExpandedGraph
 from dataclasses import dataclass
 
 
-def delta_capacity(contact_topology_k: Graph, contact_plan_builder: TimeExpandedGraph.Builder, num_nodes: int) -> np.ndarray:
-    # Compute the network capacity of the contact plans
-    capacities = compute_node_capacities(copy.deepcopy(contact_plan_builder).build())
-    network_capacity = compute_capacity(capacities)
+@dataclass
+class NodeCapacity:
+    id: int
+    # This is the amount of data that the node can receive from local nodes i.e. nodes on the same planet
+    capacity_in: float
+    # This is the amount of data that the node can transmit to nodes on other planets
+    capacity_out: float
 
+
+def delta_capacity(
+        contact_topology_k: list[list[int]],
+        node_capacities: list[NodeCapacity],
+        ipn_node_to_planet_map: dict[int, str],
+        state_duration: int
+) -> np.ndarray:
+    num_nodes = len(contact_topology_k)
+
+    # Compute network capacity with current node_capacities list
+    current_capacity = compute_capacity(node_capacities)
+    
     delta_capacities = np.zeros((num_nodes, num_nodes), dtype=int)
     for tx_idx in range(num_nodes):
         for rx_idx in range(num_nodes):
-            # For each i,j that is active i.e. adj_matrix[i][j] >= 1, compute the capacity if that edge was selected
-            if contact_topology_k.adj_matrix[tx_idx][rx_idx] >= 1:
-                # Create a new contact topology where there is only a single active contact between the current tx_idx
-                # and rx_idx. Append this to the contact plan and use that to compute the new network capacity.
-                # TODO there is a lot of copying going on here. I think we can refactor the way we compute the capacity
-                # metric so that we don't have to do this
-                contact_plan_builder_copy = copy.deepcopy(contact_plan_builder)
-                contact_topology_k_copy = copy.deepcopy(contact_topology_k)
+            # For each edge in topology_k that is active i.e. graph[i][j] >= 1, create a new graph where only that edge
+            # is active and compute the capacity if that edge was selected
+            if contact_topology_k[tx_idx][rx_idx] >= 1:
+                # Compute the node capacity list from that graph
+                single_edge_graph = np.zeros((num_nodes, num_nodes), dtype=int)
+                single_edge_graph[tx_idx][rx_idx] = contact_topology_k[tx_idx][rx_idx]
+                single_edge_node_capacities = compute_node_capacity_by_graph(
+                    single_edge_graph,
+                    state_duration,
+                    ipn_node_to_planet_map)
 
-                zero_contact_topology = np.zeros((num_nodes, num_nodes), dtype=int)
-                zero_contact_topology[tx_idx][rx_idx] = 1
+                # Merge it with the node_capacities list and compute the network capacity with the new list
+                new_node_capacities = merge_many_node_capacities(node_capacities + single_edge_node_capacities)
+                new_capacity = compute_capacity(new_node_capacities)
                 
-                contact_topology_k_copy.adj_matrix = zero_contact_topology
-                
-                contact_plan_builder_copy.with_graph(contact_topology_k_copy)
-                
-                possible_capacities = compute_node_capacities(contact_plan_builder_copy.build())
-                possible_network_capacity = compute_capacity(possible_capacities)
-
-                # Take the difference between the capacities
-                delta_capacities[tx_idx][rx_idx] = possible_network_capacity - network_capacity
+                # Take the difference and that is the new weight
+                delta_capacities[tx_idx][rx_idx] = new_capacity - current_capacity
     
     return delta_capacities
 
@@ -61,31 +71,15 @@ def delta_time(contact_topology_k: list[list[int]], contact_plan_k: list[list[in
     return disabled_contact_times
 
 
-@dataclass
-class NodeCapacity:
-    id: int
-    # This is the amount of data that the node can receive from local nodes i.e. nodes on the same planet
-    capacity_in: float
-    # This is the amount of data that the node can transmit to nodes on other planets
-    capacity_out: float
-
-
-def compute_node_capacities(time_expanded_graph: TimeExpandedGraph) -> list[NodeCapacity]:
-    # For each graph in the TEG, compute the capacity
-    node_capacities_by_graph = [
-        compute_node_capacity_by_graph(
-            graph.adj_matrix,
-            graph.state_duration,
-            time_expanded_graph.interplanetary_nodes,
-            time_expanded_graph.ipn_node_to_planet_map)
-        for graph
-        in time_expanded_graph.graphs]
-
+def merge_many_node_capacities(capacities: list[NodeCapacity]) -> list[NodeCapacity]:
+    """
+    Merges capacities for many different node ids
+    """
     # Convert to dict of node to list of capacities
-    node_capacities_dict = {node_id: [] for node_id in time_expanded_graph.interplanetary_nodes}
-    for graph_capacities in node_capacities_by_graph:
-        for node_capacity in graph_capacities:
-            node_capacities_dict[node_capacity.id].append(node_capacity)
+    ipn_node_ids = set([capacity.id for capacity in capacities])
+    node_capacities_dict = {node_id: [] for node_id in ipn_node_ids}
+    for node_capacity in capacities:
+        node_capacities_dict[node_capacity.id].append(node_capacity)
 
     # Merge node capacities calculated over all graphs in the TEG to a single capacity, this gives a list of node
     # capacities where each is the total capacity in and out over all graphs for a single IPN node
@@ -93,6 +87,9 @@ def compute_node_capacities(time_expanded_graph: TimeExpandedGraph) -> list[Node
 
 
 def merge_node_capacities(capacities: list[NodeCapacity], node_idx: int) -> NodeCapacity:
+    """
+    Merges capacities for a single node id
+    """
     # Sum the capacity in and capacity out for the IPN node
     total_capacity_in = sum([capacity.capacity_in for capacity in capacities])
     total_capacity_out = sum([capacity.capacity_out for capacity in capacities])
@@ -105,38 +102,55 @@ def merge_node_capacities(capacities: list[NodeCapacity], node_idx: int) -> Node
     )
 
 
+def compute_node_capacities(time_expanded_graph: TimeExpandedGraph) -> list[NodeCapacity]:
+    # For each graph in the TEG, compute the capacity
+    node_capacities_by_graph = [
+        compute_node_capacity_by_graph(
+            np.array(graph.adj_matrix),
+            graph.state_duration,
+            time_expanded_graph.ipn_node_to_planet_map)
+        for graph
+        in time_expanded_graph.graphs]
+    
+    # Flatten 2D list
+    node_capacities = np.array(node_capacities_by_graph).flatten()
+
+    return merge_many_node_capacities(node_capacities.tolist())
+
+
 def compute_node_capacity_by_graph(
-        adj_matrix: list[list[int]],
+        graph: np.ndarray,
         duration: int,
-        interplanetary_nodes: list[int],
         ipn_node_to_planet_map: dict[int, str]
 ) -> list[NodeCapacity]:
+    num_nodes = len(graph)
+    
     capacities = []
-    for ipn_node_idx in interplanetary_nodes:
+    for ipn_node_idx in ipn_node_to_planet_map.keys():
         node_capacity = NodeCapacity(
             id=ipn_node_idx,
             capacity_in=0,
             capacity_out=0)
 
         # The list if ipn_nodes contains the node idx i.e. its index in the adjacency matrix
-        for tx_idx in range(len(adj_matrix)):
-            for rx_idx in range(len(adj_matrix[tx_idx])):
+        for tx_idx in range(num_nodes):
+            for rx_idx in range(num_nodes):
                 # If there was no contact between those two nodes then skip
-                if adj_matrix[tx_idx][rx_idx] == 0:
+                if graph[tx_idx][rx_idx] == 0:
                     continue
 
                 # Get the bit_rate from the communication interface ID
-                a = adj_matrix[tx_idx][rx_idx]
+                a = graph[tx_idx][rx_idx]
                 bit_rate = constants.B[a]
 
                 # Only one of these two conditions can ever be true since we don't count contacts with the same node as
                 # the tx and rx
-                if tx_idx not in interplanetary_nodes and rx_idx == ipn_node_idx:
+                if tx_idx not in ipn_node_to_planet_map.keys() and rx_idx == ipn_node_idx:
                     # Compute the amount of data transmitted to the IPN node from a non-IPN node.
                     # ipn node == rx_node
                     node_capacity.capacity_in += duration * bit_rate
                 elif (tx_idx == ipn_node_idx
-                      and rx_idx in interplanetary_nodes
+                      and rx_idx in ipn_node_to_planet_map.keys()
                       and ipn_node_to_planet_map[tx_idx] != ipn_node_to_planet_map[rx_idx]):
                     # Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
                     # destination planet.

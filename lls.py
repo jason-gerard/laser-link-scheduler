@@ -8,7 +8,8 @@ from tqdm import tqdm
 import numpy as np
 
 import constants
-from weights import delta_capacity, delta_time, compute_node_capacities, compute_capacity, compute_wasted_capacity
+from weights import delta_time, compute_node_capacities, compute_capacity, compute_wasted_capacity, \
+    compute_node_capacity_by_graph, delta_capacity, merge_many_node_capacities
 from contact_plan import IONContactPlanParser, Contact
 from time_expanded_graph import build_time_expanded_graph, write_time_expanded_graph, \
     TimeExpandedGraph, convert_time_expanded_graph_to_contact_plan, Graph, time_expanded_graph_splitter
@@ -85,21 +86,20 @@ def lls(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
       Blossom([P]_k, [L]_k, [W]_k)
     """
 
-    teg_builder = TimeExpandedGraph.Builder() \
-        .with_start_time(time_expanded_graph.start_time) \
-        .with_end_time(time_expanded_graph.end_time) \
-        .with_nodes(time_expanded_graph.nodes) \
-        .with_node_map(time_expanded_graph.node_map) \
-        .with_interplanetary_nodes(time_expanded_graph.interplanetary_nodes) \
-        .with_ipn_node_to_planet_map(time_expanded_graph.ipn_node_to_planet_map) \
+    scheduled_graphs = []
     
     num_nodes = len(time_expanded_graph.nodes)
+    node_capacities = []
     W_delta_time = np.zeros((num_nodes, num_nodes), dtype=int)
 
     for graph in tqdm(time_expanded_graph.graphs):
         # Compute weights based on the current contact topology, P_k, the contact plans for the previous processed
         # states, L, and the list of interplanetary nodes, X.
-        W_k = delta_capacity(graph, teg_builder, num_nodes) + (constants.alpha * W_delta_time)
+        # TODO convert this to a weight sum i.e. (1-a)*c + a*t
+        # With the previous states node capacities + the possible combinations for this current state, compute the new
+        # capacities
+        delta_cap = delta_capacity(graph.adj_matrix, node_capacities, time_expanded_graph.ipn_node_to_planet_map, graph.state_duration)
+        W_k = delta_cap + (constants.alpha * W_delta_time)
 
         # Create list of edges, represented by three-tuple of (tx_idx, rx_idx, weight) based on the contact topology P_k
         # and computed weights based on delta_capacity + alpha * delta_time
@@ -113,7 +113,8 @@ def lls(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
         G = nx.Graph()
         G.add_weighted_edges_from(edges)
         matched_edges = nx.max_weight_matching(G)
-        
+
+        # Compute L_k from the matched edges
         # Build adj_matrix from matched edges list. nx.max_weight_matching works on an undirected graph so when we see
         # an edge add it in both directions i.e. (i,j) and (j,i)
         adj_matrix = [[0 for _ in range(num_nodes)] for _ in range(num_nodes)]
@@ -124,19 +125,32 @@ def lls(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
             
         filtered_contacts = [contact for contact in graph.contacts if should_keep_contact(time_expanded_graph, matched_edges, contact)]
 
-        # Compute L_k from the matched edges
-        teg_builder.with_graph(Graph(
+        scheduled_graphs.append(Graph(
             contacts=filtered_contacts,
             adj_matrix=adj_matrix,
             k=graph.k,
             state_duration=graph.state_duration,
-            state_start_time=graph.state_start_time,
-        ))
+            state_start_time=graph.state_start_time,))
+        
+        # Update node_capacities list with node capacities from state k contact plan and merge them together
+        selected_node_capacities = compute_node_capacity_by_graph(
+            np.array(adj_matrix),
+            graph.state_duration,
+            time_expanded_graph.ipn_node_to_planet_map)
+        node_capacities = merge_many_node_capacities(node_capacities + selected_node_capacities)
         
         # Update the matrix containing the disabled contact time for state k
         W_delta_time += delta_time(graph.adj_matrix, adj_matrix, graph.state_duration)
 
-    return teg_builder.build()
+    return TimeExpandedGraph(
+        graphs=scheduled_graphs,
+        nodes=time_expanded_graph.nodes,
+        interplanetary_nodes=time_expanded_graph.interplanetary_nodes,
+        ipn_node_to_planet_map=time_expanded_graph.ipn_node_to_planet_map,
+        node_map=time_expanded_graph.node_map,
+        start_time=time_expanded_graph.start_time,
+        end_time=time_expanded_graph.end_time,
+    )
 
 
 def should_keep_contact(time_expanded_graph: TimeExpandedGraph, matched_edges: set, contact: Contact) -> bool:

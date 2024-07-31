@@ -43,8 +43,6 @@ class TimeExpandedGraph:
     ipn_node_to_planet_map: dict[int, str]
     start_time: int
     end_time: int
-    
-    
 
     def __repr__(self):
         rep = ""
