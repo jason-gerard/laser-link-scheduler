@@ -20,6 +20,9 @@ default_a = 1
 # be used for tie breaking when multiple options have the same change in capacity. If alpha is high then increasing
 # fairness will be used over increasing capacity in some cases i.e. if a node has little impact on capacity but has
 # not been given an opportunity to transmit
+# alpha must be set greater than or equal to 0 and less than or equal to 1, i.e. [0, 1]
+# if alpha = 1 then only consider fairness
+# if alpha = 0 then only consider capacity
 alpha = 0.1
 
 # The matrix A, contains the integer IDs of the communication interfaces for each node. Each laser
