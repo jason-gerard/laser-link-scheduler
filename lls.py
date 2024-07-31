@@ -101,7 +101,12 @@ def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
     for tx_idx in range(num_nodes):
         for rx_idx in range(num_nodes):
             if P_k[tx_idx][rx_idx] >= 1:
-                edges.append((tx_idx, rx_idx, W_k[tx_idx][rx_idx]))
+                # When we compute the weight matrix it is not symmetric because we compute the capacity on an edge basis
+                # but since the networkx lib uses a symmetric matrix in order to not write the 0 edge weight to the
+                # graph on accident, because the weight of the last edge added will be used, we can just take the max of
+                # the edge weights
+                max_weight = max(W_k[tx_idx][rx_idx], W_k[rx_idx][tx_idx])
+                edges.append((tx_idx, rx_idx, max_weight))
 
     # Create graph containing edges from P_k
     G = nx.Graph()

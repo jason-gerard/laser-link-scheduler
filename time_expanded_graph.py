@@ -2,6 +2,7 @@ import copy
 from dataclasses import dataclass
 
 import numpy as np
+from tqdm import tqdm
 
 import constants
 from contact_plan import ContactPlan, Contact
@@ -94,7 +95,7 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
             ipn_node_to_planet_map[idx] = node[0]
 
     contact_topology_graphs = []
-    for index, time_step in enumerate(time_steps[:-1]):
+    for index, time_step in enumerate(tqdm(time_steps[:-1])):
         state_start_time = time_step
         state_duration = time_steps[index + 1] - state_start_time
 
@@ -146,7 +147,7 @@ def convert_time_expanded_graph_to_contact_plan(time_expanded_graph: TimeExpande
 
     rolling_start_time = 0
 
-    for graph in time_expanded_graph.graphs:
+    for graph in tqdm(time_expanded_graph.graphs):
         for tx_idx in range(len(graph.adj_matrix)):
             for rx_idx in range(len(graph.adj_matrix[tx_idx])):
                 # We have 4 different cases depending on the state of the in_progress_contacts and graph at index
