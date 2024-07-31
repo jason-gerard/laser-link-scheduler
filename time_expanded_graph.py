@@ -39,7 +39,7 @@ class TimeExpandedGraph:
     graphs: list[Graph]
     nodes: list[str]
     node_map: dict[str, int]
-    interplanetary_nodes: list[int]
+    interplanetary_nodes: list[int] # TODO remove
     ipn_node_to_planet_map: dict[int, str]
     start_time: int
     end_time: int
@@ -57,6 +57,7 @@ class TimeExpandedGraph:
 
         return rep
 
+    # TODO remove this
     class Builder:
         def __init__(self):
             self.graphs: list[Graph] = []
