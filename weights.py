@@ -38,18 +38,26 @@ def delta_capacity(contact_topology_k: Graph, contact_plan_builder: TimeExpanded
     return delta_capacities
 
 
-def delta_time(contact_topology: TimeExpandedGraph, contact_plan: TimeExpandedGraph, num_nodes: int) -> np.ndarray:
+def delta_time(contact_topology_k: list[list[int]], contact_plan_k: list[list[int]], state_duration: int) -> np.ndarray:
+    """
+    Compute the disabled contact time for each node. This is calculated by taking the state duration and adding it to
+    the index in the matrix if the edge was active in the topology but inactive in the plan. The disabled contact time
+    for an edge i,j, or the sum of the duration that edge i,j could have been enabled but was not due to previous
+    contact plan selections.
+    """
+
+    num_nodes = len(contact_topology_k)
     disabled_contact_times = np.zeros((num_nodes, num_nodes), dtype=int)
-    for k in range(len(contact_plan.graphs)):
-        for tx_idx in range(num_nodes):
-            for rx_idx in range(num_nodes):
-                # If the contact in the contact topology was >= 1, then there was a possible contact, but if in the
-                # contact plan it is equal to 0 it means it was not enabled for the kth state.
-                if contact_topology.graphs[k].adj_matrix[tx_idx][rx_idx] >= 1 and contact_plan.graphs[k].adj_matrix[tx_idx][rx_idx] == 0:
-                    # Increment the disabled contact time by the state duration i.e. the amount of time it was turned
-                    # off
-                    disabled_contact_times[tx_idx][rx_idx] += contact_topology.graphs[k].state_duration
-    
+
+    for tx_idx in range(num_nodes):
+        for rx_idx in range(num_nodes):
+            # If the contact in the contact topology was >= 1, then there was a possible contact, but if in the
+            # contact plan it is equal to 0 it means it was not enabled for the kth state.
+            if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:
+                # Increment the disabled contact time by the state duration i.e. the amount of time it was turned
+                # off
+                disabled_contact_times[tx_idx][rx_idx] = state_duration
+
     return disabled_contact_times
 
 

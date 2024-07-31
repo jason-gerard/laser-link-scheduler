@@ -9,7 +9,7 @@ class FileType(Enum):
     SCHEDULED = "contact_plan_scheduled"
     TEG = "teg"
     SPLIT = "teg_split"
-    SCHEDULED_TEG = "teg_scheduled"
+    TEG_SCHEDULED = "teg_scheduled"
 
 
 def get_experiment_file(experiment_name, file_type: FileType) -> str:
