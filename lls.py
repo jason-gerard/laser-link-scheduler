@@ -9,9 +9,9 @@ import numpy as np
 
 import constants
 import weights
-from contact_plan import IONContactPlanParser, contact_plan_splitter, Contact
+from contact_plan import IONContactPlanParser, Contact
 from time_expanded_graph import build_time_expanded_graph, write_time_expanded_graph, \
-    TimeExpandedGraph, convert_time_expanded_graph_to_contact_plan, Graph
+    TimeExpandedGraph, convert_time_expanded_graph_to_contact_plan, Graph, time_expanded_graph_splitter
 from utils import FileType
 
 
@@ -29,21 +29,22 @@ def main(experiment_name):
     contact_plan = contact_plan_parser.read(experiment_name)
     print("Finished reading contact plan")
 
-    # Split long contacts into multiple smaller contacts, a maximum duration of 100s
-    split_contact_plan = contact_plan_splitter(contact_plan)
-    contact_plan_parser.write(experiment_name, split_contact_plan, FileType.SPLIT)
-    print("Finished splitting contact plan")
-
-    # Convert split contact plan into a time expanded graph (TEG)
-    time_expanded_graph = build_time_expanded_graph(split_contact_plan)
+    # Convert contact plan into a time expanded graph (TEG)
+    time_expanded_graph = build_time_expanded_graph(contact_plan)
     write_time_expanded_graph(experiment_name, time_expanded_graph, FileType.TEG)
     print("Finished converting contact plan to time expanded graph")
-    
+
+    # Split long contacts in the TEG into multiple smaller contacts, this will result in each k state having a maximum
+    # duration of d_max
+    split_time_expanded_graph = time_expanded_graph_splitter(time_expanded_graph)
+    write_time_expanded_graph(experiment_name, split_time_expanded_graph, FileType.SPLIT)
+    print("Finished splitting time expanded graph")
+
     # Iterate through each of the k graphs and compute the maximal matching
     # As we step through the k graphs we want to optimize for our metric
     # This will produce the TEG with the maximum Earth-bound network capacity
     print("Starting scheduling contacts")
-    scheduled_time_expanded_graph = lls(time_expanded_graph)
+    scheduled_time_expanded_graph = lls(split_time_expanded_graph)
     write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.SCHEDULED_TEG)
     print("Finished scheduling contacts")
     

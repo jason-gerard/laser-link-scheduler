@@ -23,7 +23,7 @@ already be written to support unidirectional contacts but logically, for now, al
 - Speed up execution
   - Convert arrays to numpy
   - Simplify some of the logic to reduce looping
-- Implement contact plan splitting
+- Implement time expanded graph splitting
 - Minor bug fixes
 - Create verification script to make sure all k states are properly matched
 - Create some tests to make sure there are no regressions when refactoring

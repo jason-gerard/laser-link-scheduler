@@ -244,6 +244,10 @@ def convert_time_expanded_graph_to_contact_plan(time_expanded_graph: TimeExpande
     return ContactPlan(contacts)
 
 
+def time_expanded_graph_splitter(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
+    return time_expanded_graph
+
+
 def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExpandedGraph, file_type: FileType):
     path = get_experiment_file(experiment_name, file_type)
     with open(path, "w") as f:

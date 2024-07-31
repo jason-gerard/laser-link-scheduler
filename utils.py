@@ -6,9 +6,9 @@ from constants import SOURCES_ROOT
 
 class FileType(Enum):
     CONTACT_PLAN = "contact_plan"
-    SPLIT = "contact_plan_split"
     SCHEDULED = "contact_plan_scheduled"
     TEG = "teg"
+    SPLIT = "teg_split"
     SCHEDULED_TEG = "scheduled_teg"
 
 

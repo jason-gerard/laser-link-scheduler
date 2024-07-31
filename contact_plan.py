@@ -92,7 +92,3 @@ class IONContactPlanParser(ContactPlanParser):
         with open(path, "w") as f:
             writer = csv.writer(f, delimiter=" ")
             writer.writerows(rows)
-
-
-def contact_plan_splitter(contact_plan: ContactPlan) -> ContactPlan:
-    return contact_plan
