@@ -44,9 +44,9 @@ def main(experiment_name):
 
     node_capacities = compute_node_capacities(scheduled_time_expanded_graph)
     network_capacity = compute_capacity(node_capacities)
-    print(f"Scheduled network capacity: {network_capacity}")
+    print(f"Scheduled network capacity: {network_capacity:,}")
     network_wasted_capacity = compute_wasted_capacity(node_capacities)
-    print(f"Scheduled network wasted capacity: {network_wasted_capacity}")
+    print(f"Scheduled network wasted capacity: {network_wasted_capacity:,}")
 
     # Convert the TEG back to a contact plan
     scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_time_expanded_graph)
@@ -54,7 +54,7 @@ def main(experiment_name):
     print("Finished converting time expanded graph to contact plan")
 
     end = timer()
-    print(f"Elapsed time: {end - start} seconds")
+    print(f"Elapsed time: {(end - start):.4f} seconds")
 
 
 if __name__ == "__main__":
