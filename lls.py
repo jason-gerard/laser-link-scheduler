@@ -49,7 +49,7 @@ def lls(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
         W_k = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_delta_time)
 
         # Compute max weight maximal matching using the blossom algorithm
-        matched_edges = blossom(np.array(graph.adj_matrix), W_k)
+        matched_edges = blossom(graph.adj_matrix, W_k)
 
         # Compute L_k from the matched edges
         L_k = build_graph(matched_edges, graph, time_expanded_graph)
@@ -57,7 +57,7 @@ def lls(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
         
         # Update node_capacities list with node capacities from state k contact plan and merge them together
         scheduled_node_capacities = compute_node_capacity_by_graph(
-            np.array(L_k.adj_matrix),
+            L_k.adj_matrix,
             graph.state_duration,
             time_expanded_graph.ipn_node_to_planet_map)
         node_capacities = merge_many_node_capacities(node_capacities + scheduled_node_capacities)
@@ -68,7 +68,6 @@ def lls(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
     return TimeExpandedGraph(
         graphs=scheduled_graphs,
         nodes=time_expanded_graph.nodes,
-        interplanetary_nodes=time_expanded_graph.interplanetary_nodes,
         ipn_node_to_planet_map=time_expanded_graph.ipn_node_to_planet_map,
         node_map=time_expanded_graph.node_map,
         start_time=time_expanded_graph.start_time,
@@ -116,7 +115,7 @@ def build_graph(matched_edges: set, contact_topology_k: Graph, time_expanded_gra
     num_nodes = len(contact_topology_k.adj_matrix)
     # Build adj_matrix from matched edges list. nx.max_weight_matching works on an undirected graph so when we see
     # an edge add it in both directions i.e. (i,j) and (j,i)
-    adj_matrix = [[0 for _ in range(num_nodes)] for _ in range(num_nodes)]
+    adj_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
     for tx_idx, rx_idx in matched_edges:
         # Make sure to map the value of the adj_matrix, the communication interface back correctly
         adj_matrix[tx_idx][rx_idx] = contact_topology_k.adj_matrix[tx_idx][rx_idx]

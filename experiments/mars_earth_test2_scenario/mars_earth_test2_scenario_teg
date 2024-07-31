@@ -1,7 +1,6 @@
 num_k=58
 num_nodes=7
 duration=24.0 hours
-src_interplanetary_nodes=[0, 5, 6]
 ipn_node_to_planet_map={0: '1', 5: '3', 6: '3'}
 
 *,0,0,0,0,1,1,

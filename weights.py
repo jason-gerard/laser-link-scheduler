@@ -14,7 +14,7 @@ class NodeCapacity:
 
 
 def delta_capacity(
-        contact_topology_k: list[list[int]],
+        contact_topology_k: np.ndarray,
         node_capacities: list[NodeCapacity],
         ipn_node_to_planet_map: dict[int, str],
         state_duration: int
@@ -48,7 +48,7 @@ def delta_capacity(
     return delta_capacities
 
 
-def delta_time(contact_topology_k: list[list[int]], contact_plan_k: list[list[int]], state_duration: int) -> np.ndarray:
+def delta_time(contact_topology_k: np.ndarray, contact_plan_k: np.ndarray, state_duration: int) -> np.ndarray:
     """
     Compute the disabled contact time for each node. This is calculated by taking the state duration and adding it to
     the index in the matrix if the edge was active in the topology but inactive in the plan. The disabled contact time
@@ -106,7 +106,7 @@ def compute_node_capacities(time_expanded_graph: TimeExpandedGraph) -> list[Node
     # For each graph in the TEG, compute the capacity
     node_capacities_by_graph = [
         compute_node_capacity_by_graph(
-            np.array(graph.adj_matrix),
+            graph.adj_matrix,
             graph.state_duration,
             time_expanded_graph.ipn_node_to_planet_map)
         for graph
