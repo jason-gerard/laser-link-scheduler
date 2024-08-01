@@ -42,7 +42,11 @@ def main(experiment_name):
     write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED)
     print("Finished scheduling contacts")
 
-    node_capacities = compute_node_capacities(scheduled_time_expanded_graph)
+    node_capacities = compute_node_capacities(
+        scheduled_time_expanded_graph.graphs,
+        scheduled_time_expanded_graph.state_durations,
+        scheduled_time_expanded_graph.K,
+        scheduled_time_expanded_graph.ipn_node_to_planet_map)
     network_capacity = compute_capacity(node_capacities)
     print(f"Scheduled network capacity: {network_capacity:,}")
     network_wasted_capacity = compute_wasted_capacity(node_capacities)

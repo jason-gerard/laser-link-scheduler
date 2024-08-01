@@ -1,6 +1,5 @@
 import numpy as np
 import constants
-from time_expanded_graph import TimeExpandedGraph
 from dataclasses import dataclass
 
 
@@ -24,7 +23,7 @@ def delta_capacity(
     # Compute network capacity with current node_capacities list
     current_capacity = compute_capacity(node_capacities)
     
-    delta_capacities = np.zeros((num_nodes, num_nodes), dtype=int)
+    delta_capacities = np.zeros((num_nodes, num_nodes), dtype='int64')
     for tx_idx in range(num_nodes):
         for rx_idx in range(num_nodes):
             # The id of the optical communication interface that the edge uses for the contact. An id of 0 corresponds
@@ -64,7 +63,7 @@ def delta_time(contact_topology_k: np.ndarray, contact_plan_k: np.ndarray, state
     """
 
     num_nodes = len(contact_topology_k)
-    disabled_contact_times = np.zeros((num_nodes, num_nodes), dtype=int)
+    disabled_contact_times = np.zeros((num_nodes, num_nodes), dtype='int64')
 
     for tx_idx in range(num_nodes):
         for rx_idx in range(num_nodes):
@@ -109,20 +108,13 @@ def merge_node_capacities(capacities: list[NodeCapacity], node_idx: int) -> Node
     )
 
 
-def compute_node_capacities(time_expanded_graph: TimeExpandedGraph) -> list[NodeCapacity]:
+def compute_node_capacities(graphs: np.ndarray, state_durations: np.ndarray, K: int, ipn_node_to_planet_map: dict[int, str]) -> list[NodeCapacity]:
     # For each graph in the TEG, compute the capacity
     node_capacities_by_graph = [
-        compute_node_capacity_by_graph(
-            graph.adj_matrix,
-            graph.state_duration,
-            time_expanded_graph.ipn_node_to_planet_map)
-        for graph
-        in time_expanded_graph.graphs]
+        compute_node_capacity_by_graph(graphs[k], state_durations[k], ipn_node_to_planet_map) for k in range(K)]
     
-    # Flatten 2D list
-    node_capacities = np.array(node_capacities_by_graph).flatten()
-
-    return merge_many_node_capacities(node_capacities.tolist())
+    node_capacities = np.array(node_capacities_by_graph).flatten().tolist()
+    return merge_many_node_capacities(node_capacities)
 
 
 def compute_node_capacity_by_single_edge_graph(

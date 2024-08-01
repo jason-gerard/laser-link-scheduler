@@ -16,7 +16,6 @@ python3 schedule.py -f mars_earth_simple_scenario
 
 ## ToDo
 - [ ] Implement time expanded graph splitting
-- [ ] Convert DS to numpy array based, this will make implementing the LP version simpler in the future
 - [ ] Implement the fair contact plan algorithm
 - [ ] Implement the random edge algorithm
 - [ ] Create verification script to make sure all k states are properly matched

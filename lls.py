@@ -4,11 +4,11 @@ from tqdm import tqdm
 
 import constants
 from contact_plan import Contact
-from time_expanded_graph import TimeExpandedGraph, Graph
+from time_expanded_graph import TimeExpandedGraph
 from weights import delta_time, compute_node_capacity_by_graph, delta_capacity, merge_many_node_capacities
 
 
-def lls(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
+def lls(teg: TimeExpandedGraph) -> TimeExpandedGraph:
     """
     This algorithm is a max-weight maximal matching
 
@@ -30,52 +30,54 @@ def lls(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
       Blossom([P]_k, [L]_k, [W]_k)
     """
 
-    scheduled_graphs = []
-    
-    num_nodes = len(time_expanded_graph.nodes)
-    node_capacities = []
-    W_delta_time = np.zeros((num_nodes, num_nodes), dtype=int)
+    scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
+    scheduled_contacts = []
 
-    for graph in tqdm(time_expanded_graph.graphs):
+    node_capacities = []
+    W_delta_time = np.zeros((teg.N, teg.N), dtype='int64')
+
+    for k in tqdm(range(teg.K)):
         # Compute the change in network capacity on an edge by edge basis using the previous states node capacities and
         # the possible choices or decisions of active edges for this current state
         W_delta_cap = delta_capacity(
-            graph.adj_matrix,
+            teg.graphs[k],
             node_capacities,
-            time_expanded_graph.ipn_node_to_planet_map,
-            graph.state_duration)
-        
+            teg.ipn_node_to_planet_map,
+            teg.state_durations[k])
+
         # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
         W_k = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_delta_time)
 
         # Compute max weight maximal matching using the blossom algorithm
-        matched_edges = blossom(graph.adj_matrix, W_k)
+        matched_edges = blossom(teg.graphs[k], W_k)
 
         # Compute L_k from the matched edges
-        L_k = build_graph(matched_edges, graph, time_expanded_graph)
-        scheduled_graphs.append(L_k)
-        
+        L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
+        scheduled_graphs[k] = L_k
+        scheduled_contacts.append(contacts)
+
         # Update node_capacities list with node capacities from state k contact plan and merge them together
         scheduled_node_capacities = compute_node_capacity_by_graph(
-            L_k.adj_matrix,
-            graph.state_duration,
-            time_expanded_graph.ipn_node_to_planet_map)
+            L_k,
+            teg.state_durations[k],
+            teg.ipn_node_to_planet_map)
         node_capacities = merge_many_node_capacities(node_capacities + scheduled_node_capacities)
-        
+
         # Update the matrix containing the disabled contact time for state k
-        W_delta_time += delta_time(graph.adj_matrix, L_k.adj_matrix, graph.state_duration)
+        W_delta_time += delta_time(teg.graphs[k], L_k, teg.state_durations[k])
 
     return TimeExpandedGraph(
         graphs=scheduled_graphs,
-        nodes=time_expanded_graph.nodes,
-        ipn_node_to_planet_map=time_expanded_graph.ipn_node_to_planet_map,
-        node_map=time_expanded_graph.node_map,
-        start_time=time_expanded_graph.start_time,
-        end_time=time_expanded_graph.end_time,
-    )
+        contacts=scheduled_contacts,
+        state_durations=teg.state_durations,
+        K=teg.K,
+        N=teg.N,
+        nodes=teg.nodes,
+        node_map=teg.node_map,
+        ipn_node_to_planet_map=teg.ipn_node_to_planet_map)
 
 
-def fair_contact_plan(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
+def fair_contact_plan(teg: TimeExpandedGraph) -> TimeExpandedGraph:
     """
     Max-weight maximal matching
     Inputs: contact topology [P] of size K x N x N
@@ -100,7 +102,7 @@ def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
     laser ID 1 but B -> A with laser ID 3.
     """
     num_nodes = len(P_k)
-    
+
     # Create list of edges, represented by three-tuple of (tx_idx, rx_idx, weight) based on the contact topology P_k
     # and computed weights based on delta_capacity + alpha * delta_time
     edges = []
@@ -116,35 +118,34 @@ def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
     # Create graph containing edges from P_k
     G = nx.Graph()
     G.add_weighted_edges_from(edges)
-    
+
     # Perform max weight matching using the blossom algorithm. We leverage the networkx library to do this
     return nx.max_weight_matching(G)
 
 
-def build_graph(matched_edges: set, contact_topology_k: Graph, time_expanded_graph: TimeExpandedGraph) -> Graph:
-    num_nodes = len(contact_topology_k.adj_matrix)
+def build_graph(
+        matched_edges: set,
+        contact_topology_k: np.ndarray,
+        contacts_k: list[Contact],
+        node_map: dict[str, int]
+) -> tuple[np.ndarray, list[Contact]]:
+    num_nodes = len(contact_topology_k)
     # Build adj_matrix from matched edges list. nx.max_weight_matching works on an undirected graph so when we see
     # an edge add it in both directions i.e. (i,j) and (j,i)
-    adj_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
+    contact_plan_k = np.zeros((num_nodes, num_nodes), dtype='int64')
     for tx_idx, rx_idx in matched_edges:
         # Make sure to map the value of the graph i.e. the communication interface id back to the correct edge. This
         # allows us to support different lasers in each direction while using an undirected graph algorithm (blossom)
-        adj_matrix[tx_idx][rx_idx] = contact_topology_k.adj_matrix[tx_idx][rx_idx]
-        adj_matrix[rx_idx][tx_idx] = contact_topology_k.adj_matrix[rx_idx][tx_idx]
+        contact_plan_k[tx_idx][rx_idx] = contact_topology_k[tx_idx][rx_idx]
+        contact_plan_k[rx_idx][tx_idx] = contact_topology_k[rx_idx][tx_idx]
 
-    filtered_contacts = [contact for contact in contact_topology_k.contacts if
-                         should_keep_contact(time_expanded_graph, matched_edges, contact)]
+    contacts = [contact for contact in contacts_k if should_keep_contact(matched_edges, node_map, contact)]
 
-    return Graph(
-        contacts=filtered_contacts,
-        adj_matrix=adj_matrix,
-        k=contact_topology_k.k,
-        state_duration=contact_topology_k.state_duration,
-        state_start_time=contact_topology_k.state_start_time)
+    return contact_plan_k, contacts
 
 
-def should_keep_contact(time_expanded_graph: TimeExpandedGraph, matched_edges: set, contact: Contact) -> bool:
-    tx_idx = time_expanded_graph.node_map[contact.tx_node]
-    rx_idx = time_expanded_graph.node_map[contact.rx_node]
+def should_keep_contact(matched_edges: set, node_map: dict[str, int], contact: Contact) -> bool:
+    node1_idx = node_map[contact.tx_node]
+    node2_idx = node_map[contact.rx_node]
 
-    return (tx_idx, rx_idx) in matched_edges or (rx_idx, tx_idx) in matched_edges
+    return (node1_idx, node2_idx) in matched_edges or (node2_idx, node1_idx) in matched_edges

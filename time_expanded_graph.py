@@ -10,50 +10,37 @@ from utils import get_experiment_file, FileType
 
 
 @dataclass
-class Graph:
-    contacts: list[Contact]
-    adj_matrix: np.ndarray
-    k: int
-    state_duration: int  # seconds
-    state_start_time: int  # seconds
-
-    def __repr__(self):
-        rep = ""
-        for row_idx in range(len(self.adj_matrix)):
-            for col_idx in range(len(self.adj_matrix[row_idx])):
-                if row_idx == col_idx:
-                    rep += "*,"
-                else:
-                    rep += f"{self.adj_matrix[row_idx][col_idx]},"
-
-            rep += "\n"
-
-        rep += f"k={self.k}\n"
-        # rep += f"state_start_time={self.state_start_time}\n"
-        rep += f"t={self.state_duration}\n"
-        # rep += f"{self.contacts}"
-
-        return rep
-
-
-@dataclass
 class TimeExpandedGraph:
-    graphs: list[Graph]
+    graphs: np.ndarray
+    contacts: list[list[Contact]]
+    state_durations: np.ndarray
+    K: int  # number of states
+    N: int  # number of nodes
     nodes: list[str]
     node_map: dict[str, int]
     ipn_node_to_planet_map: dict[int, str]
-    start_time: int
-    end_time: int
 
     def __repr__(self):
+        end_time = sum(self.state_durations)
+
         rep = ""
         rep += f"num_k={len(self.graphs)}\n"
         rep += f"num_nodes={len(self.nodes)}\n"
-        rep += f"duration={(self.end_time - self.start_time) / 60 / 60} hours\n"
+        rep += f"duration={end_time / 60 / 60} hours\n"
         rep += f"ipn_node_to_planet_map={self.ipn_node_to_planet_map}\n"
         rep += "\n"
-        for graph in self.graphs:
-            rep += f"{graph}\n"
+        for k in range(self.K):
+            for row_idx in range(self.N):
+                for col_idx in range(self.N):
+                    if row_idx == col_idx:
+                        rep += "*,"
+                    else:
+                        rep += f"{self.graphs[k][row_idx][col_idx]},"
+
+                rep += "\n"
+            rep += f"k={k+1}\n"
+            rep += f"t={self.state_durations[k]}\n"
+            rep += "\n"
 
         return rep
 
@@ -94,19 +81,25 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
         if node in interplanetary_nodes:
             ipn_node_to_planet_map[idx] = node[0]
 
-    contact_topology_graphs = []
-    for index, time_step in enumerate(tqdm(time_steps[:-1])):
+    N = len(unique_nodes)
+    K = len(time_steps) - 1
+
+    contact_topology_graphs = np.zeros((K, N, N), dtype='int64')
+    contacts_by_state = []
+    state_durations = np.empty(K, dtype='int64')
+    
+    for k, time_step in enumerate(tqdm(time_steps[:-1])):
         state_start_time = time_step
-        state_duration = time_steps[index + 1] - state_start_time
+        state_duration = time_steps[k + 1] - state_start_time
+        state_durations[k] = state_duration
 
         # For each time step get a list of contacts that exist within that time step
         included_contacts = [contact for contact in contact_plan.contacts
                              if include_contact(contact, state_start_time, state_duration)]
+        contacts_by_state.append(included_contacts)
 
         # The index here will map the node name to its index in the adjacency matrix, by default the values are set to 0
         # which indicates there is no contact between the two nodes
-        num_nodes = len(unique_nodes)
-        adj_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
         for tx_idx, tx_node in enumerate(unique_nodes):
             # List of rx_nodes that have a contact with the tx_node in this time step
             rx_nodes = [contact.rx_node for contact in included_contacts if contact.tx_node == tx_node]
@@ -114,23 +107,17 @@ def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
 
             for rx_idx in rx_idxs:
                 # For now, we assume all satellites only have a single default interface.
-                adj_matrix[tx_idx][rx_idx] = constants.default_a
-
-        contact_topology_graphs.append(Graph(
-            contacts=included_contacts,
-            adj_matrix=adj_matrix,
-            k=index + 1,
-            state_duration=state_duration,
-            state_start_time=state_start_time,
-        ))
+                contact_topology_graphs[k][tx_idx][rx_idx] = constants.default_a
 
     return TimeExpandedGraph(
         graphs=contact_topology_graphs,
+        contacts=contacts_by_state,
+        state_durations=state_durations,
+        K=K,
+        N=N,
         nodes=unique_nodes,
-        ipn_node_to_planet_map=ipn_node_to_planet_map,
         node_map=node_map,
-        start_time=min(start_times),
-        end_time=max(end_times))
+        ipn_node_to_planet_map=ipn_node_to_planet_map)
 
 
 def include_contact(contact: Contact, state_start_time: int, state_duration: int) -> bool:
@@ -140,41 +127,40 @@ def include_contact(contact: Contact, state_start_time: int, state_duration: int
     return contact.start_time <= state_start_time and contact.end_time >= state_end_time
 
 
-def convert_time_expanded_graph_to_contact_plan(time_expanded_graph: TimeExpandedGraph) -> ContactPlan:
+def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> ContactPlan:
     contacts: list[Contact] = []
-    in_progress_contacts: list[list[Contact]] = \
-        [[None for _ in range(len(time_expanded_graph.nodes))] for _ in range(len(time_expanded_graph.nodes))]
+    in_progress_contacts: list[list[Contact]] = [[None for _ in range(teg.N)] for _ in range(teg.N)]
 
     rolling_start_time = 0
 
-    for graph in tqdm(time_expanded_graph.graphs):
-        for tx_idx in range(len(graph.adj_matrix)):
-            for rx_idx in range(len(graph.adj_matrix[tx_idx])):
+    for k in tqdm(range(teg.K)):
+        for tx_idx in range(teg.N):
+            for rx_idx in range(teg.N):
                 # We have 4 different cases depending on the state of the in_progress_contacts and graph at index
                 # tx_idx and rx_idx
-                if graph.adj_matrix[tx_idx][rx_idx] == 0 and not in_progress_contacts[tx_idx][rx_idx]:
+                if teg.graphs[k][tx_idx][rx_idx] == 0 and not in_progress_contacts[tx_idx][rx_idx]:
                     continue
-                elif graph.adj_matrix[tx_idx][rx_idx] == 0 and in_progress_contacts[tx_idx][rx_idx]:
+                elif teg.graphs[k][tx_idx][rx_idx] == 0 and in_progress_contacts[tx_idx][rx_idx]:
                     # End the contact
                     contacts.append(copy.deepcopy(in_progress_contacts[tx_idx][rx_idx]))
                     in_progress_contacts[tx_idx][rx_idx] = None
-                elif graph.adj_matrix[tx_idx][rx_idx] == 1 and not in_progress_contacts[tx_idx][rx_idx]:
+                elif teg.graphs[k][tx_idx][rx_idx] == 1 and not in_progress_contacts[tx_idx][rx_idx]:
                     # Start the contact
                     in_progress_contacts[tx_idx][rx_idx] = Contact(
-                        tx_node=time_expanded_graph.nodes[tx_idx],
-                        rx_node=time_expanded_graph.nodes[rx_idx],
+                        tx_node=teg.nodes[tx_idx],
+                        rx_node=teg.nodes[rx_idx],
                         start_time=rolling_start_time,
                         # We can only assume the contact will be there for a single state, so set the end_time to the
                         # duration of the current state, this will be updated as it appears in later graphs
-                        end_time=rolling_start_time + graph.state_duration,
+                        end_time=rolling_start_time + teg.state_durations[k],
                         context={},
                     )
-                elif graph.adj_matrix[tx_idx][rx_idx] == 1 and in_progress_contacts[tx_idx][rx_idx]:
+                elif teg.graphs[k][tx_idx][rx_idx] == 1 and in_progress_contacts[tx_idx][rx_idx]:
                     # Update the in progress contact but extending its end time to the end of the current state
-                    in_progress_contacts[tx_idx][rx_idx].end_time += graph.state_duration
+                    in_progress_contacts[tx_idx][rx_idx].end_time += teg.state_durations[k]
 
         # For each graph we traverse add the duration of that state to the rolling start time that new contacts use
-        rolling_start_time += graph.state_duration
+        rolling_start_time += teg.state_durations[k]
 
     # Cleanup the in progress contacts that start in the last state or last until the last state
     for contact_row_idx in range(len(in_progress_contacts)):
