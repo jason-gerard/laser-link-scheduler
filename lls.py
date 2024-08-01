@@ -93,6 +93,12 @@ def fair_contact_plan(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGra
 
 
 def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
+    """
+    The blossom algorithm assumes undirected edges meaning that we cannot have A -> B without B -> A. Logically this
+    makes sense for laser communications because both laser transceivers must be physically pointing towards each other.
+    This algorithm does support individually defining the properties of the laser in each direction i.e. A -> B with
+    laser ID 1 but B -> A with laser ID 3.
+    """
     num_nodes = len(P_k)
     
     # Create list of edges, represented by three-tuple of (tx_idx, rx_idx, weight) based on the contact topology P_k
@@ -102,11 +108,10 @@ def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
         for rx_idx in range(num_nodes):
             if P_k[tx_idx][rx_idx] >= 1:
                 # When we compute the weight matrix it is not symmetric because we compute the capacity on an edge basis
-                # but since the networkx lib uses a symmetric matrix in order to not write the 0 edge weight to the
-                # graph on accident, because the weight of the last edge added will be used, we can just take the max of
-                # the edge weights
-                max_weight = max(W_k[tx_idx][rx_idx], W_k[rx_idx][tx_idx])
-                edges.append((tx_idx, rx_idx, max_weight))
+                # but since the networkx lib uses a symmetric matrix it will select both edges. To account for this we
+                # sum the weights of the edges in either direction to become the total weight for that undirected edge.
+                total_weight = W_k[tx_idx][rx_idx] + W_k[rx_idx][tx_idx]
+                edges.append((tx_idx, rx_idx, total_weight))
 
     # Create graph containing edges from P_k
     G = nx.Graph()
@@ -122,7 +127,8 @@ def build_graph(matched_edges: set, contact_topology_k: Graph, time_expanded_gra
     # an edge add it in both directions i.e. (i,j) and (j,i)
     adj_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
     for tx_idx, rx_idx in matched_edges:
-        # Make sure to map the value of the adj_matrix, the communication interface back correctly
+        # Make sure to map the value of the graph i.e. the communication interface id back to the correct edge. This
+        # allows us to support different lasers in each direction while using an undirected graph algorithm (blossom)
         adj_matrix[tx_idx][rx_idx] = contact_topology_k.adj_matrix[tx_idx][rx_idx]
         adj_matrix[rx_idx][tx_idx] = contact_topology_k.adj_matrix[rx_idx][tx_idx]
 
