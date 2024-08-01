@@ -9,13 +9,7 @@ from utils import FileType
 from weights import compute_node_capacities, compute_capacity, compute_wasted_capacity
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--experiment_name', help='Name of experiment folder')
-    return parser.parse_args()
-
-
-def main(experiment_name):
+def scheduler_driver(experiment_name):
     start = timer()
 
     # Read contact plan from disk
@@ -61,6 +55,12 @@ def main(experiment_name):
     print(f"Elapsed time: {(end - start):.4f} seconds")
 
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--experiment_name', help='Name of experiment folder')
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
     args = get_args()
-    main(args.experiment_name)
+    scheduler_driver(args.experiment_name)

@@ -3,7 +3,18 @@ Scheduling algorithm for free-space laser communication in deep space
 
 ## Usage
 ```
-python3 schedule.py -f mars_earth_simple_scenario
+python3 scheduler.py -f mars_earth_simple_scenario
+```
+
+## Testing
+To run the tests
+```
+pytest -vv -s
+```
+
+To update the static mocks for regression testing
+```
+python3 update_static_mocks.py
 ```
 
 ## Runs
@@ -18,5 +29,4 @@ python3 schedule.py -f mars_earth_simple_scenario
 - [ ] Implement time expanded graph splitting
 - [ ] Implement the fair contact plan algorithm
 - [ ] Implement the random edge algorithm
-- [ ] Create verification script to make sure all k states are properly matched
 - [ ] Create some tests to make sure there are no regressions when refactoring
