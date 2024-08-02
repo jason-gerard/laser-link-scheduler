@@ -1,6 +1,9 @@
+import json
 import argparse
+import os.path
 from timeit import default_timer as timer
 
+import constants
 from contact_plan import IONContactPlanParser
 from lls import lls
 from time_expanded_graph import build_time_expanded_graph, write_time_expanded_graph, \
@@ -53,6 +56,10 @@ def scheduler_driver(experiment_name):
 
     end = timer()
     print(f"Elapsed time: {(end - start):.4f} seconds")
+    
+    metrics_dump_path = os.path.join(constants.ANALYSIS_DIR, constants.METRICS_FILE)
+    with open(metrics_dump_path, "w") as f:
+        json.dump(constants.metrics, f)
 
 
 def get_args():

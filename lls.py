@@ -29,6 +29,7 @@ def lls(teg: TimeExpandedGraph) -> TimeExpandedGraph:
                    + alpha * delta_time([P]_k, [L]_k, [T]) for all i,j
       Blossom([P]_k, [L]_k, [W]_k)
     """
+    constants.metrics["W_avg"] = np.zeros((teg.N, teg.N))  # Used for reporting only
 
     scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
     scheduled_contacts = []
@@ -48,6 +49,8 @@ def lls(teg: TimeExpandedGraph) -> TimeExpandedGraph:
         # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
         W_k = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_delta_time)
 
+        constants.metrics["W_avg"] += W_k  # Used for reporting only
+
         # Compute max weight maximal matching using the blossom algorithm
         matched_edges = blossom(teg.graphs[k], W_k)
 
@@ -65,6 +68,8 @@ def lls(teg: TimeExpandedGraph) -> TimeExpandedGraph:
 
         # Update the matrix containing the disabled contact time for state k
         W_delta_time += delta_time(teg.graphs[k], L_k, teg.state_durations[k])
+
+    constants.metrics["W_avg"] = (constants.metrics["W_avg"] / teg.K).tolist()  # Used for reporting only
 
     return TimeExpandedGraph(
         graphs=scheduled_graphs,
