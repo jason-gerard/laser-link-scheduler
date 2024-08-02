@@ -4,16 +4,18 @@ Scheduling algorithm for free-space laser communication in deep space
 ## Usage
 There are a couple scenarios the project comes with by default. These are the ones used for analysis. They model interplanetary Mars to Earth space exploration missions where there are a set of orbiters around Mars that either produce data with onboard equipment or receive data from other nodes such as landers, rovers, or drones. The orbiters transmit data to relay satellites around Mars which then try to transmit data across interplanetary distances to Earth.
 
-You can run any of the scenarios by passing in the name of the experiment.
+You can run any of the scenarios by passing in the name of the experiment and algorithm.
 ```
-python3 scheduler.py -f <experiment_name>
+python3 main.py -e <experiment_name> -s <scheduler_name>
+```
+For example running the following command will run the `mars_earth_simple_scenario` with the `Laser Link Scheduler` algorithm
+```
+python3 main.py -e mars_earth_simple_scenario -f lls
 ```
 
-The list of default scenarios is below
+Get the list of all input parameters
 ```
-python3 scheduler.py -f mars_earth_test_scenario
-python3 scheduler.py -f mars_earth_simple_scenario
-python3 scheduler.py -f mars_earth_scenario
+python3 main.py --help
 ```
 
 ## Related Tools
@@ -25,11 +27,6 @@ python3 scheduler.py -f mars_earth_scenario
 To run the tests
 ```
 pytest -vv -s
-```
-
-To update the static mocks for regression testing
-```
-python3 update_static_mocks.py
 ```
 
 ## Runs
@@ -44,3 +41,5 @@ python3 update_static_mocks.py
 - [ ] Implement time expanded graph splitting
 - [ ] Implement the fair contact plan algorithm
 - [ ] Implement the random edge algorithm
+- [ ] Write exporter back to IPN-V contact plan format
+- [ ] Write reporting output file to compare scheduling algorithms easier
