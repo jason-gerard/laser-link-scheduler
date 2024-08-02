@@ -106,7 +106,32 @@ class RandomScheduler:
         """
         Apply blossom algorithm with no weights
         """
-        return teg
+        scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
+        scheduled_contacts = []
+
+        for k in tqdm(range(teg.K)):
+            # Generate a matrix of random weights, the high and low here doesn't really matter as long as there is a
+            # decent range of value between them
+            W_k = np.random.uniform(low=0, high=100, size=(teg.N, teg.N))
+
+            # Compute max weight maximal matching using the blossom algorithm but with the static weights matrix that is
+            # equal for all edges
+            matched_edges = blossom(teg.graphs[k], W_k)
+
+            # Compute L_k from the matched edges
+            L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
+            scheduled_graphs[k] = L_k
+            scheduled_contacts.append(contacts)
+
+        return TimeExpandedGraph(
+            graphs=scheduled_graphs,
+            contacts=scheduled_contacts,
+            state_durations=teg.state_durations,
+            K=teg.K,
+            N=teg.N,
+            nodes=teg.nodes,
+            node_map=teg.node_map,
+            ipn_node_to_planet_map=teg.ipn_node_to_planet_map)
 
 
 def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:

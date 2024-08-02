@@ -40,6 +40,5 @@ pytest -vv -s
 ## ToDo
 - [ ] Implement time expanded graph splitting
 - [ ] Implement the fair contact plan algorithm
-- [ ] Implement the random edge algorithm
 - [ ] Write exporter back to IPN-V contact plan format
 - [ ] Write reporting output file to compare scheduling algorithms easier

@@ -1,6 +1,7 @@
 import json
 import argparse
 import os.path
+import numpy as np
 from timeit import default_timer as timer
 
 import constants
@@ -87,5 +88,6 @@ def get_args():
 
 
 if __name__ == "__main__":
+    np.random.seed(42)
     args = get_args()
     multi_experiment_driver(args.experiment_names, args.scheduler_names)
