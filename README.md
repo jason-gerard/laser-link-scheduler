@@ -30,15 +30,13 @@ pytest -vv -s
 ```
 
 ## Runs
-| Version | Scenario                   | Duration        |
-|---------|----------------------------|-----------------|
-| V1      | mars_earth_simple_scenario | 4199.48 seconds |
-| V1      | mars_earth_scenario        | est. 20 days    |
-| V2      | mars_earth_simple_scenario | 1.2 seconds     |
-| V2      | mars_earth_scenario        | 305.7 seconds   |
+| Algorithm            | Scenario            | Duration         | Capacity   | Wasted capacity |
+|----------------------|---------------------|------------------|------------|-----------------|
+| Laser Link Scheduler | mars_earth_scenario | 299.0008 seconds | 34,320,000 | 34,340,000      |
+| Fair Contact Plan    | mars_earth_scenario | 253.0698 seconds | 27,680,000 | 40,620,000      |
+| Random Scheduler     | mars_earth_scenario | 479.9008 seconds | 21,980,000 | 45,460,000      |
 
 ## ToDo
-- [ ] Implement time expanded graph splitting
-- [ ] Implement the fair contact plan algorithm
+- [ ] Implement time expanded graph fractionation
 - [ ] Write exporter back to IPN-V contact plan format
 - [ ] Write reporting output file to compare scheduling algorithms easier

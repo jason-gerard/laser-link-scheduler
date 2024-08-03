@@ -143,7 +143,7 @@ class RandomScheduler:
         for k in tqdm(range(teg.K)):
             # Generate a matrix of random weights, the high and low here doesn't really matter as long as there is a
             # decent range of value between them
-            W_k = np.random.uniform(low=0, high=100, size=(teg.N, teg.N))
+            W_k = np.random.randint(low=0, high=100, size=(teg.N, teg.N))
 
             # Compute max weight maximal matching using the blossom algorithm but with the static weights matrix that is
             # equal for all edges
