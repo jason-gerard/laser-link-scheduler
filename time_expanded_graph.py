@@ -19,6 +19,8 @@ class TimeExpandedGraph:
     nodes: list[str]
     node_map: dict[str, int]
     ipn_node_to_planet_map: dict[int, str]
+    
+    W: np.ndarray  # 3D Weights matrix [k][tx_idx][rx_idx]
 
     def __repr__(self):
         end_time = sum(self.state_durations)
@@ -117,7 +119,8 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> Ti
         N=N,
         nodes=unique_nodes,
         node_map=node_map,
-        ipn_node_to_planet_map=ipn_node_to_planet_map)
+        ipn_node_to_planet_map=ipn_node_to_planet_map,
+        W=np.array([]))
 
 
 def include_contact(contact: Contact, state_start_time: int, state_duration: int) -> bool:

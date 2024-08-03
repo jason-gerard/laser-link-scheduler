@@ -1,4 +1,5 @@
 SOURCES_ROOT = "experiments"
+REPORTS_ROOT = "reports"
 
 # Minimum duration an edge i,j in state k can have
 # If there is a contact in the contact topology, P, that is shorter than this, since we can't extend the duration we
@@ -59,8 +60,3 @@ B = [0, default_BIT_RATE]
 # The list X, contains the interplanetary node central body mapping, where x = 0 means that the node is not an IPN node.
 # For nodes 0, 1, 2, 3
 # X = [1, 3, 0, 3]
-
-# Singleton dict used for storing reporting data, not used for any processing
-ANALYSIS_DIR = "analysis"
-METRICS_FILE = "metrics.json"
-metrics = {}

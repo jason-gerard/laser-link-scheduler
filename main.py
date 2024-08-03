@@ -1,19 +1,16 @@
-import json
 import argparse
-import os.path
 import numpy as np
 from timeit import default_timer as timer
 
-import constants
 from contact_plan import IONContactPlanParser
+from report_generator import Reporter
 from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, write_time_expanded_graph, \
     convert_time_expanded_graph_to_contact_plan, graph_fractionation
 from utils import FileType
-from weights import compute_node_capacities, compute_capacity, compute_wasted_capacity
 
 
-def experiment_driver(experiment_name: str, scheduler_name: str):
+def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Reporter):
     start = timer()
 
     # Read contact plan from disk
@@ -49,35 +46,28 @@ def experiment_driver(experiment_name: str, scheduler_name: str):
     write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED)
     print("Finished scheduling contacts")
 
-    node_capacities = compute_node_capacities(
-        scheduled_time_expanded_graph.graphs,
-        scheduled_time_expanded_graph.state_durations,
-        scheduled_time_expanded_graph.K,
-        scheduled_time_expanded_graph.ipn_node_to_planet_map)
-    network_capacity = compute_capacity(node_capacities)
-    print(f"Scheduled network capacity: {network_capacity:,}")
-    network_wasted_capacity = compute_wasted_capacity(node_capacities)
-    print(f"Scheduled network wasted capacity: {network_wasted_capacity:,}")
-
     # Convert the TEG back to a contact plan
     scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_time_expanded_graph)
     contact_plan_parser.write(experiment_name, scheduled_contact_plan, FileType.SCHEDULED)
     print("Finished converting time expanded graph to contact plan")
 
-    end = timer()
-    print(f"Elapsed time: {(end - start):.4f} seconds")
-    
-    metrics_dump_path = os.path.join(constants.ANALYSIS_DIR, constants.METRICS_FILE)
-    with open(metrics_dump_path, "w") as f:
-        json.dump(constants.metrics, f)
-        
+    reporter.generate_report(
+        experiment_name,
+        scheduler_name,
+        timer() - start,
+        scheduled_time_expanded_graph)
+
 
 def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[str]):
+    reporter = Reporter(debug=True)
+
     for experiment_name in experiment_names:
         for scheduler_name in scheduler_names:
             print(f"Starting execution of experiment: {experiment_name}, with scheduler: {scheduler_name}")
-            experiment_driver(experiment_name, scheduler_name)
+            experiment_driver(experiment_name, scheduler_name, reporter)
             print("\n\n")
+
+    reporter.write_report()
 
 
 def get_args():

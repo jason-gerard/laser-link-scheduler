@@ -10,6 +10,7 @@ class FileType(Enum):
     TEG = "teg"
     SPLIT = "teg_split"
     TEG_SCHEDULED = "teg_scheduled"
+    REPORT = "report"
 
 
 def get_experiment_file(experiment_name, file_type: FileType) -> str:

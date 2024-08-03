@@ -27,11 +27,9 @@ class LaserLinkScheduler:
           Blossom([P]_k, [L]_k, [W]_k)
           dct <- delta_time([P]_k, [L]_k, [T])
         """
-        # TODO remove this and just store the output teg as a pickle that can be loaded for any analysis work
-        constants.metrics["W_avg"] = np.zeros((teg.N, teg.N))  # Used for reporting only
-
-        scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
+        scheduled_graphs = np.empty((teg.K, teg.N, teg.N), dtype='int64')
         scheduled_contacts = []
+        weights = np.empty((teg.K, teg.N, teg.N), dtype="float32")
 
         node_capacities = []
         W_dct = np.zeros((teg.N, teg.N), dtype='int64')
@@ -46,12 +44,10 @@ class LaserLinkScheduler:
                 teg.state_durations[k])
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
-            W_k = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
-
-            constants.metrics["W_avg"] += W_k  # Used for reporting only
+            weights[k] = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
 
             # Compute max weight maximal matching using the blossom algorithm
-            matched_edges = blossom(teg.graphs[k], W_k)
+            matched_edges = blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
             L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
@@ -68,8 +64,6 @@ class LaserLinkScheduler:
             # Update the matrix containing the disabled contact time for state k
             W_dct += disabled_contact_time(teg.graphs[k], L_k, teg.state_durations[k])
 
-        constants.metrics["W_avg"] = (constants.metrics["W_avg"] / teg.K).tolist()  # Used for reporting only
-
         return TimeExpandedGraph(
             graphs=scheduled_graphs,
             contacts=scheduled_contacts,
@@ -78,7 +72,8 @@ class LaserLinkScheduler:
             N=teg.N,
             nodes=teg.nodes,
             node_map=teg.node_map,
-            ipn_node_to_planet_map=teg.ipn_node_to_planet_map)
+            ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
+            W=weights)
 
 
 class FairContactPlan:
@@ -96,21 +91,18 @@ class FairContactPlan:
           if [L]_k,i,j = 0 then
             DCT_i,j <- DCT_i,j + [T]_k for all i,j
         """
-        constants.metrics["W_avg"] = np.zeros((teg.N, teg.N))  # Used for reporting only
-
         scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
         scheduled_contacts = []
+        weights = np.empty((teg.K, teg.N, teg.N), dtype="float32")
 
         W_disabled_contact_time = np.zeros((teg.N, teg.N), dtype='int64')
 
         for k in tqdm(range(teg.K)):
             # Set the weights matrix equal to the current disabled contact time matrix
-            W_k = W_disabled_contact_time
-
-            constants.metrics["W_avg"] += W_k  # Used for reporting only
+            weights[k] = W_disabled_contact_time
 
             # Compute max weight maximal matching using the blossom algorithm
-            matched_edges = blossom(teg.graphs[k], W_k)
+            matched_edges = blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
             L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
@@ -120,8 +112,6 @@ class FairContactPlan:
             # Update the matrix containing the disabled contact time for state k
             W_disabled_contact_time += disabled_contact_time(teg.graphs[k], L_k, teg.state_durations[k])
 
-        constants.metrics["W_avg"] = (constants.metrics["W_avg"] / teg.K).tolist()  # Used for reporting only
-
         return TimeExpandedGraph(
             graphs=scheduled_graphs,
             contacts=scheduled_contacts,
@@ -130,7 +120,8 @@ class FairContactPlan:
             N=teg.N,
             nodes=teg.nodes,
             node_map=teg.node_map,
-            ipn_node_to_planet_map=teg.ipn_node_to_planet_map)
+            ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
+            W=weights)
 
 
 class RandomScheduler:
@@ -140,15 +131,16 @@ class RandomScheduler:
         """
         scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
         scheduled_contacts = []
+        weights = np.empty((teg.K, teg.N, teg.N), dtype="float32")
 
         for k in tqdm(range(teg.K)):
             # Generate a matrix of random weights, the high and low here doesn't really matter as long as there is a
             # decent range of value between them
-            W_k = np.random.randint(low=0, high=100, size=(teg.N, teg.N))
+            weights[k] = np.random.randint(low=0, high=100, size=(teg.N, teg.N))
 
             # Compute max weight maximal matching using the blossom algorithm but with the static weights matrix that is
             # equal for all edges
-            matched_edges = blossom(teg.graphs[k], W_k)
+            matched_edges = blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
             L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
@@ -163,7 +155,8 @@ class RandomScheduler:
             N=teg.N,
             nodes=teg.nodes,
             node_map=teg.node_map,
-            ipn_node_to_planet_map=teg.ipn_node_to_planet_map)
+            ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
+            W=weights)
 
 
 def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
