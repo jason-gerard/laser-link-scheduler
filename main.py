@@ -7,8 +7,8 @@ from timeit import default_timer as timer
 import constants
 from contact_plan import IONContactPlanParser
 from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler
-from time_expanded_graph import build_time_expanded_graph, write_time_expanded_graph, \
-    convert_time_expanded_graph_to_contact_plan, time_expanded_graph_splitter
+from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, write_time_expanded_graph, \
+    convert_time_expanded_graph_to_contact_plan, graph_fractionation
 from utils import FileType
 from weights import compute_node_capacities, compute_capacity, compute_wasted_capacity
 
@@ -22,14 +22,14 @@ def experiment_driver(experiment_name: str, scheduler_name: str):
     print("Finished reading contact plan")
 
     # Convert contact plan into a time expanded graph (TEG)
-    time_expanded_graph = build_time_expanded_graph(contact_plan)
+    time_expanded_graph = convert_contact_plan_to_time_expanded_graph(contact_plan)
     write_time_expanded_graph(experiment_name, time_expanded_graph, FileType.TEG)
     print("Finished converting contact plan to time expanded graph")
 
     # Split long contacts in the TEG into multiple smaller contacts, this will result in each k state having a maximum
-    # duration of d_max
-    split_time_expanded_graph = time_expanded_graph_splitter(time_expanded_graph)
-    write_time_expanded_graph(experiment_name, split_time_expanded_graph, FileType.SPLIT)
+    # duration of d_max. This process is referred to as fractionation.
+    fractionated_time_expanded_graph = graph_fractionation(time_expanded_graph)
+    write_time_expanded_graph(experiment_name, fractionated_time_expanded_graph, FileType.SPLIT)
     print("Finished splitting time expanded graph")
 
     print("Starting scheduling contacts")
@@ -37,14 +37,14 @@ def experiment_driver(experiment_name: str, scheduler_name: str):
         # Iterate through each of the k graphs and compute the maximal matching
         # As we step through the k graphs we want to optimize for our metric
         # This will produce the TEG with the maximum Earth-bound network capacity
-        scheduled_time_expanded_graph = LaserLinkScheduler().schedule(split_time_expanded_graph)
+        scheduled_time_expanded_graph = LaserLinkScheduler().schedule(fractionated_time_expanded_graph)
     elif scheduler_name == "fcp":
-        scheduled_time_expanded_graph = FairContactPlan().schedule(split_time_expanded_graph)
+        scheduled_time_expanded_graph = FairContactPlan().schedule(fractionated_time_expanded_graph)
     elif scheduler_name == "random":
-        scheduled_time_expanded_graph = RandomScheduler().schedule(split_time_expanded_graph)
+        scheduled_time_expanded_graph = RandomScheduler().schedule(fractionated_time_expanded_graph)
     else:
         print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
-        scheduled_time_expanded_graph = split_time_expanded_graph
+        scheduled_time_expanded_graph = fractionated_time_expanded_graph
 
     write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED)
     print("Finished scheduling contacts")

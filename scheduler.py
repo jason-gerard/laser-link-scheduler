@@ -27,6 +27,7 @@ class LaserLinkScheduler:
           Blossom([P]_k, [L]_k, [W]_k)
           dct <- delta_time([P]_k, [L]_k, [T])
         """
+        # TODO remove this and just store the output teg as a pickle that can be loaded for any analysis work
         constants.metrics["W_avg"] = np.zeros((teg.N, teg.N))  # Used for reporting only
 
         scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')

@@ -45,7 +45,7 @@ class TimeExpandedGraph:
         return rep
 
 
-def build_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
+def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
     # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
     # We are defining this as any contact with a range greater than 100,000 km.
     # A non-ipn node can receive across interplanetary distances, but cannot transmit across interplanetary
@@ -169,10 +169,14 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                 contacts.append(copy.deepcopy(in_progress_contacts[contact_row_idx][contact_col_idx]))
                 in_progress_contacts[contact_row_idx][contact_col_idx] = None
 
+    # TODO right now there can be a contact from A->B during time t1 and a contact from A->B during time t2. These
+    # should be merged together to reduce the length of the contact plan, they are only split due to the k states
+    # of the contact plan. This should also improve the performance of the simulators that consume the contact plan
+    
     return ContactPlan(contacts)
 
 
-def time_expanded_graph_splitter(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
+def graph_fractionation(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
     return time_expanded_graph
 
 
