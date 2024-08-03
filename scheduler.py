@@ -5,7 +5,7 @@ from tqdm import tqdm
 import constants
 from contact_plan import Contact
 from time_expanded_graph import TimeExpandedGraph
-from weights import delta_time, compute_node_capacity_by_graph, delta_capacity, merge_many_node_capacities
+from weights import disabled_contact_time, compute_node_capacity_by_graph, delta_capacity, merge_many_node_capacities
 
 
 class LaserLinkScheduler:
@@ -14,21 +14,18 @@ class LaserLinkScheduler:
         This algorithm is a max-weight maximal matching
 
         The weights of the matrix W_k should be calculated such that the weight of each edge should correspond to the
-        delta capacity or delta wasted capacity if that edge was selected plus the sum of time that contact was
-        previously disabled for
+        delta capacity or delta wasted capacity if that edge was selected plus the sum of time that contact was disabled
 
-        delta_cap -> The increased network capacity (max weight maximal matching) or wasted capacity (min weight maximal
-        matching) if the edge i,j is selected for step k.
-        
         Inputs: contact topology [P] of size K x N x N
                 IPN node mappings [X] of size N
                 state durations [T] of size K
         Outputs: contact plan [L] of size K x N x N
         
         for k <- 0 to K do
-          [W]_k,i,j <- delta_capacity([P]_k, [L], [X])
-                       + alpha * delta_time([P]_k, [L]_k, [T]) for all i,j
+          d_c <- delta_capacity([P]_k, [L], [X])
+          [W]_k,i,j <- (1 - a) * d_c + a * dct
           Blossom([P]_k, [L]_k, [W]_k)
+          dct <- delta_time([P]_k, [L]_k, [T])
         """
         constants.metrics["W_avg"] = np.zeros((teg.N, teg.N))  # Used for reporting only
 
@@ -36,11 +33,11 @@ class LaserLinkScheduler:
         scheduled_contacts = []
 
         node_capacities = []
-        W_delta_time = np.zeros((teg.N, teg.N), dtype='int64')
+        W_dct = np.zeros((teg.N, teg.N), dtype='int64')
 
         for k in tqdm(range(teg.K)):
-            # Compute the change in network capacity on an edge by edge basis using the previous states node capacities and
-            # the possible choices or decisions of active edges for this current state
+            # Compute the change in network capacity on an edge by edge basis using the previous states node
+            # capacities and the possible choices or decisions of active edges for this current state
             W_delta_cap = delta_capacity(
                 teg.graphs[k],
                 node_capacities,
@@ -48,7 +45,7 @@ class LaserLinkScheduler:
                 teg.state_durations[k])
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
-            W_k = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_delta_time)
+            W_k = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
 
             constants.metrics["W_avg"] += W_k  # Used for reporting only
 
@@ -68,7 +65,7 @@ class LaserLinkScheduler:
             node_capacities = merge_many_node_capacities(node_capacities + scheduled_node_capacities)
 
             # Update the matrix containing the disabled contact time for state k
-            W_delta_time += delta_time(teg.graphs[k], L_k, teg.state_durations[k])
+            W_dct += disabled_contact_time(teg.graphs[k], L_k, teg.state_durations[k])
 
         constants.metrics["W_avg"] = (constants.metrics["W_avg"] / teg.K).tolist()  # Used for reporting only
 
@@ -98,7 +95,41 @@ class FairContactPlan:
           if [L]_k,i,j = 0 then
             DCT_i,j <- DCT_i,j + [T]_k for all i,j
         """
-        return teg
+        constants.metrics["W_avg"] = np.zeros((teg.N, teg.N))  # Used for reporting only
+
+        scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
+        scheduled_contacts = []
+
+        W_disabled_contact_time = np.zeros((teg.N, teg.N), dtype='int64')
+
+        for k in tqdm(range(teg.K)):
+            # Set the weights matrix equal to the current disabled contact time matrix
+            W_k = W_disabled_contact_time
+
+            constants.metrics["W_avg"] += W_k  # Used for reporting only
+
+            # Compute max weight maximal matching using the blossom algorithm
+            matched_edges = blossom(teg.graphs[k], W_k)
+
+            # Compute L_k from the matched edges
+            L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
+            scheduled_graphs[k] = L_k
+            scheduled_contacts.append(contacts)
+
+            # Update the matrix containing the disabled contact time for state k
+            W_disabled_contact_time += disabled_contact_time(teg.graphs[k], L_k, teg.state_durations[k])
+
+        constants.metrics["W_avg"] = (constants.metrics["W_avg"] / teg.K).tolist()  # Used for reporting only
+
+        return TimeExpandedGraph(
+            graphs=scheduled_graphs,
+            contacts=scheduled_contacts,
+            state_durations=teg.state_durations,
+            K=teg.K,
+            N=teg.N,
+            nodes=teg.nodes,
+            node_map=teg.node_map,
+            ipn_node_to_planet_map=teg.ipn_node_to_planet_map)
 
 
 class RandomScheduler:

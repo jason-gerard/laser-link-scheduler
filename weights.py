@@ -18,6 +18,12 @@ def delta_capacity(
         ipn_node_to_planet_map: dict[int, str],
         state_duration: int
 ) -> np.ndarray:
+    """
+    The delta cap method can be used with two different sub routines. Each of the sub routines will be applied to the
+    current contact topology and applied to a new graph where each edge is selected in isolation.The choice of sub
+    routine can either be the increase in capacity which is used for max weight maximal matching or it can compute the
+    increase in wasted capacity for min weight maximal matching.
+    """
     num_nodes = len(contact_topology_k)
 
     # Compute network capacity with current node_capacities list
@@ -54,7 +60,7 @@ def delta_capacity(
     return delta_capacities
 
 
-def delta_time(contact_topology_k: np.ndarray, contact_plan_k: np.ndarray, state_duration: int) -> np.ndarray:
+def disabled_contact_time(contact_topology_k: np.ndarray, contact_plan_k: np.ndarray, state_duration: int) -> np.ndarray:
     """
     Compute the disabled contact time for each node. This is calculated by taking the state duration and adding it to
     the index in the matrix if the edge was active in the topology but inactive in the plan. The disabled contact time
@@ -67,9 +73,21 @@ def delta_time(contact_topology_k: np.ndarray, contact_plan_k: np.ndarray, state
 
     for tx_idx in range(num_nodes):
         for rx_idx in range(num_nodes):
-            # If the contact in the contact topology was >= 1, then there was a possible contact, but if in the
-            # contact plan it is equal to 0 it means it was not enabled for the kth state.
-            if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:
+            # There are two ways to decide to increment the disabled contact time.
+            #
+            # The first method would be to increment the DCT if the link (edge) existed in the contact topology but was
+            # not selected in the contact plan
+            # if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:
+            #
+            # The second method is to increment any contact that was not in the contact plan regardless if it was a
+            # feasible contact in the original contact topology.
+            # if contact_plan_k[tx_idx][rx_idx] == 0:
+            #
+            # After some testing it seems that the second method produces the same or higher capacity for both LLS and
+            # FCP due to a higher prioritization of links which are scarce in the initial contact topology. This way
+            # when they do show up in the contact topology there is a much higher chance for it to be selected. Since
+            # these links are often intra-constellation or interplanetary links, it improves the capacity of the network
+            if contact_plan_k[tx_idx][rx_idx] == 0:
                 # Increment the disabled contact time by the state duration i.e. the amount of time it was turned
                 # off
                 disabled_contact_times[tx_idx][rx_idx] = state_duration
