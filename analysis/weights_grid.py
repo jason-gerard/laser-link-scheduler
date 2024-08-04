@@ -1,4 +1,6 @@
-import json
+import os
+import pickle
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,30 +8,53 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
-with open("./analysis/metrics.json", "r") as f:
-    metrics = json.load(f)
+sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
+from time_expanded_graph import TimeExpandedGraph
+
+# report_id = 1722737768
+report_id = 1722740313
+file_name = "lls_mars_earth_simple_scenario.pkl"
+with open(f"reports/{report_id}/{file_name}", "rb") as f:
+    teg: TimeExpandedGraph = pickle.load(f)
     
-W_avg = metrics["W_avg"]
+W_avg = np.sum(teg.W, axis=0) / teg.K
 
 max_val = max(map(max, W_avg))
 
 viridis = mpl.colormaps['viridis'].resampled(256)
-newcolors = viridis(np.linspace(0, 1, 256))
+newcolors = viridis(np.linspace(0, 1, int(max_val)))
 white = np.array([1, 1, 1, 1])
 newcolors[:1, :] = white
 newcmp = ListedColormap(newcolors)
 
 fig, ax = plt.subplots(1, 1)
 
-psm = ax.pcolormesh(metrics["W_avg"], cmap=newcmp, vmax=max_val)
+psm = ax.pcolormesh(W_avg, cmap=newcmp, vmax=max_val)
 
-dim = np.arange(0, len(W_avg)+1)
+dim = np.arange(0, teg.N+1)
 ax.grid(True, which='both', axis='both', linestyle='-', color='grey')
-ax.set_xticks(dim, minor=True)
-ax.set_yticks(dim, minor=True)
+
+ax.set_xticks(dim)
+ax.set_yticks(dim)
+
+original_labels = [str(label) for label in ax.get_xticks()]
+labels_of_interest = [str(i) for i in np.arange(0, teg.N, 5).tolist() + [24]]
+new_labels = [label if label in labels_of_interest else "" for label in original_labels]
+ax.set_xticklabels(new_labels)
+
+original_labels = [str(label) for label in ax.get_yticks()]
+labels_of_interest = [str(i) for i in np.arange(0, teg.N, 5).tolist() + [24]]
+new_labels = [label if label in labels_of_interest else "" for label in original_labels]
+ax.set_yticklabels(new_labels)
 
 ax.set_xlim(dim[0], dim[-1])
 ax.set_ylim(dim[0], dim[-1])
 
-fig.colorbar(psm, ax=ax)
+plt.xlabel("Receiving Satellite ID")
+plt.ylabel("Transmitting Satellite ID")
+
+cbar = fig.colorbar(psm, ax=ax)
+cbar.set_label('Average Delta Capacity')
+
+
 plt.show()
