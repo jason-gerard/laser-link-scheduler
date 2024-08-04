@@ -3,6 +3,7 @@ import pickle
 import sys
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
 import matplotlib as mpl
@@ -38,23 +39,43 @@ ax.set_xticks(dim)
 ax.set_yticks(dim)
 
 original_labels = [str(label) for label in ax.get_xticks()]
-labels_of_interest = [str(i) for i in np.arange(0, teg.N, 5).tolist() + [24]]
+labels_of_interest = [str(i) for i in [0, 4, 20, 24]]
 new_labels = [label if label in labels_of_interest else "" for label in original_labels]
 ax.set_xticklabels(new_labels)
 
 original_labels = [str(label) for label in ax.get_yticks()]
-labels_of_interest = [str(i) for i in np.arange(0, teg.N, 5).tolist() + [24]]
+labels_of_interest = [str(i) for i in [0, 4, 20, 24]]
 new_labels = [label if label in labels_of_interest else "" for label in original_labels]
 ax.set_yticklabels(new_labels)
+
+ax.yaxis.set_label_text("Transmitting Satellite ID")
+
+# Second X-axis
+ax2 = ax.twiny()
+
+ax2.spines["bottom"].set_position(("axes", -0.075))
+ax2.tick_params('both', length=0, width=0, which='minor')
+ax2.tick_params('both', direction='in', which='major')
+ax2.xaxis.set_ticks_position("bottom")
+ax2.xaxis.set_label_position("bottom")
+
+ax2.set_xticks([0, 4, 20, 24])
+ax2.xaxis.set_major_formatter(ticker.NullFormatter())
+ax2.xaxis.set_minor_locator(ticker.FixedLocator([2, 12, 22]))
+ax2.xaxis.set_minor_formatter(ticker.FixedFormatter(['Earth Relay', 'Mars Orbiter', 'Mars Relay']))
 
 ax.set_xlim(dim[0], dim[-1])
 ax.set_ylim(dim[0], dim[-1])
 
 plt.xlabel("Receiving Satellite ID")
-plt.ylabel("Transmitting Satellite ID")
+# plt.ylabel("Transmitting Satellite ID")
 
 cbar = fig.colorbar(psm, ax=ax)
-cbar.set_label('Average Delta Capacity')
+cbar.set_label('Average Delta Capacity & DCT')
 
-
+plt.savefig(
+    os.path.join("analysis", "weights_grid.pdf"),
+    format="pdf",
+    bbox_inches='tight'
+)
 plt.show()
