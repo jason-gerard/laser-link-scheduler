@@ -1,6 +1,9 @@
 import csv
-from abc import ABC, abstractmethod
+import json
+import os
 from dataclasses import dataclass
+
+from constants import SOURCES_ROOT
 from utils import get_experiment_file, FileType
 
 
@@ -22,17 +25,7 @@ class ContactPlan:
     contacts: list[Contact]
 
 
-class ContactPlanParser(ABC):
-    @abstractmethod
-    def read(self, file_name: str) -> ContactPlan:
-        pass
-
-    @abstractmethod
-    def write(self, file_name: str, contact_plan: ContactPlan, file_type: FileType):
-        pass
-
-
-class IONContactPlanParser(ContactPlanParser):
+class IONContactPlanParser:
     
     CONTACT_PREFIX = ["a", "contact"]
     TIMESTAMP_PREFIX = "+"
@@ -69,7 +62,6 @@ class IONContactPlanParser(ContactPlanParser):
     def write(self, experiment_name: str, contact_plan: ContactPlan, file_type: FileType):
         rows = []
 
-        path = get_experiment_file(experiment_name, file_type)
         for contact in contact_plan.contacts:
             ion_start_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.start_time}"
             ion_end_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.end_time}"
@@ -89,6 +81,31 @@ class IONContactPlanParser(ContactPlanParser):
             
             rows.append(IONContactPlanParser.CONTACT_PREFIX + row)
 
+        path = get_experiment_file(experiment_name, file_type)
         with open(path, "w") as f:
             writer = csv.writer(f, delimiter=" ")
             writer.writerows(rows)
+
+
+class IPNDContactPlanParser:
+
+    def write(self, experiment_name: str, contact_plan: ContactPlan):
+        contact_plan_json = {
+            "ContactPlan": []
+        }
+        
+        initial_start_time = 725803264.184
+        for contact in contact_plan.contacts:
+            contact_json = {
+                "SourceID": int(contact.tx_node),
+                "DestinationID": int(contact.rx_node),
+                "StartTime": initial_start_time + contact.start_time,
+                "EndTime": initial_start_time + contact.end_time,
+                "Duration": float(contact.end_time - contact.start_time),
+                "Color": []
+            }
+            contact_plan_json["ContactPlan"].append(contact_json)
+
+        path = os.path.join(SOURCES_ROOT, experiment_name, "contactPlan.json")
+        with open(path, "w") as f:
+            json.dump(contact_plan_json, f, indent=4)

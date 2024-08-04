@@ -2,7 +2,7 @@ import argparse
 import numpy as np
 from timeit import default_timer as timer
 
-from contact_plan import IONContactPlanParser
+from contact_plan import IONContactPlanParser, IPNDContactPlanParser
 from report_generator import Reporter
 from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, write_time_expanded_graph, \
@@ -50,6 +50,10 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
     scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_time_expanded_graph)
     contact_plan_parser.write(experiment_name, scheduled_contact_plan, FileType.SCHEDULED)
     print("Finished converting time expanded graph to contact plan")
+    
+    # Write contact plan to disk as IPN-D contact plan, so we can visualize the output
+    ipnd_contact_plan_parser = IPNDContactPlanParser()
+    ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
 
     reporter.generate_report(
         experiment_name,

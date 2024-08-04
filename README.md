@@ -39,4 +39,4 @@ pytest -vv -s
 
 ## ToDo
 - [ ] Implement time expanded graph fractionation
-- [ ] Write exporter back to IPN-V contact plan format
+- [ ] Merge neighboring contacts at the end of scheduling to reduce size of contact plan
