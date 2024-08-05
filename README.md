@@ -39,4 +39,3 @@ pytest -vv -s
 
 ## ToDo
 - [ ] Implement time expanded graph fractionation
-- [ ] Merge neighboring contacts at the end of scheduling to reduce size of contact plan

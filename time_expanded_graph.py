@@ -19,7 +19,7 @@ class TimeExpandedGraph:
     nodes: list[str]
     node_map: dict[str, int]
     ipn_node_to_planet_map: dict[int, str]
-    
+
     W: np.ndarray  # 3D Weights matrix [k][tx_idx][rx_idx]
 
     def __repr__(self):
@@ -40,7 +40,7 @@ class TimeExpandedGraph:
                         rep += f"{self.graphs[k][row_idx][col_idx]},"
 
                 rep += "\n"
-            rep += f"k={k+1}\n"
+            rep += f"k={k + 1}\n"
             rep += f"t={self.state_durations[k]}\n"
             rep += "\n"
 
@@ -89,7 +89,7 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> Ti
     contact_topology_graphs = np.zeros((K, N, N), dtype='int64')
     contacts_by_state = []
     state_durations = np.empty(K, dtype='int64')
-    
+
     for k, time_step in enumerate(tqdm(time_steps[:-1])):
         state_start_time = time_step
         state_duration = time_steps[k + 1] - state_start_time
@@ -171,12 +171,24 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
             if in_progress_contacts[contact_row_idx][contact_col_idx]:
                 contacts.append(copy.deepcopy(in_progress_contacts[contact_row_idx][contact_col_idx]))
                 in_progress_contacts[contact_row_idx][contact_col_idx] = None
+            
+    # Merge contacts to minimize the size of the resulting contact plan
+    merged_contacts = merge_neighboring_contacts(contacts)
 
-    # TODO right now there can be a contact from A->B during time t1 and a contact from A->B during time t2. These
-    # should be merged together to reduce the length of the contact plan, they are only split due to the k states
-    # of the contact plan. This should also improve the performance of the simulators that consume the contact plan
+    return ContactPlan(merged_contacts)
+
+
+def merge_neighboring_contacts(contacts: list[Contact]) -> list[Contact]:
+    """
+    If there is a contact A->B during time t1 and a contact from A->B during time t2, these contacts should be merged
+    together to reduce the length of the contact plan, they are only split due to the k states of the contact plan.
+    This should also improve the performance of the simulators that consume the contact plan.
+    """
     
-    return ContactPlan(contacts)
+    # I went and verified from the different experiments to see how often this happens, and it seems to never happen for
+    # any of the scheduling algorithms. I think due to how the weight matrices are constructed with their fairness
+    # properties, this case won't happen. After we implement fractionation we can test again to see if this happens.
+    return contacts
 
 
 def graph_fractionation(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
