@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 import constants
-from contact_plan import ContactPlan, Contact, IONContactPlanParser
+from contact_plan import ContactPlan, Contact
 from utils import get_experiment_file, FileType
 
 
@@ -55,7 +55,7 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> Ti
     # distances. This depends on the scenario. Some definitions say that a non-ipn node cannot receive or transmit
     # across interplanetary distances, the code below supports both use cases.
     interplanetary_contacts = [contact for contact in contact_plan.contacts
-                               if contact.context[IONContactPlanParser.RANGE_CONTEXT] > constants.INTERPLANETARY_RANGE]
+                               if contact.range > constants.INTERPLANETARY_RANGE]
     interplanetary_tx_nodes = [contact.tx_node for contact in interplanetary_contacts]
     interplanetary_rx_nodes = [contact.rx_node for contact in interplanetary_contacts]
     interplanetary_nodes = [node for node in interplanetary_tx_nodes + interplanetary_rx_nodes
@@ -165,8 +165,8 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                         # We can only assume the contact will be there for a single state, so set the end_time to the
                         # duration of the current state, this will be updated as it appears in later graphs
                         end_time=rolling_start_time + teg.state_durations[k],
-                        context=associated_contact[0].context,
-                    )
+                        bit_rate=associated_contact[0].bit_rate,
+                        range=associated_contact[0].range)
                 elif teg.graphs[k][tx_idx][rx_idx] == 1 and in_progress_contacts[tx_idx][rx_idx]:
                     # Update the in progress contact but extending its end time to the end of the current state
                     in_progress_contacts[tx_idx][rx_idx].end_time += teg.state_durations[k]
@@ -180,7 +180,7 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
             if in_progress_contacts[contact_row_idx][contact_col_idx]:
                 contacts.append(copy.deepcopy(in_progress_contacts[contact_row_idx][contact_col_idx]))
                 in_progress_contacts[contact_row_idx][contact_col_idx] = None
-            
+
     # Merge contacts to minimize the size of the resulting contact plan
     merged_contacts = merge_neighboring_contacts(contacts)
 

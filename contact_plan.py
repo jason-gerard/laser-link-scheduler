@@ -9,15 +9,12 @@ from utils import get_experiment_file, FileType
 
 @dataclass
 class Contact:
-    # Transmitting node, from node
-    tx_node: str
-    # Receiving node, to node
-    rx_node: str
+    tx_node: str  # Transmitting node, from node
+    rx_node: str  # Receiving node, to node
     start_time: int
     end_time: int
-    # The context attribute can be any additional information associated with the contact. For example this could
-    # include the range or distance between the contacts, one way light time (OWLT), data rate, BER, etc
-    context: dict
+    bit_rate: int  # bits per second
+    range: float  # distance between the nodes in light-seconds
 
 
 @dataclass
@@ -29,8 +26,6 @@ class IONContactPlanParser:
     
     CONTACT_PREFIX = ["a", "contact"]
     RANGE_PREFIX = ["a", "range"]
-    BIT_RATE_CONTEXT = "bit_rate"
-    RANGE_CONTEXT = "range"
 
     TIMESTAMP_PREFIX = "+"
 
@@ -53,10 +48,8 @@ class IONContactPlanParser:
                     rx_node=rx_node,
                     start_time=int(ion_start_time[1:]),
                     end_time=int(ion_end_time[1:]),
-                    context={
-                        IONContactPlanParser.BIT_RATE_CONTEXT: int(bit_rate),
-                        IONContactPlanParser.RANGE_CONTEXT: float(range_in_light_seconds)
-                    }
+                    bit_rate=int(bit_rate),
+                    range=float(range_in_light_seconds),
                 )
 
                 contacts.append(contact)
@@ -76,22 +69,17 @@ class IONContactPlanParser:
                 ion_end_time,
                 contact.tx_node,
                 contact.rx_node,
+                contact.bit_rate,
             ]
-            
+            contact_rows.append(IONContactPlanParser.CONTACT_PREFIX + contact_row)
+
             range_row = [
                 ion_start_time,
                 ion_end_time,
                 contact.tx_node,
                 contact.rx_node,
+                contact.range,
             ]
-            
-            # Add optional context values to the row
-            if IONContactPlanParser.BIT_RATE_CONTEXT in contact.context:
-                contact_row.append(contact.context[IONContactPlanParser.BIT_RATE_CONTEXT])
-            if IONContactPlanParser.RANGE_CONTEXT in contact.context:
-                range_row.append(contact.context[IONContactPlanParser.RANGE_CONTEXT])
-            
-            contact_rows.append(IONContactPlanParser.CONTACT_PREFIX + contact_row)
             range_rows.append(IONContactPlanParser.RANGE_PREFIX + range_row)
 
         path = get_experiment_file(experiment_name, file_type)
