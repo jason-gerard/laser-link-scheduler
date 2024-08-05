@@ -60,3 +60,7 @@ B = [0, default_BIT_RATE]
 # The list X, contains the interplanetary node central body mapping, where x = 0 means that the node is not an IPN node.
 # For nodes 0, 1, 2, 3
 # X = [1, 3, 0, 3]
+
+# The interplanetary range we define is any contact over 100,000 kilometers. We then convert this to light seconds to
+# follow the ION contact plan standard
+INTERPLANETARY_RANGE = 100_000 * 1_000 / 299_792_458

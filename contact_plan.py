@@ -28,9 +28,11 @@ class ContactPlan:
 class IONContactPlanParser:
     
     CONTACT_PREFIX = ["a", "contact"]
-    TIMESTAMP_PREFIX = "+"
-    DURATION_CONTEXT = "duration"
+    RANGE_PREFIX = ["a", "range"]
+    BIT_RATE_CONTEXT = "bit_rate"
     RANGE_CONTEXT = "range"
+
+    TIMESTAMP_PREFIX = "+"
 
     def read(self, experiment_name: str) -> ContactPlan:
         contacts = []
@@ -38,11 +40,13 @@ class IONContactPlanParser:
         path = get_experiment_file(experiment_name, FileType.CONTACT_PLAN)
         with open(path, "r") as f:
             reader = csv.reader(f, delimiter=" ")
-            for row in reader:
-                if not row:
-                    continue
-                
-                ion_start_time, ion_end_time, tx_node, rx_node, duration, contact_range = row[2:]
+            
+            # We assume here that the contact plan has each contact written as "a contact" command followed by "a range"
+            # command as the next row
+            iter_reader = iter(reader)
+            for contact_row, range_row in zip(iter_reader, iter_reader):
+                ion_start_time, ion_end_time, tx_node, rx_node, bit_rate = contact_row[2:]
+                range_in_light_seconds = range_row[-1]
 
                 contact = Contact(
                     tx_node=tx_node,
@@ -50,8 +54,8 @@ class IONContactPlanParser:
                     start_time=int(ion_start_time[1:]),
                     end_time=int(ion_end_time[1:]),
                     context={
-                        IONContactPlanParser.DURATION_CONTEXT: float(duration),
-                        IONContactPlanParser.RANGE_CONTEXT: float(contact_range)
+                        IONContactPlanParser.BIT_RATE_CONTEXT: int(bit_rate),
+                        IONContactPlanParser.RANGE_CONTEXT: float(range_in_light_seconds)
                     }
                 )
 
@@ -60,13 +64,21 @@ class IONContactPlanParser:
         return ContactPlan(contacts)
 
     def write(self, experiment_name: str, contact_plan: ContactPlan, file_type: FileType):
-        rows = []
+        contact_rows = []
+        range_rows = []
 
         for contact in contact_plan.contacts:
             ion_start_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.start_time}"
             ion_end_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.end_time}"
 
-            row = [
+            contact_row = [
+                ion_start_time,
+                ion_end_time,
+                contact.tx_node,
+                contact.rx_node,
+            ]
+            
+            range_row = [
                 ion_start_time,
                 ion_end_time,
                 contact.tx_node,
@@ -74,17 +86,19 @@ class IONContactPlanParser:
             ]
             
             # Add optional context values to the row
-            if IONContactPlanParser.DURATION_CONTEXT in contact.context:
-                row.append(contact.context[IONContactPlanParser.DURATION_CONTEXT])
+            if IONContactPlanParser.BIT_RATE_CONTEXT in contact.context:
+                contact_row.append(contact.context[IONContactPlanParser.BIT_RATE_CONTEXT])
             if IONContactPlanParser.RANGE_CONTEXT in contact.context:
-                row.append(contact.context[IONContactPlanParser.RANGE_CONTEXT])
+                range_row.append(contact.context[IONContactPlanParser.RANGE_CONTEXT])
             
-            rows.append(IONContactPlanParser.CONTACT_PREFIX + row)
+            contact_rows.append(IONContactPlanParser.CONTACT_PREFIX + contact_row)
+            range_rows.append(IONContactPlanParser.RANGE_PREFIX + range_row)
 
         path = get_experiment_file(experiment_name, file_type)
         with open(path, "w") as f:
             writer = csv.writer(f, delimiter=" ")
-            writer.writerows(rows)
+            writer.writerows(contact_rows)
+            writer.writerows(range_rows)
 
 
 class IPNDContactPlanParser:

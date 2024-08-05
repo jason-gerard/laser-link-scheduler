@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 import constants
-from contact_plan import ContactPlan, Contact
+from contact_plan import ContactPlan, Contact, IONContactPlanParser
 from utils import get_experiment_file, FileType
 
 
@@ -54,7 +54,8 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> Ti
     # distances. We are defining interplanetary nodes here as nodes that can transmit and receive across interplanetary
     # distances. This depends on the scenario. Some definitions say that a non-ipn node cannot receive or transmit
     # across interplanetary distances, the code below supports both use cases.
-    interplanetary_contacts = [contact for contact in contact_plan.contacts if contact.context["range"] > 100_000]
+    interplanetary_contacts = [contact for contact in contact_plan.contacts
+                               if contact.context[IONContactPlanParser.RANGE_CONTEXT] > constants.INTERPLANETARY_RANGE]
     interplanetary_tx_nodes = [contact.tx_node for contact in interplanetary_contacts]
     interplanetary_rx_nodes = [contact.rx_node for contact in interplanetary_contacts]
     interplanetary_nodes = [node for node in interplanetary_tx_nodes + interplanetary_rx_nodes
@@ -148,15 +149,23 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                     contacts.append(copy.deepcopy(in_progress_contacts[tx_idx][rx_idx]))
                     in_progress_contacts[tx_idx][rx_idx] = None
                 elif teg.graphs[k][tx_idx][rx_idx] == 1 and not in_progress_contacts[tx_idx][rx_idx]:
+                    tx_node = teg.nodes[tx_idx]
+                    rx_node = teg.nodes[rx_idx]
+
+                    associated_contact = [contact for contact in teg.contacts[k]
+                                          if contact.tx_node == tx_node and contact.rx_node == rx_node]
+                    
+                    assert len(associated_contact) == 1
+
                     # Start the contact
                     in_progress_contacts[tx_idx][rx_idx] = Contact(
-                        tx_node=teg.nodes[tx_idx],
-                        rx_node=teg.nodes[rx_idx],
+                        tx_node=tx_node,
+                        rx_node=rx_node,
                         start_time=rolling_start_time,
                         # We can only assume the contact will be there for a single state, so set the end_time to the
                         # duration of the current state, this will be updated as it appears in later graphs
                         end_time=rolling_start_time + teg.state_durations[k],
-                        context={},
+                        context=associated_contact[0].context,
                     )
                 elif teg.graphs[k][tx_idx][rx_idx] == 1 and in_progress_contacts[tx_idx][rx_idx]:
                     # Update the in progress contact but extending its end time to the end of the current state
