@@ -35,8 +35,8 @@ alpha = 0.1
 # For nodes 0, 1, 2, 3
 # I = [1, 2, 4, 2]
 
-# For now, we are assuming a constant and symmetric bitrate across all links at 100 mbps.
-default_BIT_RATE = 100
+# For now, we are assuming a constant and symmetric bitrate across all links, units are bits per second (bps).
+default_BIT_RATE = 1000
 # This list B, contains the bit rates for each communication interface.
 # Since a = 0 doesn't apply to any interface the bit_rate is just set to 0.
 B = [0, default_BIT_RATE]
