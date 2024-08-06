@@ -7,7 +7,7 @@ from constants import SOURCES_ROOT
 from utils import get_experiment_file, FileType
 
 
-@dataclass
+@dataclass(frozen=True)
 class Contact:
     tx_node: str  # Transmitting node, from node
     rx_node: str  # Receiving node, to node

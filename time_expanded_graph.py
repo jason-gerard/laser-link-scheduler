@@ -1,5 +1,4 @@
-import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 from tqdm import tqdm
@@ -133,71 +132,48 @@ def include_contact(contact: Contact, state_start_time: int, state_duration: int
 
 def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> ContactPlan:
     contacts: list[Contact] = []
-    in_progress_contacts: list[list[Contact]] = [[None for _ in range(teg.N)] for _ in range(teg.N)]
-
-    rolling_start_time = 0
+    # This matrix keeps track of active contacts where the value of the matrix = -1 if there is no active contact for
+    # that edge, or a value >= 0 when there is an active contact for that edge. The value of the edge is equal to the
+    # start time of that contact. This allows us to merge contacts that are active across multiple of the k states.
+    active_contacts = np.full((teg.N, teg.N), fill_value=-1, dtype='int64')
 
     for k in tqdm(range(teg.K)):
         for tx_idx in range(teg.N):
             for rx_idx in range(teg.N):
-                # We have 4 different cases depending on the state of the in_progress_contacts and graph at index
-                # tx_idx and rx_idx
-                if teg.graphs[k][tx_idx][rx_idx] == 0 and not in_progress_contacts[tx_idx][rx_idx]:
-                    continue
-                elif teg.graphs[k][tx_idx][rx_idx] == 0 and in_progress_contacts[tx_idx][rx_idx]:
-                    # End the contact
-                    contacts.append(copy.deepcopy(in_progress_contacts[tx_idx][rx_idx]))
-                    in_progress_contacts[tx_idx][rx_idx] = None
-                elif teg.graphs[k][tx_idx][rx_idx] == 1 and not in_progress_contacts[tx_idx][rx_idx]:
-                    tx_node = teg.nodes[tx_idx]
-                    rx_node = teg.nodes[rx_idx]
+                should_start_contact = teg.graphs[k][tx_idx][rx_idx] == 1 and active_contacts[tx_idx][rx_idx] == -1
+                should_end_contact = teg.graphs[k][tx_idx][rx_idx] == 0 and active_contacts[tx_idx][rx_idx] >= 0
 
-                    associated_contact = [contact for contact in teg.contacts[k]
-                                          if contact.tx_node == tx_node and contact.rx_node == rx_node]
-                    
-                    assert len(associated_contact) == 1
+                if should_start_contact:
+                    active_contacts[tx_idx][rx_idx] = np.sum(teg.state_durations[0:k]) if k > 0 else 0
+                elif should_end_contact:
+                    # Find the associated contact in the previous state since now the contact is over
+                    contact = [contact for contact in teg.contacts[k - 1]
+                               if contact.tx_node == teg.nodes[tx_idx] and contact.rx_node == teg.nodes[rx_idx]][0]
 
-                    # Start the contact
-                    in_progress_contacts[tx_idx][rx_idx] = Contact(
-                        tx_node=tx_node,
-                        rx_node=rx_node,
-                        start_time=rolling_start_time,
-                        # We can only assume the contact will be there for a single state, so set the end_time to the
-                        # duration of the current state, this will be updated as it appears in later graphs
-                        end_time=rolling_start_time + teg.state_durations[k],
-                        bit_rate=associated_contact[0].bit_rate,
-                        range=associated_contact[0].range)
-                elif teg.graphs[k][tx_idx][rx_idx] == 1 and in_progress_contacts[tx_idx][rx_idx]:
-                    # Update the in progress contact but extending its end time to the end of the current state
-                    in_progress_contacts[tx_idx][rx_idx].end_time += teg.state_durations[k]
+                    contacts.append(replace(
+                        contact,
+                        start_time=active_contacts[tx_idx][rx_idx],
+                        end_time=np.sum(teg.state_durations[0:k])))
 
-        # For each graph we traverse add the duration of that state to the rolling start time that new contacts use
-        rolling_start_time += teg.state_durations[k]
+                    active_contacts[tx_idx][rx_idx] = -1
 
-    # Cleanup the in progress contacts that start in the last state or last until the last state
-    for contact_row_idx in range(len(in_progress_contacts)):
-        for contact_col_idx in range(len(in_progress_contacts[contact_row_idx])):
-            if in_progress_contacts[contact_row_idx][contact_col_idx]:
-                contacts.append(copy.deepcopy(in_progress_contacts[contact_row_idx][contact_col_idx]))
-                in_progress_contacts[contact_row_idx][contact_col_idx] = None
+                # If we are at the last state of the time expanded graph and there are still active contacts then
+                # "clean" them up and append them to the list of contacts. Without this the loop will terminate and
+                # not add these
+                is_contact_in_progress = teg.graphs[k][tx_idx][rx_idx] == 1 and active_contacts[tx_idx][rx_idx] >= 0
+                should_cleanup_contact = k == teg.K - 1 and (should_start_contact or is_contact_in_progress)
+                if should_cleanup_contact:
+                    contact = [contact for contact in teg.contacts[k]
+                               if contact.tx_node == teg.nodes[tx_idx] and contact.rx_node == teg.nodes[rx_idx]][0]
 
-    # Merge contacts to minimize the size of the resulting contact plan
-    merged_contacts = merge_neighboring_contacts(contacts)
+                    contacts.append(replace(
+                        contact,
+                        start_time=active_contacts[tx_idx][rx_idx],
+                        end_time=np.sum(teg.state_durations[0:k + 1])))
 
-    return ContactPlan(merged_contacts)
+                    active_contacts[tx_idx][rx_idx] = -1
 
-
-def merge_neighboring_contacts(contacts: list[Contact]) -> list[Contact]:
-    """
-    If there is a contact A->B during time t1 and a contact from A->B during time t2, these contacts should be merged
-    together to reduce the length of the contact plan, they are only split due to the k states of the contact plan.
-    This should also improve the performance of the simulators that consume the contact plan.
-    """
-    
-    # I went and verified from the different experiments to see how often this happens, and it seems to never happen for
-    # any of the scheduling algorithms. I think due to how the weight matrices are constructed with their fairness
-    # properties, this case won't happen. After we implement fractionation we can test again to see if this happens.
-    return contacts
+    return ContactPlan(sorted(contacts, key=lambda c: c.end_time))
 
 
 def graph_fractionation(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
