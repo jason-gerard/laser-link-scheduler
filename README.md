@@ -11,7 +11,7 @@ python3 main.py -e <experiment_name> -s <scheduler_name>
 
 For example running the following command will run the `mars_earth_simple_scenario` with the `Laser Link Scheduler` algorithm
 ```
-python3 main.py -e mars_earth_simple_scenario -f lls
+python3 main.py -e mars_earth_simple_scenario -s lls
 ```
 
 Get the list of all input parameters
