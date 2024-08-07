@@ -6,7 +6,7 @@ from contact_plan import IONContactPlanParser, IPNDContactPlanParser
 from report_generator import Reporter
 from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, write_time_expanded_graph, \
-    convert_time_expanded_graph_to_contact_plan, graph_fractionation
+    convert_time_expanded_graph_to_contact_plan, fractionate_graph
 from utils import FileType
 
 
@@ -25,11 +25,11 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
 
     # Split long contacts in the TEG into multiple smaller contacts, this will result in each k state having a maximum
     # duration of d_max. This process is referred to as fractionation.
-    fractionated_time_expanded_graph = graph_fractionation(time_expanded_graph)
+    fractionated_time_expanded_graph = fractionate_graph(time_expanded_graph)
     write_time_expanded_graph(experiment_name, fractionated_time_expanded_graph, FileType.SPLIT)
-    print("Finished splitting time expanded graph")
+    print("Finished fractionating time expanded graph")
 
-    print("Starting scheduling contacts")
+    print("Starting contact scheduling")
     if scheduler_name == "lls":
         # Iterate through each of the k graphs and compute the maximal matching
         # As we step through the k graphs we want to optimize for our metric
@@ -44,7 +44,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
         scheduled_time_expanded_graph = fractionated_time_expanded_graph
 
     write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED)
-    print("Finished scheduling contacts")
+    print("Finished contact scheduling")
 
     # Convert the TEG back to a contact plan
     scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_time_expanded_graph)

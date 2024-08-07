@@ -184,7 +184,7 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
     return ContactPlan(sorted(contacts, key=lambda c: c.end_time))
 
 
-def graph_fractionation(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
+def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
     k = 0
     while k < time_expanded_graph.K:
 
