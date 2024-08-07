@@ -1,6 +1,8 @@
 # laser-link-scheduler
 Scheduling algorithm for free-space laser communication in delay/disruption tolerant deep space networks.
 
+![Scheduled contact plan visualized in IPN-V](IPN-D_scenarios/scheduled_scenario.gif)
+
 ## Usage
 There are a couple scenarios the project comes with by default. These are the ones used for analysis. They model interplanetary Mars to Earth space exploration missions where there are a set of orbiters around Mars that either produce data with onboard equipment or receive data from other nodes such as landers, rovers, or drones. The orbiters transmit data to relay satellites around Mars which then try to transmit data across interplanetary distances to Earth.
 

@@ -45,7 +45,7 @@ class Reporter:
         
         report_path = str(os.path.join(report_dir, f"{report_id}_{FileType.REPORT.value}.csv"))
         with open(report_path, "w") as f:
-            writer = csv.writer(f, delimiter=",")
+            writer = csv.writer(f, delimiter=",", lineterminator="\n")
             writer.writerow(basic_report_headers)
             writer.writerows(self.reports)
         
