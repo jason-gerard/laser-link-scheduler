@@ -11,7 +11,7 @@ d_min = 5
 # multiple contacts of duration t_max, which then translates into multiple k states. There is a tradeoff with this
 # variable between the overhead of setting up the link and being able to transition to contacts with different nodes
 # to improve the fairness.
-d_max = 100
+d_max = 500
 
 # The default communication interface to use, a = 1 is the default laser that each node is equipped with.
 # The default interface, a = 1, has the default bit rate of 100 mbps.

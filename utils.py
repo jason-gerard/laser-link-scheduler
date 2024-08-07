@@ -8,7 +8,6 @@ class FileType(Enum):
     CONTACT_PLAN = "contact_plan"
     SCHEDULED = "contact_plan_scheduled"
     TEG = "teg"
-    SPLIT = "teg_split"
     TEG_SCHEDULED = "teg_scheduled"
     REPORT = "report"
 

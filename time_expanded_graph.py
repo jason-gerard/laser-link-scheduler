@@ -46,7 +46,7 @@ class TimeExpandedGraph:
         return rep
 
 
-def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> TimeExpandedGraph:
+def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, should_fractionate: bool) -> TimeExpandedGraph:
     # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
     # We are defining this as any contact with a range greater than 100,000 km.
     # A non-ipn node can receive across interplanetary distances, but cannot transmit across interplanetary
@@ -90,6 +90,7 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> Ti
     contacts_by_state = []
     state_durations = np.empty(K, dtype='int64')
 
+    print("Starting contact plan to time expanded graph conversion")
     for k, time_step in enumerate(tqdm(time_steps[:-1])):
         state_start_time = time_step
         state_duration = time_steps[k + 1] - state_start_time
@@ -111,7 +112,7 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> Ti
                 # For now, we assume all satellites only have a single default interface.
                 contact_topology_graphs[k][tx_idx][rx_idx] = constants.default_a
 
-    return TimeExpandedGraph(
+    time_expanded_graph = TimeExpandedGraph(
         graphs=contact_topology_graphs,
         contacts=contacts_by_state,
         state_durations=state_durations,
@@ -122,12 +123,63 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan) -> Ti
         ipn_node_to_planet_map=ipn_node_to_planet_map,
         W=np.array([]))
 
+    # This process of fractionation splits long contacts in the TEG into multiple smaller contacts, this will result in
+    # each k state having a maximum duration of d_max. Since there are more states and more decision points some
+    # algorithms will have better performance.
+    return fractionate_graph(time_expanded_graph) if should_fractionate else time_expanded_graph
+
 
 def include_contact(contact: Contact, state_start_time: int, state_duration: int) -> bool:
     state_end_time = state_start_time + state_duration
     # The current state should include contacts that start before the state start time, inclusive, and end after the
     # start end time, inclusive
     return contact.start_time <= state_start_time and contact.end_time >= state_end_time
+
+
+def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
+    print("Starting time expanded graph fractionation")
+    k = 0
+    while k < time_expanded_graph.K:
+
+        if (time_expanded_graph.state_durations[k] > constants.d_max):
+
+            largeDuration = time_expanded_graph.state_durations[k]
+            time_expanded_graph.state_durations = np.delete(time_expanded_graph.state_durations, k, axis=0)
+
+            kthGraph = time_expanded_graph.graphs[k, :, :]
+            time_expanded_graph.graphs = np.delete(time_expanded_graph.graphs, k, axis=0)
+
+            KthContacts = time_expanded_graph.contacts.pop(k)
+
+            time_expanded_graph.K -= 1
+
+            # since the states added will be already split we can skip them
+            numCreatedK = 0
+
+            while largeDuration > constants.d_max:
+                time_expanded_graph.state_durations = np.insert(time_expanded_graph.state_durations, k, constants.d_max,
+                                                                axis=0)
+                time_expanded_graph.graphs = np.insert(time_expanded_graph.graphs, k, kthGraph, axis=0)
+                largeDuration -= constants.d_max
+                time_expanded_graph.K += 1
+                numCreatedK += 1
+
+            if largeDuration > 0:
+                time_expanded_graph.state_durations = np.insert(time_expanded_graph.state_durations, k, largeDuration,
+                                                                axis=0)
+                time_expanded_graph.graphs = np.insert(time_expanded_graph.graphs, k, kthGraph, axis=0)
+                time_expanded_graph.K += 1
+                numCreatedK += 1
+
+            new_contacts = [KthContacts for _ in range(numCreatedK)]
+
+            time_expanded_graph.contacts[k:k] = new_contacts
+
+            k += numCreatedK;
+
+        k += 1
+
+    return time_expanded_graph
 
 
 def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> ContactPlan:
@@ -182,51 +234,6 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                     active_contacts[tx_idx][rx_idx] = -1
 
     return ContactPlan(sorted(contacts, key=lambda c: c.end_time))
-
-
-def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
-    k = 0
-    while k < time_expanded_graph.K:
-
-        if (time_expanded_graph.state_durations[k] > constants.d_max):
-
-            largeDuration = time_expanded_graph.state_durations[k]
-            time_expanded_graph.state_durations = np.delete(time_expanded_graph.state_durations, k, axis=0)
-
-            kthGraph = time_expanded_graph.graphs[k, :, :]
-            time_expanded_graph.graphs = np.delete(time_expanded_graph.graphs, k, axis=0)
-
-            KthContacts = time_expanded_graph.contacts.pop(k)
-
-            time_expanded_graph.K -= 1
-
-            # since the states added will be already split we can skip them
-            numCreatedK = 0
-
-            while largeDuration > constants.d_max:
-                time_expanded_graph.state_durations = np.insert(time_expanded_graph.state_durations, k, constants.d_max,
-                                                                axis=0)
-                time_expanded_graph.graphs = np.insert(time_expanded_graph.graphs, k, kthGraph, axis=0)
-                largeDuration -= constants.d_max
-                time_expanded_graph.K += 1
-                numCreatedK += 1
-
-            if largeDuration > 0:
-                time_expanded_graph.state_durations = np.insert(time_expanded_graph.state_durations, k, largeDuration,
-                                                                axis=0)
-                time_expanded_graph.graphs = np.insert(time_expanded_graph.graphs, k, kthGraph, axis=0)
-                time_expanded_graph.K += 1
-                numCreatedK += 1
-
-            new_contacts = [KthContacts for _ in range(numCreatedK)]
-
-            time_expanded_graph.contacts[k:k] = new_contacts
-
-            k += numCreatedK;
-
-        k += 1
-
-    return time_expanded_graph
 
 
 def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExpandedGraph, file_type: FileType):

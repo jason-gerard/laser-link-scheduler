@@ -34,6 +34,3 @@ To run the tests
 ```
 pytest -vv -s
 ```
-
-## ToDo
-- [ ] Implement time expanded graph fractionation

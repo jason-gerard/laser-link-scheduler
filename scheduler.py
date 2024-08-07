@@ -11,10 +11,11 @@ from weights import disabled_contact_time, compute_node_capacity_by_graph, delta
 class LaserLinkScheduler:
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         """
-        This algorithm is a max-weight maximal matching
-
-        The weights of the matrix W_k should be calculated such that the weight of each edge should correspond to the
-        delta capacity or delta wasted capacity if that edge was selected plus the sum of time that contact was disabled
+        This algorithm is a max-weight maximal matching, where it will iterate through each of the k graphs and
+        compute the maximal matching. By maximizing the capacity model at each of the k graphs we will produce the
+        TEG with the maximum Earth-bound network capacity. The weights of the matrix W_k should be calculated such
+        that the weight of each edge should correspond to the delta capacity or delta wasted capacity if that edge
+        was selected plus the sum of time that contact was disabled.
 
         Inputs: contact topology [P] of size K x N x N
                 IPN node mappings [X] of size N
