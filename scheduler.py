@@ -37,7 +37,9 @@ class LaserLinkScheduler:
 
         for k in tqdm(range(teg.K)):
             # Compute the change in network capacity on an edge by edge basis using the previous states node
-            # capacities and the possible choices or decisions of active edges for this current state
+            # capacities and the possible choices or decisions of active edges for this current state. This is a
+            # dynamic programming approach where we used the memoized values of the weights of the previous k states
+            # to compute the new weights matrix for capacity for state k+1.
             W_delta_cap = delta_capacity(
                 teg.graphs[k],
                 node_capacities,
