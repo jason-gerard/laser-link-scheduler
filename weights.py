@@ -28,7 +28,7 @@ def delta_capacity(
 
     # Compute network capacity with current node_capacities list
     current_capacity = compute_capacity(node_capacities)
-    
+
     delta_capacities = np.zeros((num_nodes, num_nodes), dtype='int64')
     for tx_idx in range(num_nodes):
         for rx_idx in range(num_nodes):
@@ -45,7 +45,7 @@ def delta_capacity(
                     interface_id,
                     state_duration,
                     ipn_node_to_planet_map)
-                
+
                 # Since the delta caps matrix is already filled with zeros, if the single edge node capacity returns
                 # None i.e. there was no new capacity then we can just leave the delta as 0, otherwise compute
                 # the new total capacity then the new delta
@@ -53,14 +53,15 @@ def delta_capacity(
                     # Merge it with the node_capacities list and compute the network capacity with the new list
                     new_node_capacities = merge_many_node_capacities(node_capacities + [single_edge_node_capacity])
                     new_capacity = compute_capacity(new_node_capacities)
-                    
+
                     # Take the difference and that is the new weight
                     delta_capacities[tx_idx][rx_idx] = new_capacity - current_capacity
-    
+
     return delta_capacities
 
 
-def disabled_contact_time(contact_topology_k: np.ndarray, contact_plan_k: np.ndarray, state_duration: int) -> np.ndarray:
+def disabled_contact_time(contact_topology_k: np.ndarray, contact_plan_k: np.ndarray,
+                          state_duration: int) -> np.ndarray:
     """
     Compute the disabled contact time for each node. This is calculated by taking the state duration and adding it to
     the index in the matrix if the edge was active in the topology but inactive in the plan. The disabled contact time
@@ -107,7 +108,8 @@ def merge_many_node_capacities(capacities: list[NodeCapacity]) -> list[NodeCapac
 
     # Merge node capacities calculated over all graphs in the TEG to a single capacity, this gives a list of node
     # capacities where each is the total capacity in and out over all graphs for a single IPN node
-    return [merge_node_capacities(node_capacities, node_idx) for node_idx, node_capacities in node_capacities_dict.items()]
+    return [merge_node_capacities(node_capacities, node_idx) for node_idx, node_capacities in
+            node_capacities_dict.items()]
 
 
 def merge_node_capacities(capacities: list[NodeCapacity], node_idx: int) -> NodeCapacity:
@@ -126,11 +128,16 @@ def merge_node_capacities(capacities: list[NodeCapacity], node_idx: int) -> Node
     )
 
 
-def compute_node_capacities(graphs: np.ndarray, state_durations: np.ndarray, K: int, ipn_node_to_planet_map: dict[int, str]) -> list[NodeCapacity]:
+def compute_node_capacities(
+        graphs: np.ndarray,
+        state_durations: np.ndarray,
+        K: int,
+        ipn_node_to_planet_map: dict[int, str]
+) -> list[NodeCapacity]:
     # For each graph in the TEG, compute the capacity
     node_capacities_by_graph = [
         compute_node_capacity_by_graph(graphs[k], state_durations[k], ipn_node_to_planet_map) for k in range(K)]
-    
+
     node_capacities = np.array(node_capacities_by_graph).flatten().tolist()
     return merge_many_node_capacities(node_capacities)
 
@@ -172,7 +179,7 @@ def compute_node_capacity_by_graph(
         ipn_node_to_planet_map: dict[int, str]
 ) -> list[NodeCapacity]:
     num_nodes = len(graph)
-    
+
     capacities = []
     for ipn_node_idx in ipn_node_to_planet_map.keys():
         node_capacity = NodeCapacity(
@@ -227,3 +234,36 @@ def compute_wasted_capacity(capacities: list[NodeCapacity]) -> float:
     # This metric should be minimized
     # Sum the wasted capacities for each IPN nodes to get the network wasted capacity
     return sum(wasted_capacities)
+
+
+def compute_jains_fairness_index(
+        graphs: np.ndarray,
+        state_durations: np.ndarray,
+        ipn_node_to_planet_map: dict[int, str],
+        K: int,
+        N: int
+) -> float:
+    """
+    Compute the fairness based on the scheduled duration a contact is enabled and the bit rate of the laser, which gives
+    the amount of data scheduled to be transferred over that period.
+    """
+    nodes = [node_idx for node_idx in range(N) if node_idx not in ipn_node_to_planet_map.keys()]  # Mars orbiter nodes
+    # Create a single graph the sums the enabled contact times of all k states
+    enabled_contact_times = np.zeros((K, N, N), dtype="int64")
+    for k in range(K):
+        for tx_idx in range(N):
+            for rx_idx in range(N):
+                if (graphs[k][tx_idx][rx_idx] >= 1
+                        and tx_idx in nodes
+                        and rx_idx in ipn_node_to_planet_map.keys()):
+                    interface_id = graphs[k][tx_idx][rx_idx]
+                    bit_rate = constants.B[interface_id]
+
+                    enabled_contact_times[k][tx_idx][rx_idx] = state_durations[k] * bit_rate
+
+    enabled_contact_time_graph = np.sum(enabled_contact_times, axis=0)
+    # Compute a list of the amount of data each Mars orbiter transmitted to a Mars relay
+    enabled_contact_time_by_node = np.array([np.sum(enabled_contact_time_graph[node_idx]) for node_idx in nodes])
+
+    # Solve for the network level Jain's fairness index with x as the throughput of the Mars orbiter nodes
+    return (np.sum(enabled_contact_time_by_node) ** 2) / (len(nodes) * np.sum(enabled_contact_time_by_node ** 2))

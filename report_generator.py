@@ -6,7 +6,7 @@ import pickle
 import constants
 from time_expanded_graph import TimeExpandedGraph
 from utils import FileType
-from weights import compute_node_capacities, compute_capacity, compute_wasted_capacity
+from weights import compute_node_capacities, compute_capacity, compute_wasted_capacity, compute_jains_fairness_index
 
 
 class Reporter:
@@ -17,6 +17,9 @@ class Reporter:
         self.debug = debug
     
     def generate_report(self, experiment_name: str, scheduler_name: str, duration: float, teg: TimeExpandedGraph):
+        if self.debug:
+            print(f"Elapsed time: {duration:.4f} seconds")
+
         self.time_expanded_graph_data.append({
             "name": f"{scheduler_name}_{experiment_name}",
             "teg": teg,
@@ -26,17 +29,19 @@ class Reporter:
         network_capacity = compute_capacity(node_capacities)
         network_wasted_capacity = compute_wasted_capacity(node_capacities)
 
-        row = [scheduler_name, experiment_name, duration, network_capacity, network_wasted_capacity]
+        jains_fairness_index = compute_jains_fairness_index(teg.graphs, teg.state_durations, teg.ipn_node_to_planet_map, teg.K, teg.N)
+
+        row = [scheduler_name, experiment_name, duration, network_capacity, network_wasted_capacity, jains_fairness_index]
         self.reports.append(row)
 
         if self.debug:
             print(f"Scheduled network capacity: {network_capacity:,}")
             print(f"Scheduled network wasted capacity: {network_wasted_capacity:,}")
-            print(f"Elapsed time: {duration:.4f} seconds")
+            print(f"Jain's fairness index: {jains_fairness_index}")
 
     def write_report(self):
         # Create CSV of runtimes, capacity, and wasted capacity
-        basic_report_headers = ["Algorithm", "Scenario", "Duration", "Capacity", "Wasted capacity"]
+        basic_report_headers = ["Algorithm", "Scenario", "Duration", "Capacity", "Wasted capacity", "Jain's fairness index"]
 
         report_id = int(time.time())
 
