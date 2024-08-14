@@ -245,7 +245,10 @@ def compute_jains_fairness_index(
 ) -> float:
     """
     Compute the fairness based on the scheduled duration a contact is enabled and the bit rate of the laser, which gives
-    the amount of data scheduled to be transferred over that period.
+    the amount of data scheduled to be transferred over that period, this is the resource we are evaluating the fairness
+    of. This fairness evaluation is specifically looking at orbiter to relay transmissions and does not include orbiter
+    to orbiter or relay to relay transmissions. This metrics tries to understand of fair/even the distribution of access
+    opportunities is between the science satellites (orbiters) and the relay satellites.
     """
     nodes = [node_idx for node_idx in range(N) if node_idx not in ipn_node_to_planet_map.keys()]  # Mars orbiter nodes
     # Create a single graph the sums the enabled contact times of all k states
@@ -267,3 +270,42 @@ def compute_jains_fairness_index(
 
     # Solve for the network level Jain's fairness index with x as the throughput of the Mars orbiter nodes
     return (np.sum(enabled_contact_time_by_node) ** 2) / (len(nodes) * np.sum(enabled_contact_time_by_node ** 2))
+
+
+def compute_scheduled_delay(
+        graphs: np.ndarray,
+        state_durations: np.ndarray,
+        ipn_node_to_planet_map: dict[int, str],
+        K: int,
+        N: int
+) -> float:
+    """
+    Compute the average delay between when an orbiter can transmit to a relay. This does not include orbiter to orbiter
+    or relay to relay transmissions. This tries to understand the delay for Mars orbiter to Mars relay transmissions.
+    """
+    orbiter_nodes = [node_idx for node_idx in range(N) if node_idx not in ipn_node_to_planet_map]
+    relay_nodes = [node_idx for node_idx in range(N) if node_idx in ipn_node_to_planet_map]
+    node_delays = {node_idx: {"total_delay": 0, "num_contacts": 0} for node_idx in orbiter_nodes}
+
+    # This list keeps track of the delays each orbiter node has between contact opportunities with the relay satellites.
+    node_contact_delays = np.zeros(N, dtype="int64")
+    # For each orbiter compute the average delay between relay contact times
+    for k in range(K):
+        for tx_idx in orbiter_nodes:
+            is_in_contact = len([rx_idx for rx_idx in relay_nodes if graphs[k][tx_idx][rx_idx] >= 1]) > 0
+            if is_in_contact and (node_contact_delays[tx_idx] > 0 or k == 0):
+                node_delays[tx_idx]["total_delay"] += node_contact_delays[tx_idx]
+                node_delays[tx_idx]["num_contacts"] += 1
+                node_contact_delays[tx_idx] = 0
+            elif not is_in_contact:
+                node_contact_delays[tx_idx] += state_durations[k]
+    
+    # Since we increment the delay when a contact opportunity occurs, for the nodes that are not in communication with
+    # an orbiter at the end of the contact plan this will add those delays to the running total.
+    for tx_idx, delay in enumerate(node_contact_delays):
+        if delay > 0:
+            node_delays[tx_idx]["total_delay"] += node_contact_delays[tx_idx]
+
+    # Take the average delay of all orbiters
+    avg_delay_by_node = [node_delay["total_delay"] / node_delay["num_contacts"] for node_delay in node_delays.values()]
+    return sum(avg_delay_by_node) / len(avg_delay_by_node)

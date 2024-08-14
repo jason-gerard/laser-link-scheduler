@@ -78,4 +78,9 @@ plt.savefig(
     format="pdf",
     bbox_inches='tight'
 )
+plt.savefig(
+    os.path.join("analysis", "weights_grid.png"),
+    format="png",
+    bbox_inches='tight'
+)
 plt.show()
