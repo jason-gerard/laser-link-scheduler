@@ -29,8 +29,8 @@ display_name = {
 }
 
 metrics = [
-    ("Capacity", "terabits", 20, 200, 20),
-    ("Wasted capacity", "terabits", 40, 280, 40),
+    ("Capacity", "terabits/day", 20, 200, 20),
+    ("Wasted capacity", "terabits/day", 40, 280, 40),
     ("Scheduled delay", "seconds", 2_000, 10_000, 2_000),
     ("Jain's fairness index", "", 0.9, 1.0, 0.02),
 ]
@@ -62,7 +62,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     plt.ylim(max(y_min-y_step, 0), y_max)
     ax.set_yticks(np.arange(y_min, y_max+0.01, y_step))
 
-    file_name = label.replace(" ", "_")
+    file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(
         os.path.join("analysis", f"{file_name}.pdf"),
         format="pdf",
