@@ -66,11 +66,12 @@ for metric, unit, y_min, y_max, y_step in metrics:
     plt.savefig(
         os.path.join("analysis", f"{file_name}.pdf"),
         format="pdf",
-        bbox_inches='tight'
+        bbox_inches="tight"
     )
     plt.savefig(
         os.path.join("analysis", f"{file_name}.png"),
         format="png",
-        bbox_inches='tight'
+        bbox_inches="tight",
+        dpi=300,
     )
     # plt.show()
