@@ -130,16 +130,20 @@ class FairContactPlan:
 class RandomScheduler:
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         """
-        Apply blossom algorithm with no weights
+        Apply blossom algorithm with random weights
         """
+        rng = np.random.default_rng()
+
         scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
         scheduled_contacts = []
         weights = np.empty((teg.K, teg.N, teg.N), dtype="float32")
 
         for k in tqdm(range(teg.K)):
-            # Generate a matrix of random weights, the high and low here doesn't really matter as long as there is a
-            # decent range of value between them
-            weights[k] = np.random.randint(low=0, high=100, size=(teg.N, teg.N))
+            # Generate a matrix of random weights 21 times, to be statistically significant, then take the average of
+            # those generations. This way we only run the algorithm one time but don't have randomness skew the baseline
+            # results up or down too much.
+            random_weights = [rng.choice(100, (teg.N, teg.N)) for _ in range(21)]
+            weights[k] = np.mean(random_weights, axis=0)
 
             # Compute max weight maximal matching using the blossom algorithm but with the static weights matrix that is
             # equal for all edges
