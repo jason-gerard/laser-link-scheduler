@@ -137,47 +137,61 @@ def include_contact(contact: Contact, state_start_time: int, state_duration: int
 
 
 def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
-    print("Starting time expanded graph fractionation")
-    k = 0
-    while k < time_expanded_graph.K:
+    print("\tStarting time expanded graph fractionation")
 
+    new_k = time_expanded_graph.K
+    for k in range(0, time_expanded_graph.K):
         if (time_expanded_graph.state_durations[k] > constants.d_max):
 
             largeDuration = time_expanded_graph.state_durations[k]
-            time_expanded_graph.state_durations = np.delete(time_expanded_graph.state_durations, k, axis=0)
-
-            kthGraph = time_expanded_graph.graphs[k, :, :]
-            time_expanded_graph.graphs = np.delete(time_expanded_graph.graphs, k, axis=0)
-
-            KthContacts = time_expanded_graph.contacts.pop(k)
-
-            time_expanded_graph.K -= 1
-
-            # since the states added will be already split we can skip them
-            numCreatedK = 0
+            new_k -= 1
 
             while largeDuration > constants.d_max:
-                time_expanded_graph.state_durations = np.insert(time_expanded_graph.state_durations, k, constants.d_max,
-                                                                axis=0)
-                time_expanded_graph.graphs = np.insert(time_expanded_graph.graphs, k, kthGraph, axis=0)
                 largeDuration -= constants.d_max
-                time_expanded_graph.K += 1
-                numCreatedK += 1
+                new_k += 1
 
             if largeDuration > 0:
-                time_expanded_graph.state_durations = np.insert(time_expanded_graph.state_durations, k, largeDuration,
-                                                                axis=0)
-                time_expanded_graph.graphs = np.insert(time_expanded_graph.graphs, k, kthGraph, axis=0)
-                time_expanded_graph.K += 1
-                numCreatedK += 1
+                new_k += 1
 
-            new_contacts = [KthContacts for _ in range(numCreatedK)]
+    new_teg_graph = np.zeros((new_k, time_expanded_graph.graphs.shape[1], time_expanded_graph.graphs.shape[2]))
+    new_teg_durations = np.empty(new_k, dtype='int64')
+    new_contacts = [[] for _ in range(new_k)]
 
-            time_expanded_graph.contacts[k:k] = new_contacts
+    k_offset = 0
 
-            k += numCreatedK;
+    for k in tqdm(range(0, time_expanded_graph.K), ncols=120, bar_format="\t{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"):
+        if (time_expanded_graph.state_durations[k] > constants.d_max):
 
-        k += 1
+            largeDuration = time_expanded_graph.state_durations[k]
+            kthGraph = time_expanded_graph.graphs[k, :, :]
+            KthContacts = time_expanded_graph.contacts[k]
+
+            while largeDuration > constants.d_max:
+                new_teg_durations[k + k_offset] = constants.d_max
+                new_teg_graph[k + k_offset] = kthGraph
+                new_contacts[k + k_offset] = KthContacts
+
+                largeDuration -= constants.d_max
+                k_offset += 1
+
+            if largeDuration > 0:
+                new_teg_durations[k + k_offset] = largeDuration
+                new_teg_graph[k + k_offset] = kthGraph
+                new_contacts[k + k_offset] = KthContacts
+                k_offset += 1
+            
+            k_offset -= 1
+        else:
+            new_teg_graph[k + k_offset] = time_expanded_graph.graphs[k]
+            new_teg_durations[k + k_offset] = time_expanded_graph.state_durations[k]
+            new_contacts[k + k_offset] = time_expanded_graph.contacts[k]
+
+    time_expanded_graph.graphs = new_teg_graph
+    time_expanded_graph.state_durations = new_teg_durations
+    time_expanded_graph.contacts = new_contacts
+    time_expanded_graph.K = new_k
+
+    print("\tFinished time expanded graph fractionation the new number of k states is {new_k}".format(new_k=new_k))
 
     return time_expanded_graph
 
