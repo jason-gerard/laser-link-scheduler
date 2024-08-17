@@ -141,43 +141,43 @@ def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGra
 
     new_k = time_expanded_graph.K
     for k in range(0, time_expanded_graph.K):
-        if (time_expanded_graph.state_durations[k] > constants.d_max):
+        if time_expanded_graph.state_durations[k] > constants.d_max:
 
-            largeDuration = time_expanded_graph.state_durations[k]
+            large_duration = time_expanded_graph.state_durations[k]
             new_k -= 1
 
-            while largeDuration > constants.d_max:
-                largeDuration -= constants.d_max
+            while large_duration > constants.d_max:
+                large_duration -= constants.d_max
                 new_k += 1
 
-            if largeDuration > 0:
+            if large_duration > 0:
                 new_k += 1
 
-    new_teg_graph = np.zeros((new_k, time_expanded_graph.graphs.shape[1], time_expanded_graph.graphs.shape[2]))
+    new_teg_graph = np.zeros((new_k, time_expanded_graph.N, time_expanded_graph.N), dtype="int64")
     new_teg_durations = np.empty(new_k, dtype='int64')
     new_contacts = [[] for _ in range(new_k)]
 
     k_offset = 0
 
     for k in tqdm(range(0, time_expanded_graph.K), ncols=120, bar_format="\t{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"):
-        if (time_expanded_graph.state_durations[k] > constants.d_max):
+        if time_expanded_graph.state_durations[k] > constants.d_max:
 
-            largeDuration = time_expanded_graph.state_durations[k]
-            kthGraph = time_expanded_graph.graphs[k, :, :]
-            KthContacts = time_expanded_graph.contacts[k]
+            large_duration = time_expanded_graph.state_durations[k]
+            kth_graph = time_expanded_graph.graphs[k, :, :]
+            kth_contacts = time_expanded_graph.contacts[k]
 
-            while largeDuration > constants.d_max:
+            while large_duration > constants.d_max:
                 new_teg_durations[k + k_offset] = constants.d_max
-                new_teg_graph[k + k_offset] = kthGraph
-                new_contacts[k + k_offset] = KthContacts
+                new_teg_graph[k + k_offset] = kth_graph
+                new_contacts[k + k_offset] = kth_contacts
 
-                largeDuration -= constants.d_max
+                large_duration -= constants.d_max
                 k_offset += 1
 
-            if largeDuration > 0:
-                new_teg_durations[k + k_offset] = largeDuration
-                new_teg_graph[k + k_offset] = kthGraph
-                new_contacts[k + k_offset] = KthContacts
+            if large_duration > 0:
+                new_teg_durations[k + k_offset] = large_duration
+                new_teg_graph[k + k_offset] = kth_graph
+                new_contacts[k + k_offset] = kth_contacts
                 k_offset += 1
             
             k_offset -= 1
