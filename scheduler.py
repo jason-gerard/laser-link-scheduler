@@ -132,7 +132,7 @@ class RandomScheduler:
         """
         Apply blossom algorithm with random weights
         """
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(seed=42)
 
         scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
         scheduled_contacts = []
