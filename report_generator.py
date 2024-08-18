@@ -11,14 +11,13 @@ from weights import compute_node_capacities, compute_capacity, compute_wasted_ca
 
 class Reporter:
     
-    def __init__(self, debug: bool):
+    def __init__(self, write_pkl: bool):
         self.reports = []
         self.time_expanded_graph_data = []
-        self.debug = debug
+        self.write_pkl = write_pkl
     
     def generate_report(self, experiment_name: str, scheduler_name: str, duration: float, teg: TimeExpandedGraph):
-        if self.debug:
-            print(f"Elapsed time: {duration:.4f} seconds")
+        print(f"Elapsed time: {duration:.4f} seconds")
 
         self.time_expanded_graph_data.append({
             "name": f"{scheduler_name}_{experiment_name}",
@@ -36,13 +35,15 @@ class Reporter:
         row = [scheduler_name, experiment_name, duration, network_capacity, network_wasted_capacity, jains_fairness_index, scheduled_delay]
         self.reports.append(row)
 
-        if self.debug:
-            print(f"Scheduled network capacity: {network_capacity:,}")
-            print(f"Scheduled network wasted capacity: {network_wasted_capacity:,}")
-            print(f"Jain's fairness index: {jains_fairness_index}")
-            print(f"Average delay: {scheduled_delay}")
+        print(f"Scheduled network capacity: {network_capacity:,}")
+        print(f"Scheduled network wasted capacity: {network_wasted_capacity:,}")
+        print(f"Jain's fairness index: {jains_fairness_index}")
+        print(f"Average delay: {scheduled_delay}")
 
     def write_report(self):
+        if not self.write_pkl:
+            return
+
         # Create CSV of runtimes, capacity, and wasted capacity
         basic_report_headers = ["Algorithm", "Scenario", "Execution duration", "Capacity", "Wasted capacity", "Jain's fairness index", "Scheduled delay"]
 
