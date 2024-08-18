@@ -307,5 +307,6 @@ def compute_scheduled_delay(
             node_delays[tx_idx]["total_delay"] += node_contact_delays[tx_idx]
 
     # Take the average delay of all orbiters
-    avg_delay_by_node = [node_delay["total_delay"] / node_delay["num_contacts"] for node_delay in node_delays.values()]
+    avg_delay_by_node = [node_delay["total_delay"] / max(node_delay["num_contacts"], 1)
+                         for node_delay in node_delays.values()]
     return sum(avg_delay_by_node) / len(avg_delay_by_node)
