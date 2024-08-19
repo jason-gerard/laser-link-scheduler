@@ -5,7 +5,7 @@ import numpy as np
 
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
 from report_generator import Reporter
-from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler
+from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler, AlternatingScheduler
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, write_time_expanded_graph, \
     convert_time_expanded_graph_to_contact_plan
 from utils import FileType
@@ -34,6 +34,8 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
         scheduled_time_expanded_graph = FairContactPlan().schedule(time_expanded_graph)
     elif scheduler_name == "random":
         scheduled_time_expanded_graph = RandomScheduler().schedule(time_expanded_graph)
+    elif scheduler_name == "alternating":
+        scheduled_time_expanded_graph = AlternatingScheduler().schedule(time_expanded_graph)
     else:
         print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
         raise Exception("No scheduler selected")

@@ -213,17 +213,18 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                     active_contacts[tx_idx][rx_idx] = np.sum(teg.state_durations[0:k]) if k > 0 else 0
                 elif should_end_contact:
                     # Find the associated contact in the previous state since now the contact is over
-                    contact = [contact for contact in teg.contacts[k - 1]
-                               if contact.tx_node == teg.nodes[tx_idx] and contact.rx_node == teg.nodes[rx_idx]][0]
+                    possible_contact = [contact for contact in teg.contacts[k - 1]
+                                        if contact.tx_node == teg.nodes[tx_idx] and contact.rx_node == teg.nodes[rx_idx]]
+                    
+                    if possible_contact:
+                        interface_id = teg.graphs[k - 1][tx_idx][rx_idx]
+                        bit_rate = constants.B[interface_id]
 
-                    interface_id = teg.graphs[k - 1][tx_idx][rx_idx]
-                    bit_rate = constants.B[interface_id]
-
-                    contacts.append(replace(
-                        contact,
-                        start_time=active_contacts[tx_idx][rx_idx],
-                        end_time=np.sum(teg.state_durations[0:k]),
-                        bit_rate=bit_rate))
+                        contacts.append(replace(
+                            possible_contact[0],
+                            start_time=active_contacts[tx_idx][rx_idx],
+                            end_time=np.sum(teg.state_durations[0:k]),
+                            bit_rate=bit_rate))
 
                     active_contacts[tx_idx][rx_idx] = -1
 
@@ -233,19 +234,18 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                 is_contact_in_progress = teg.graphs[k][tx_idx][rx_idx] >= 1 and active_contacts[tx_idx][rx_idx] >= 0
                 should_cleanup_contact = k == teg.K - 1 and (should_start_contact or is_contact_in_progress)
                 if should_cleanup_contact:
-                    contact = [contact for contact in teg.contacts[k]
-                               if contact.tx_node == teg.nodes[tx_idx] and contact.rx_node == teg.nodes[rx_idx]][0]
+                    possible_contact = [contact for contact in teg.contacts[k]
+                                        if contact.tx_node == teg.nodes[tx_idx] and contact.rx_node == teg.nodes[rx_idx]]
 
-                    interface_id = teg.graphs[k][tx_idx][rx_idx]
-                    bit_rate = constants.B[interface_id]
+                    if possible_contact:
+                        interface_id = teg.graphs[k][tx_idx][rx_idx]
+                        bit_rate = constants.B[interface_id]
 
-                    contacts.append(replace(
-                        contact,
-                        start_time=active_contacts[tx_idx][rx_idx],
-                        end_time=np.sum(teg.state_durations[0:k + 1]),
-                        bit_rate=bit_rate))
-
-                    active_contacts[tx_idx][rx_idx] = -1
+                        contacts.append(replace(
+                            possible_contact[0],
+                            start_time=active_contacts[tx_idx][rx_idx],
+                            end_time=np.sum(teg.state_durations[0:k + 1]),
+                            bit_rate=bit_rate))
 
     return ContactPlan(sorted(contacts, key=lambda c: c.end_time))
 

@@ -134,19 +134,82 @@ class RandomScheduler:
         """
         rng = np.random.default_rng(seed=42)
 
+        # Since we are assigning the weights at random we have to do multiple iterations to avoid skewing the results
+        # based on a single good or bad selection of weights. Generally 21 iterations is seen as statistically
+        # significant.
+        num_iters = 5
+
+        all_scheduled_graphs = np.zeros((teg.K * num_iters, teg.N, teg.N), dtype='int64')
+        scheduled_contacts = [[] for _ in range(teg.K)]
+        all_weights = np.empty((teg.K * num_iters, teg.N, teg.N), dtype="int64")
+
+        for i in range(num_iters):
+            for k in tqdm(range(teg.K)):
+                # Get an N x N matrix of weights randomly assigned between [0, 1], this will be used to compute the
+                # matching.
+                all_weights[k * i] = rng.integers(low=0, high=1, size=(teg.N, teg.N), endpoint=True)
+
+                # Compute max weight maximal matching using the blossom algorithm but with the weights as a random
+                # matrix. This gives the matching as if no real network information is known.
+                matched_edges = blossom(teg.graphs[k], all_weights[k * i])
+
+                # Compute L_k from the matched edges
+                L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
+                all_scheduled_graphs[k * i] = L_k
+
+        scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
+        weights = np.empty((teg.K, teg.N, teg.N), dtype="int64")
+
+        selected_ks = rng.choice(teg.K * num_iters, teg.K, replace=False)
+        for k, selected_k in enumerate(selected_ks):
+            scheduled_graphs[k] = all_scheduled_graphs[selected_k]
+            weights[k] = all_weights[selected_k]
+
+        return TimeExpandedGraph(
+            graphs=scheduled_graphs,
+            contacts=scheduled_contacts,
+            state_durations=teg.state_durations,
+            K=teg.K,
+            N=teg.N,
+            nodes=teg.nodes,
+            node_map=teg.node_map,
+            ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
+            W=weights)
+
+
+class AlternatingScheduler:
+    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
+        """
+        The AlternatingScheduler is a naive algorithm that takes alternating turns between intra-constellation and
+        inter-constellation transmissions. That is in the first state it will only schedule intra-constellation
+        transmissions, then in the second state, only inter-constellation transmissions, and then repeat. There is also
+        some randomness applied to the weights given in order to increase the fairness.
+        """
+        rng = np.random.default_rng(seed=42)
+
         scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
         scheduled_contacts = []
-        weights = np.empty((teg.K, teg.N, teg.N), dtype="float32")
+        weights = np.zeros((teg.K, teg.N, teg.N), dtype="int64")
 
         for k in tqdm(range(teg.K)):
-            # Generate a matrix of random weights 21 times, to be statistically significant, then take the average of
-            # those generations. This way we only run the algorithm one time but don't have randomness skew the baseline
-            # results up or down too much.
-            random_weights = [rng.choice(100, (teg.N, teg.N)) for _ in range(21)]
-            weights[k] = np.mean(random_weights, axis=0)
+            # Set the weights for the maximal matching based on the alternating current state (even or odd) and based
+            # on the transmission type (inter- or intra-constellation).
+            for tx_idx in range(teg.N):
+                for rx_idx in range(teg.N):
+                    if teg.graphs[k][tx_idx][rx_idx] == 0:
+                        continue
 
-            # Compute max weight maximal matching using the blossom algorithm but with the static weights matrix that is
-            # equal for all edges
+                    # Since these weights are just for fairness we don't need to do multiple iterations to converge on
+                    # a result like the random algorithm
+                    weight = rng.integers(low=0, high=10, size=1)[0]
+
+                    # If it is an even state then assign the weights to the intra-constellation edges
+                    is_intra_edge = tx_idx not in teg.ipn_node_to_planet_map and rx_idx in teg.ipn_node_to_planet_map
+                    # If it is an odd state then assign the weights to the inter-constellation edges
+                    is_inter_edge = tx_idx in teg.ipn_node_to_planet_map and rx_idx in teg.ipn_node_to_planet_map
+                    weights[k][tx_idx][rx_idx] = \
+                        weight if (k % 2 == 0 and is_intra_edge) or (k % 2 == 1 and is_inter_edge) else 0
+
             matched_edges = blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
