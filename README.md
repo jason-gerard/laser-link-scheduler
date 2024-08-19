@@ -30,6 +30,7 @@ python3 main.py --help
 - Laser Link Scheduler (LLS) is a scheduling algorithm designed for interplanetary communication workloads using free-space lasers. The implementation is done in Python leveraging the numpy and networkx libraries.
 - Fair Contact Plan (FCP) is a scheduling algorithm designed to provide fairness, primarily in intra-constellation communication. The implementation of this algorithm in this project is based on the open-source C++ implementation of it, https://github.com/juanfraire/dtn-topology-solver.
 - Random Scheduler is a scheduling algorithm that uses random weights at each k states of the time expanded graph for edge selection. This was mostly created as a baseline.
+- Alternating Scheduler is a naive algorithm that takes alternating turns between intra-constellation and inter-constellation transmissions.
 
 Further computational performance improvements can be made for the algorithms by further vectorizing operations for numpy, using the PyPy just-in-time compiler, and by using the Python multiprocessing library. There are many operations that could easily be parallelized to reduce the execution times of the algorithms.
 
