@@ -48,6 +48,7 @@ class Reporter:
         basic_report_headers = ["Algorithm", "Scenario", "Execution duration", "Capacity", "Wasted capacity", "Jain's fairness index", "Scheduled delay"]
 
         report_id = int(time.time())
+        print(f"Writing report ID {report_id} to disk")
 
         report_dir = os.path.join(constants.REPORTS_ROOT, f"{report_id}")
         os.mkdir(report_dir)

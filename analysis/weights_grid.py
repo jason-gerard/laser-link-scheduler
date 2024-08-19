@@ -1,5 +1,6 @@
 import os
 import pickle
+import pprint
 import sys
 
 import matplotlib.pyplot as plt
@@ -12,18 +13,25 @@ from matplotlib.colors import ListedColormap
 sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
 from time_expanded_graph import TimeExpandedGraph
 
-# report_id = 1722737768
-report_id = 1722740313
+# weights[k] = W_delta_cap + W_dct
+# if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:
+
+report_id = 1724036744
 file_name = "lls_mars_earth_simple_scenario.pkl"
 with open(f"reports/{report_id}/{file_name}", "rb") as f:
     teg: TimeExpandedGraph = pickle.load(f)
-    
+
 W_avg = np.sum(teg.W, axis=0) / teg.K
 
 max_val = max(map(max, W_avg))
 
+W_avg = W_avg / max_val
+
+max_val = max(map(max, W_avg))
+# pprint.pprint(W_avg)
+
 viridis = mpl.colormaps['viridis'].resampled(256)
-newcolors = viridis(np.linspace(0, 1, int(max_val)))
+newcolors = viridis(np.linspace(0, 1, 100))
 white = np.array([1, 1, 1, 1])
 newcolors[:1, :] = white
 newcmp = ListedColormap(newcolors)
@@ -71,7 +79,7 @@ plt.xlabel("Receiving Satellite ID")
 # plt.ylabel("Transmitting Satellite ID")
 
 cbar = fig.colorbar(psm, ax=ax)
-cbar.set_label('Average Delta Capacity & DCT')
+cbar.set_label('Average edge weight')
 
 plt.savefig(
     os.path.join("analysis", "weights_grid.pdf"),
@@ -81,6 +89,7 @@ plt.savefig(
 plt.savefig(
     os.path.join("analysis", "weights_grid.png"),
     format="png",
-    bbox_inches='tight'
+    bbox_inches='tight',
+    dpi=300,
 )
 plt.show()
