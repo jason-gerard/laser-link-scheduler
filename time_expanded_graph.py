@@ -218,7 +218,7 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                     
                     if possible_contact:
                         interface_id = teg.graphs[k - 1][tx_idx][rx_idx]
-                        bit_rate = constants.B[interface_id]
+                        bit_rate = constants.R[interface_id]
 
                         contacts.append(replace(
                             possible_contact[0],
@@ -239,7 +239,7 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
 
                     if possible_contact:
                         interface_id = teg.graphs[k][tx_idx][rx_idx]
-                        bit_rate = constants.B[interface_id]
+                        bit_rate = constants.R[interface_id]
 
                         contacts.append(replace(
                             possible_contact[0],

@@ -23,7 +23,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
     # benefits from graph fractionation.
     time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
         contact_plan,
-        should_fractionate=scheduler_name == "fcp")
+        should_fractionate=True)
     write_time_expanded_graph(experiment_name, time_expanded_graph, FileType.TEG)
     print("Finished converting contact plan to time expanded graph")
 

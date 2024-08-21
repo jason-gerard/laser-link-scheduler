@@ -46,9 +46,9 @@ alpha = 0.1
 # TODO update the code to us megabit as the base unit, switching now will cause integer overflow errors
 # default_BIT_RATE = 267_000_000
 default_BIT_RATE = 1000  # 1 kilobit per second
-# This list B, contains the bit rates for each communication interface.
+# This list R, contains the bit rates for each communication interface.
 # Since a = 0 doesn't apply to any interface the bit_rate is just set to 0.
-B = [0, default_BIT_RATE]
+R = [0, default_BIT_RATE]
 
 # The matrix P, represents the contact topology of the network. This contains for each state k, all possible contacts.
 # This is the input to the algorithm.

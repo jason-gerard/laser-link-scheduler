@@ -149,7 +149,7 @@ def compute_node_capacity_by_single_edge_graph(
         duration: int,
         ipn_node_to_planet_map: dict[int, str]
 ) -> NodeCapacity | None:
-    bit_rate = constants.B[interface_id]
+    bit_rate = constants.R[interface_id]
 
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
     # the tx and rx
@@ -196,7 +196,7 @@ def compute_node_capacity_by_graph(
 
                 # Get the bit_rate from the communication interface ID
                 a = graph[tx_idx][rx_idx]
-                bit_rate = constants.B[a]
+                bit_rate = constants.R[a]
 
                 # Only one of these two conditions can ever be true since we don't count contacts with the same node as
                 # the tx and rx
@@ -270,7 +270,7 @@ def compute_jains_fairness_index(
                         and tx_idx in nodes
                         and rx_idx in ipn_node_to_planet_map.keys()):
                     interface_id = graphs[k][tx_idx][rx_idx]
-                    bit_rate = constants.B[interface_id]
+                    bit_rate = constants.R[interface_id]
 
                     enabled_contact_times[k][tx_idx][rx_idx] = state_durations[k] * bit_rate
 
