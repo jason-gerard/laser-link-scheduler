@@ -9,7 +9,7 @@ plt.rcParams.update({'font.size': 18})
 plt.rc('legend', fontsize=14)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
-report_id = 1724043930
+report_id = 1724207677
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [{k: v for k, v in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
@@ -17,6 +17,7 @@ with open(path, "r") as f:
 for run in report:
     run["Capacity"] = int(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
     run["Wasted capacity"] = int(run["Wasted capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+    run["Wasted buffer capacity"] = int(run["Wasted buffer capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
     run["Scheduled delay"] = float(run["Scheduled delay"])
     run["Jain's fairness index"] = float(run["Jain's fairness index"])
 
@@ -32,6 +33,7 @@ algorithms = [
 metrics = [
     ("Capacity", "terabits/day", 20, 200, 20),
     ("Wasted capacity", "terabits/day", 40, 280, 40),
+    ("Wasted buffer capacity", "terabits/day", 20, 160, 20),
     ("Scheduled delay", "seconds", 2_000, 50_000, 10_000),
     ("Jain's fairness index", "", 0.2, 1.0, 0.2),
 ]

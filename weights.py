@@ -236,6 +236,16 @@ def compute_wasted_capacity(capacities: list[NodeCapacity]) -> float:
     return sum(wasted_capacities)
 
 
+def compute_wasted_buffer(capacities: list[NodeCapacity]) -> float:
+    # To compute the wasted buffer we first compute the difference between how much data was scheduled as inflow and
+    # outflow. Excess outflow data does not count as wasted buffer capacity. The main difference between wasted buffer
+    # and wasted network capacity is that wasted network capacity includes excess inflow and outflow in the computation
+    # where buffer only includes excess inflow.
+    wasted_capacities = [max(capacity.capacity_in - capacity.capacity_out, 0) for capacity in capacities]
+
+    return sum(wasted_capacities)
+
+
 def compute_jains_fairness_index(
         graphs: np.ndarray,
         state_durations: np.ndarray,
