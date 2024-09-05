@@ -16,6 +16,10 @@ from time_expanded_graph import TimeExpandedGraph
 # weights[k] = W_delta_cap + W_dct
 # if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:
 
+plt.rcParams.update({'font.size': 18})
+plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.family': 'Times New Roman'})
+
 report_id = 1724036744
 file_name = "lls_mars_earth_simple_scenario.pkl"
 with open(f"reports/{report_id}/{file_name}", "rb") as f:
@@ -61,7 +65,7 @@ ax.yaxis.set_label_text("Transmitting Satellite ID")
 # Second X-axis
 ax2 = ax.twiny()
 
-ax2.spines["bottom"].set_position(("axes", -0.075))
+ax2.spines["bottom"].set_position(("axes", -0.1))
 ax2.tick_params('both', length=0, width=0, which='minor')
 ax2.tick_params('both', direction='in', which='major')
 ax2.xaxis.set_ticks_position("bottom")
@@ -74,6 +78,9 @@ ax2.xaxis.set_minor_formatter(ticker.FixedFormatter(['Earth Relay', 'Mars Orbite
 
 ax.set_xlim(dim[0], dim[-1])
 ax.set_ylim(dim[0], dim[-1])
+
+# ax.tick_params(axis='x', which='major', pad=15)
+ax2.tick_params(axis='x', which='major', pad=15)
 
 plt.xlabel("Receiving Satellite ID")
 # plt.ylabel("Transmitting Satellite ID")
