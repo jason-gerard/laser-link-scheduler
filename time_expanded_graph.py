@@ -137,10 +137,10 @@ def include_contact(contact: Contact, state_start_time: int, state_duration: int
 
 
 def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
-    print("\tStarting time expanded graph fractionation")
+    print("Starting time expanded graph fractionation")
 
     new_k = time_expanded_graph.K
-    for k in range(0, time_expanded_graph.K):
+    for k in range(time_expanded_graph.K):
         if time_expanded_graph.state_durations[k] > constants.d_max:
 
             large_duration = time_expanded_graph.state_durations[k]
@@ -159,7 +159,7 @@ def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGra
 
     k_offset = 0
 
-    for k in tqdm(range(0, time_expanded_graph.K), ncols=120, bar_format="\t{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"):
+    for k in tqdm(range(time_expanded_graph.K)):
         if time_expanded_graph.state_durations[k] > constants.d_max:
 
             large_duration = time_expanded_graph.state_durations[k]
@@ -191,7 +191,7 @@ def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGra
     time_expanded_graph.contacts = new_contacts
     time_expanded_graph.K = new_k
 
-    print("\tFinished time expanded graph fractionation the new number of k states is {new_k}".format(new_k=new_k))
+    print(f"Finished time expanded graph fractionation the new number of k states is {new_k}")
 
     return time_expanded_graph
 
