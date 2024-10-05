@@ -1,6 +1,8 @@
 contourpy==1.2.1
 cycler==0.12.1
+exceptiongroup==1.2.2
 fonttools==4.53.1
+iniconfig==2.0.0
 kiwisolver==1.4.5
 matplotlib==3.9.1
 networkx==3.3
@@ -8,10 +10,17 @@ numpy==2.0.1
 packaging==24.1
 pandas==2.2.2
 pillow==10.4.0
+pluggy==1.5.0
+PuLP==2.9.0
 pyparsing==3.1.2
+PyQt6==6.7.1
+PyQt6-Qt6==6.7.2
+PyQt6_sip==13.8.0
+pytest==8.3.2
 python-dateutil==2.9.0.post0
 pytz==2024.1
 scipy==1.14.0
 six==1.16.0
+tomli==2.0.1
 tqdm==4.66.4
 tzdata==2024.1
