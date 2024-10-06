@@ -2,52 +2,18 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
+from constants import SOURCE_NODES, DESTINATION_NODES, RELAY_NODES, NODE_TO_PLANET_MAP
 from contact_plan import IONContactPlanParser
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, TimeExpandedGraph
 
 SHOW_FIGS = True
 
-experiment_name = "mars_earth_s_scenario"
-
-SOURCE_NODES = ["2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012",
-                "2013", "2014", "2015", "2016"]
-RELAY_NODES = ["3001", "3002", "3003", "3004"]
-DESTINATION_NODES = ["1001", "1002"]
-
-EARTH = "EARTH"
-MARS = "MARS"
-
-NODE_TO_PLANET_MAP = {
-    "1001": EARTH,
-    "1002": EARTH,
-
-    "2001": MARS,
-    "2002": MARS,
-    "2003": MARS,
-    "2004": MARS,
-    "2005": MARS,
-    "2006": MARS,
-    "2007": MARS,
-    "2008": MARS,
-    "2009": MARS,
-    "2010": MARS,
-    "2011": MARS,
-    "2012": MARS,
-    "2013": MARS,
-    "2014": MARS,
-    "2015": MARS,
-    "2016": MARS,
-
-    "3001": MARS,
-    "3002": MARS,
-    "3003": MARS,
-    "3004": MARS,
-}
+EXPERIMENT_NAME = "mars_earth_s_scenario"
 
 
 def main():
     contact_plan_parser = IONContactPlanParser()
-    contact_plan = contact_plan_parser.read(experiment_name)
+    contact_plan = contact_plan_parser.read(EXPERIMENT_NAME)
 
     teg = convert_contact_plan_to_time_expanded_graph(
         contact_plan,
