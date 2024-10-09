@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+from tqdm import tqdm
 
 from constants import SOURCE_NODES, DESTINATION_NODES, RELAY_NODES, NODE_TO_PLANET_MAP
 from contact_plan import IONContactPlanParser
@@ -22,12 +23,11 @@ def main():
     reduced_teg = dag_reduction(teg)
     
     print(count_edges(teg), count_edges(reduced_teg))
-    print(f"Percent of edges removed = {(1 - count_edges(reduced_teg) / count_edges(teg)):.3f}%")
-
-    visualize(teg)
-    visualize(reduced_teg)
+    print(f"Percent of edges removed = {100 * (1 - count_edges(reduced_teg) / count_edges(teg)):.3f}%")
 
     if SHOW_FIGS:
+        visualize(teg)
+        visualize(reduced_teg)
         plt.show()
 
 
@@ -40,8 +40,9 @@ def dag_reduction(teg: TimeExpandedGraph):
     Requirement 2: The source and relay nodes are both orbiting the same planet for any S -> R edge
     """
     reduced_graph = np.zeros((teg.K, teg.N, teg.N), dtype="int64")
-    
-    for k in range(teg.K):
+
+    print("Starting the DAG topology reduction algorithm")
+    for k in tqdm(range(teg.K)):
         for tx_idx in range(teg.N):
             for rx_idx in range(teg.N):
                 if teg.graphs[k][tx_idx][rx_idx] >= 1:
@@ -87,7 +88,7 @@ def visualize(teg):
             G.add_node(node)
         G.add_edges_from(edges)
 
-        print(teg.graphs[k])
+        # print(teg.graphs[k])
         plt.figure(k + rand)
         nx.draw(G, nx.spring_layout(G), node_size=1500, with_labels=True)
 
