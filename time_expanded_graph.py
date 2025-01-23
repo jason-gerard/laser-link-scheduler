@@ -18,6 +18,8 @@ class TimeExpandedGraph:
     nodes: list[str]
     node_map: dict[str, int]
     ipn_node_to_planet_map: dict[int, str]
+    
+    pos: np.ndarray
 
     W: np.ndarray  # 3D Weights matrix [k][tx_idx][rx_idx]
 
@@ -89,6 +91,8 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
     contact_topology_graphs = np.zeros((K, N, N), dtype='int64')
     contacts_by_state = []
     state_durations = np.empty(K, dtype='int64')
+    
+    positions = np.empty((K, N, 3), dtype="float64")
 
     print("Starting contact plan to time expanded graph conversion")
     for k, time_step in enumerate(tqdm(time_steps[:-1])):
@@ -105,12 +109,19 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
         # which indicates there is no contact between the two nodes
         for tx_idx, tx_node in enumerate(unique_nodes):
             # List of rx_nodes that have a contact with the tx_node in this time step
-            rx_nodes = [contact.rx_node for contact in included_contacts if contact.tx_node == tx_node]
+            tx_included_contacts = [contact for contact in included_contacts if contact.tx_node == tx_node]
+            rx_nodes = [contact.rx_node for contact in tx_included_contacts]
             rx_idxs = [node_map[rx_node] for rx_node in rx_nodes]
 
             for rx_idx in rx_idxs:
                 # For now, we assume all satellites only have a single default interface.
                 contact_topology_graphs[k][tx_idx][rx_idx] = constants.default_a
+                
+            # Add position data for the node
+            tx_x = tx_included_contacts[0].tx_x
+            tx_y = tx_included_contacts[0].tx_y
+            tx_z = tx_included_contacts[0].tx_z
+            positions[k][tx_idx] = [tx_x, tx_y, tx_z]
 
     time_expanded_graph = TimeExpandedGraph(
         graphs=contact_topology_graphs,
@@ -121,7 +132,8 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
         nodes=unique_nodes,
         node_map=node_map,
         ipn_node_to_planet_map=ipn_node_to_planet_map,
-        W=np.array([]))
+        W=np.array([]),
+        pos=positions)
 
     # This process of fractionation splits long contacts in the TEG into multiple smaller contacts, this will result in
     # each k state having a maximum duration of d_max. Since there are more states and more decision points some

@@ -76,7 +76,8 @@ class LaserLinkScheduler:
             nodes=teg.nodes,
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
-            W=weights)
+            W=weights,
+            pos=teg.pos)
 
 
 class FairContactPlan:
@@ -124,7 +125,8 @@ class FairContactPlan:
             nodes=teg.nodes,
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
-            W=weights)
+            W=weights,
+            pos=teg.pos)
 
 
 class RandomScheduler:
@@ -174,7 +176,8 @@ class RandomScheduler:
             nodes=teg.nodes,
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
-            W=weights)
+            W=weights,
+            pos=teg.pos)
 
 
 class AlternatingScheduler:
@@ -226,7 +229,8 @@ class AlternatingScheduler:
             nodes=teg.nodes,
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
-            W=weights)
+            W=weights,
+            pos=teg.pos)
 
 
 def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:

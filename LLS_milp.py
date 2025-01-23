@@ -113,7 +113,8 @@ class LLSModel:
             nodes=self.teg.nodes,
             node_map=self.teg.node_map,
             ipn_node_to_planet_map=self.teg.ipn_node_to_planet_map,
-            W=self.teg.W)
+            W=self.teg.W,
+            pos=self.teg.pos)
 
     def flow(self, i, j):
         edges = list(set(self.edges_by_node[i]) & set(self.edges_by_node[j]))

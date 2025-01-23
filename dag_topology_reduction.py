@@ -69,7 +69,8 @@ def dag_reduction(teg: TimeExpandedGraph):
         nodes=teg.nodes,
         node_map=teg.node_map,
         ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
-        W=teg.W)
+        W=teg.W,
+        pos=teg.pos)
 
 
 def visualize(teg, name):

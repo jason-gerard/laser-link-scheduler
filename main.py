@@ -25,6 +25,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
         contact_plan,
         should_fractionate=True)
     write_time_expanded_graph(experiment_name, time_expanded_graph, FileType.TEG)
+    print(time_expanded_graph.pos)
     print("Finished converting contact plan to time expanded graph")
 
     print("Starting contact scheduling")
