@@ -9,7 +9,7 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, Tim
 
 SHOW_FIGS = True
 
-EXPERIMENT_NAME = "mars_earth_s_scenario"
+EXPERIMENT_NAME = "mars_earth_xs_scenario"
 
 
 def main():
@@ -26,9 +26,9 @@ def main():
     print(f"Percent of edges removed = {100 * (1 - count_edges(reduced_teg) / count_edges(teg)):.3f}%")
 
     if SHOW_FIGS:
-        visualize(teg)
-        visualize(reduced_teg)
-        plt.show()
+        visualize(teg, name="teg")
+        visualize(reduced_teg, name="reduced_teg")
+        # plt.show()
 
 
 def dag_reduction(teg: TimeExpandedGraph):
@@ -72,7 +72,7 @@ def dag_reduction(teg: TimeExpandedGraph):
         W=teg.W)
 
 
-def visualize(teg):
+def visualize(teg, name):
     rand = np.random.randint(1, 10)
     for k in range(1):
         num_nodes = teg.N
@@ -90,8 +90,10 @@ def visualize(teg):
 
         # print(teg.graphs[k])
         plt.figure(k + rand)
-        nx.draw(G, nx.spring_layout(G), node_size=1500, with_labels=True)
-
+        # nx.draw(G, nx.spring_layout(G), node_size=1500, with_labels=False)
+        A = nx.nx_agraph.to_agraph(G)
+        A.layout(prog="dot")
+        A.draw(f'{name}.png', args='-Gnodesep=0.01 -Gfont_size=1', prog='dot')
 
 def count_edges(teg):
     count = 0
