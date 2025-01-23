@@ -1,5 +1,6 @@
 import numpy as np
 import constants
+from pat_delay_model import pat_delay
 from dataclasses import dataclass
 
 
@@ -14,9 +15,11 @@ class NodeCapacity:
 
 def delta_capacity(
         contact_topology_k: np.ndarray,
+        scheduled_contact_topology: np.ndarray,
         node_capacities: list[NodeCapacity],
         ipn_node_to_planet_map: dict[int, str],
-        state_duration: int
+        state_duration: int,
+        positions: np.ndarray,
 ) -> np.ndarray:
     """
     The delta cap method can be used with two different sub routines. Each of the sub routines will be applied to the
@@ -44,7 +47,9 @@ def delta_capacity(
                     rx_idx,
                     interface_id,
                     state_duration,
-                    ipn_node_to_planet_map)
+                    ipn_node_to_planet_map,
+                    scheduled_contact_topology,
+                    positions)
 
                 # Since the delta caps matrix is already filled with zeros, if the single edge node capacity returns
                 # None i.e. there was no new capacity then we can just leave the delta as 0, otherwise compute
@@ -132,11 +137,13 @@ def compute_node_capacities(
         graphs: np.ndarray,
         state_durations: np.ndarray,
         K: int,
-        ipn_node_to_planet_map: dict[int, str]
+        ipn_node_to_planet_map: dict[int, str],
+        scheduled_contact_topology: np.ndarray,
+        positions: np.ndarray,
 ) -> list[NodeCapacity]:
     # For each graph in the TEG, compute the capacity
     node_capacities_by_graph = [
-        compute_node_capacity_by_graph(graphs[k], state_durations[k], ipn_node_to_planet_map) for k in range(K)]
+        compute_node_capacity_by_graph(graphs[k], state_durations[k], ipn_node_to_planet_map, scheduled_contact_topology[:k], positions) for k in range(K)]
 
     node_capacities = np.array(node_capacities_by_graph).flatten().tolist()
     return merge_many_node_capacities(node_capacities)
@@ -147,9 +154,19 @@ def compute_node_capacity_by_single_edge_graph(
         rx_idx: int,
         interface_id: int,
         duration: int,
-        ipn_node_to_planet_map: dict[int, str]
+        ipn_node_to_planet_map: dict[int, str],
+        scheduled_contact_topology: np.ndarray,
+        positions: np.ndarray,
 ) -> NodeCapacity | None:
     bit_rate = constants.R[interface_id]
+    
+    effective_contact_duration = compute_effective_contact_time(
+        tx_idx,
+        rx_idx,
+        scheduled_contact_topology,
+        duration,
+        positions,
+    )
 
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
     # the tx and rx
@@ -158,7 +175,7 @@ def compute_node_capacity_by_single_edge_graph(
         # node
         return NodeCapacity(
             id=rx_idx,
-            capacity_in=duration * bit_rate,
+            capacity_in=effective_contact_duration * bit_rate,
             capacity_out=0)
     elif (tx_idx in ipn_node_to_planet_map.keys()
           and rx_idx in ipn_node_to_planet_map.keys()
@@ -168,7 +185,7 @@ def compute_node_capacity_by_single_edge_graph(
         return NodeCapacity(
             id=tx_idx,
             capacity_in=0,
-            capacity_out=duration * bit_rate)
+            capacity_out=effective_contact_duration * bit_rate)
     else:
         return None
 
@@ -176,7 +193,9 @@ def compute_node_capacity_by_single_edge_graph(
 def compute_node_capacity_by_graph(
         graph: np.ndarray,
         duration: int,
-        ipn_node_to_planet_map: dict[int, str]
+        ipn_node_to_planet_map: dict[int, str],
+        scheduled_contact_topology: np.ndarray,
+        positions: np.ndarray,
 ) -> list[NodeCapacity]:
     num_nodes = len(graph)
 
@@ -194,6 +213,14 @@ def compute_node_capacity_by_graph(
                 if graph[tx_idx][rx_idx] == 0:
                     continue
 
+                effective_contact_duration = compute_effective_contact_time(
+                    tx_idx,
+                    rx_idx,
+                    scheduled_contact_topology,
+                    duration,
+                    positions,
+                )
+                
                 # Get the bit_rate from the communication interface ID
                 a = graph[tx_idx][rx_idx]
                 bit_rate = constants.R[a]
@@ -203,14 +230,14 @@ def compute_node_capacity_by_graph(
                 if tx_idx not in ipn_node_to_planet_map.keys() and rx_idx == ipn_node_idx:
                     # Compute the amount of data transmitted to the IPN node from a non-IPN node.
                     # ipn node == rx_node
-                    node_capacity.capacity_in += duration * bit_rate
+                    node_capacity.capacity_in += effective_contact_duration * bit_rate
                 elif (tx_idx == ipn_node_idx
                       and rx_idx in ipn_node_to_planet_map.keys()
                       and ipn_node_to_planet_map[tx_idx] != ipn_node_to_planet_map[rx_idx]):
                     # Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
                     # destination planet.
                     # ipn node == tx_node
-                    node_capacity.capacity_out += duration * bit_rate
+                    node_capacity.capacity_out += effective_contact_duration * bit_rate
 
         capacities.append(node_capacity)
 
@@ -241,6 +268,7 @@ def compute_wasted_buffer(capacities: list[NodeCapacity]) -> float:
     # outflow. Excess outflow data does not count as wasted buffer capacity. The main difference between wasted buffer
     # and wasted network capacity is that wasted network capacity includes excess inflow and outflow in the computation
     # where buffer only includes excess inflow.
+    print(capacities)
     wasted_capacities = [max(capacity.capacity_in - capacity.capacity_out, 0) for capacity in capacities]
 
     return sum(wasted_capacities)
@@ -320,3 +348,79 @@ def compute_scheduled_delay(
     avg_delay_by_node = [node_delay["total_delay"] / max(node_delay["num_contacts"], 1)
                          for node_delay in node_delays.values()]
     return sum(avg_delay_by_node) / len(avg_delay_by_node)
+
+
+def compute_effective_contact_time(
+    idx1: int,
+    idx2: int,
+    scheduled_contact_topology: np.ndarray,
+    state_duration: int,
+    positions: np.ndarray,
+) -> float:
+    # TODO add 2 levels of cache
+    # delay value for same nodes idx1, idx2, k
+    # coordinates for a specific node
+
+    curr_k = min(len(scheduled_contact_topology), len(positions) - 1)
+    
+    # For node1 check in the scheduled topology the last time it had a contact and with which node
+    # Take that k and check the coordinates of it and the rx at that time, this will give the previous coordinates
+    idx1_k = -1
+    idx1_rx = None
+    for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
+        for rx_idx in range(len(scheduled_contact_topology[k])):
+            if scheduled_contact_topology[k][idx1][rx_idx] >= 1:
+                idx1_k = k
+                idx1_rx = rx_idx
+                break
+
+    # Do the same for node 2
+    idx2_k = -1
+    idx2_rx = None
+    for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
+        for rx_idx in range(len(scheduled_contact_topology[k])):
+            if scheduled_contact_topology[k][idx2][rx_idx] >= 1:
+                idx2_k = k
+                idx2_rx = rx_idx
+                break
+
+    # Use PAT lib to compute delay
+    if idx1_k != -1 and idx2_k != -1:
+        idx1_coords = np.array(positions[curr_k][idx1])
+        idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
+
+        idx2_coords = np.array(positions[curr_k][idx2])
+        idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
+        
+        PAT_delay = pat_delay(
+            np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
+            np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
+        )
+    elif idx1_k != -1 and idx2_k == -1:
+        # idx2 first contact
+        idx1_coords = np.array(positions[curr_k][idx1])
+        idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
+
+        idx2_coords = np.array(positions[curr_k][idx2])
+
+        PAT_delay = pat_delay(
+            np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
+            np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
+        )
+    elif idx1_k == -1 and idx2_k != -1:
+        # idx1 first contact
+        idx2_coords = np.array(positions[curr_k][idx2])
+        idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
+
+        idx1_coords = np.array(positions[curr_k][idx1])
+
+        PAT_delay = pat_delay(
+            np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
+            np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
+        )
+    else:
+        PAT_delay = 0
+
+    # Subtract with state duration, bind it to a floor of 0, this will give
+    # effective contact duration = contact duration - PAT_delay
+    return max(state_duration - PAT_delay, 0)

@@ -25,7 +25,7 @@ class Reporter:
             "teg": teg,
         })
         
-        node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.ipn_node_to_planet_map)
+        node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.ipn_node_to_planet_map, teg.graphs, teg.pos)
         network_capacity = compute_capacity(node_capacities)
         network_wasted_capacity = compute_wasted_capacity(node_capacities)
 

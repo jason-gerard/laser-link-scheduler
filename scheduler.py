@@ -40,11 +40,17 @@ class LaserLinkScheduler:
             # capacities and the possible choices or decisions of active edges for this current state. This is a
             # dynamic programming approach where we used the memoized values of the weights of the previous k states
             # to compute the new weights matrix for capacity for state k+1.
+            # We pass in the previous graphs as previous state, from there we can see for the two nodes making the edge
+            # where were they looking before and where will they look now.
+            # In the case that a node did not have a link in the previous time slice we can assume they are still
+            # pointing at the last node they were in contact with.
             W_delta_cap = delta_capacity(
                 teg.graphs[k],
+                scheduled_graphs[:k],
                 node_capacities,
                 teg.ipn_node_to_planet_map,
-                teg.state_durations[k])
+                teg.state_durations[k],
+                teg.pos)
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
             weights[k] = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
@@ -61,7 +67,9 @@ class LaserLinkScheduler:
             scheduled_node_capacities = compute_node_capacity_by_graph(
                 L_k,
                 teg.state_durations[k],
-                teg.ipn_node_to_planet_map)
+                teg.ipn_node_to_planet_map,
+                scheduled_graphs[:k],
+                teg.pos)
             node_capacities = merge_many_node_capacities(node_capacities + scheduled_node_capacities)
 
             # Update the matrix containing the disabled contact time for state k

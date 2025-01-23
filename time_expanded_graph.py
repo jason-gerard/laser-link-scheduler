@@ -118,9 +118,14 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
                 contact_topology_graphs[k][tx_idx][rx_idx] = constants.default_a
                 
             # Add position data for the node
-            tx_x = tx_included_contacts[0].tx_x
-            tx_y = tx_included_contacts[0].tx_y
-            tx_z = tx_included_contacts[0].tx_z
+            newest_contact = tx_included_contacts[0]
+            for contact in tx_included_contacts:
+                if contact.start_time > newest_contact.start_time:
+                    newest_contact = contact
+            
+            tx_x = newest_contact.tx_x
+            tx_y = newest_contact.tx_y
+            tx_z = newest_contact.tx_z
             positions[k][tx_idx] = [tx_x, tx_y, tx_z]
 
     time_expanded_graph = TimeExpandedGraph(
