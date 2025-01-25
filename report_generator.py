@@ -26,10 +26,10 @@ class Reporter:
         })
         
         node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.ipn_node_to_planet_map, teg.graphs, teg.pos)
-        network_capacity = compute_capacity(node_capacities)
+        network_capacity = int(compute_capacity(node_capacities))
         network_wasted_capacity = compute_wasted_capacity(node_capacities)
 
-        wasted_buffer_capacity = compute_wasted_buffer(node_capacities)
+        wasted_buffer_capacity = int(compute_wasted_buffer(node_capacities))
 
         jains_fairness_index = compute_jains_fairness_index(teg.graphs, teg.state_durations, teg.ipn_node_to_planet_map, teg.K, teg.N)
         

@@ -350,6 +350,12 @@ def compute_scheduled_delay(
     return sum(avg_delay_by_node) / len(avg_delay_by_node)
 
 
+# L1 cache effective contact time for same nodes idx1, idx2, k
+effective_contact_time_cache = {}
+
+# L2 cache coordinates for a specific node
+coordinate_cache = {}
+
 def compute_effective_contact_time(
     idx1: int,
     idx2: int,
@@ -357,35 +363,58 @@ def compute_effective_contact_time(
     state_duration: int,
     positions: np.ndarray,
 ) -> float:
-    # TODO add 2 levels of cache
-    # delay value for same nodes idx1, idx2, k
-    # coordinates for a specific node
-
+    if constants.should_bypass_retargeting_time:
+        return state_duration
+    
     curr_k = min(len(scheduled_contact_topology), len(positions) - 1)
+    
+    if ((idx1, idx2, curr_k) in effective_contact_time_cache or (idx2, idx1, curr_k) in effective_contact_time_cache) and curr_k != len(positions) - 1:
+        return effective_contact_time_cache[(idx1, idx2, curr_k)]
     
     # For node1 check in the scheduled topology the last time it had a contact and with which node
     # Take that k and check the coordinates of it and the rx at that time, this will give the previous coordinates
-    idx1_k = -1
-    idx1_rx = None
-    for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
-        for rx_idx in range(len(scheduled_contact_topology[k])):
-            if scheduled_contact_topology[k][idx1][rx_idx] >= 1:
-                idx1_k = k
-                idx1_rx = rx_idx
-                break
+    idx1_rx = -1
+    if (idx1, curr_k) in coordinate_cache:
+        idx1_rx = coordinate_cache[(idx1, curr_k)]
+    else:
+        for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
+            for rx_idx in range(len(scheduled_contact_topology[k])):
+                if scheduled_contact_topology[k][idx1][rx_idx] >= 1:
+                    idx1_rx = rx_idx
+                    coordinate_cache[(idx1, curr_k)] = rx_idx
+                    break
 
     # Do the same for node 2
-    idx2_k = -1
-    idx2_rx = None
-    for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
-        for rx_idx in range(len(scheduled_contact_topology[k])):
-            if scheduled_contact_topology[k][idx2][rx_idx] >= 1:
-                idx2_k = k
-                idx2_rx = rx_idx
-                break
+    idx2_rx = -1
+    if (idx2, curr_k) in coordinate_cache:
+        idx2_rx = coordinate_cache[(idx2, curr_k)]
+    else:
+        for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
+            for rx_idx in range(len(scheduled_contact_topology[k])):
+                if scheduled_contact_topology[k][idx2][rx_idx] >= 1:
+                    idx2_rx = rx_idx
+                    coordinate_cache[(idx2, curr_k)] = rx_idx
+                    break
+
+    # For node1 check in the scheduled topology the last time it had a contact and with which node
+    # Take that k and check the coordinates of it and the rx at that time, this will give the previous coordinates
+    # idx1_rx = -1
+    # for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
+    #     for rx_idx in range(len(scheduled_contact_topology[k])):
+    #         if scheduled_contact_topology[k][idx1][rx_idx] >= 1:
+    #             idx1_rx = rx_idx
+    #             break
+
+    # Do the same for node 2
+    # idx2_rx = -1
+    # for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
+    #     for rx_idx in range(len(scheduled_contact_topology[k])):
+    #         if scheduled_contact_topology[k][idx2][rx_idx] >= 1:
+    #             idx2_rx = rx_idx
+    #             break
 
     # Use PAT lib to compute delay
-    if idx1_k != -1 and idx2_k != -1:
+    if idx1_rx != -1 and idx2_rx != -1:
         idx1_coords = np.array(positions[curr_k][idx1])
         idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
 
@@ -396,7 +425,7 @@ def compute_effective_contact_time(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
         )
-    elif idx1_k != -1 and idx2_k == -1:
+    elif idx1_rx != -1 and idx2_rx == -1:
         # idx2 first contact
         idx1_coords = np.array(positions[curr_k][idx1])
         idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
@@ -407,7 +436,7 @@ def compute_effective_contact_time(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
         )
-    elif idx1_k == -1 and idx2_k != -1:
+    elif idx1_rx == -1 and idx2_rx != -1:
         # idx1 first contact
         idx2_coords = np.array(positions[curr_k][idx2])
         idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
@@ -423,4 +452,9 @@ def compute_effective_contact_time(
 
     # Subtract with state duration, bind it to a floor of 0, this will give
     # effective contact duration = contact duration - PAT_delay
-    return max(state_duration - PAT_delay, 0)
+    effective_contact_time = max(state_duration - PAT_delay, 0)
+    
+    effective_contact_time_cache[(idx1, idx2, curr_k)] = effective_contact_time
+    effective_contact_time_cache[(idx2, idx1, curr_k)] = effective_contact_time
+
+    return effective_contact_time

@@ -20,10 +20,22 @@ def pat_delay_single_node(src_node, curr_dst_node, new_dst_node) -> float:
     return theta / SLEW_RATE
 
 
+# L2 cache delay value for same nodes idx1, idx1_rx, k
+retargeting_delay_cache = {}
+
 def pat_delay(node_set1, node_set2) -> float:
     # Compute the PAT delay for node sets 1 and 2
-    pat_delay_1 = pat_delay_single_node(*node_set1)
-    pat_delay_2 = pat_delay_single_node(*node_set2)
+    if node_set1.tostring() in retargeting_delay_cache:
+        pat_delay_1 = retargeting_delay_cache[node_set1.tostring()]
+    else:
+        pat_delay_1 = pat_delay_single_node(*node_set1)
+        retargeting_delay_cache[node_set1.tostring()] = pat_delay_1
+
+    if node_set2.tostring() in retargeting_delay_cache:
+        pat_delay_2 = retargeting_delay_cache[node_set2.tostring()]
+    else:
+        pat_delay_2 = pat_delay_single_node(*node_set2)
+        retargeting_delay_cache[node_set2.tostring()] = pat_delay_2
 
     # The max between them is the actual delay since both must be finished pointing
     # before starting acquisition

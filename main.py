@@ -9,9 +9,11 @@ from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler, Alte
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, write_time_expanded_graph, \
     convert_time_expanded_graph_to_contact_plan
 from utils import FileType
+import constants
 
 
 def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Reporter):
+    constants.should_bypass_retargeting_time = False
     start = timer()
 
     # Read contact plan from disk
@@ -30,6 +32,10 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
     print("Starting contact scheduling")
     if scheduler_name == "lls":
         scheduled_time_expanded_graph = LaserLinkScheduler().schedule(time_expanded_graph)
+    elif scheduler_name == "lls_pat_unaware":
+        constants.should_bypass_retargeting_time = True
+        scheduled_time_expanded_graph = LaserLinkScheduler().schedule(time_expanded_graph)
+        constants.should_bypass_retargeting_time = False
     elif scheduler_name == "fcp":
         scheduled_time_expanded_graph = FairContactPlan().schedule(time_expanded_graph)
     elif scheduler_name == "random":
@@ -52,6 +58,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
     ipnd_contact_plan_parser = IPNDContactPlanParser()
     ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
 
+    constants.should_bypass_retargeting_time = False
     reporter.generate_report(
         experiment_name,
         scheduler_name,
@@ -60,7 +67,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
 
 
 def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[str]):
-    reporter = Reporter(write_pkl=True)
+    reporter = Reporter(write_pkl=False)
 
     for experiment_name in experiment_names:
         for scheduler_name in scheduler_names:

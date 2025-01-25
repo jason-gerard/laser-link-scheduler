@@ -70,6 +70,8 @@ R = [0, default_BIT_RATE]
 # For nodes 0, 1, 2, 3
 # X = [1, 3, 0, 3]
 
+should_bypass_retargeting_time = False
+
 # The interplanetary range we define is any contact over 100,000 kilometers. We then convert this to light seconds to
 # follow the ION contact plan standard
 INTERPLANETARY_RANGE = 100_000 * 1_000 / 299_792_458
