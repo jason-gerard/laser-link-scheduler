@@ -13,7 +13,7 @@ import constants
 
 
 def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Reporter):
-    constants.should_bypass_retargeting_time = False
+    constants.should_bypass_retargeting_time = True
     start = timer()
 
     # Read contact plan from disk
@@ -58,7 +58,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
     ipnd_contact_plan_parser = IPNDContactPlanParser()
     ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
 
-    constants.should_bypass_retargeting_time = False
+    constants.should_bypass_retargeting_time = True
     reporter.generate_report(
         experiment_name,
         scheduler_name,

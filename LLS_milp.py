@@ -5,9 +5,32 @@ from constants import RELAY_NODES, SOURCE_NODES, DESTINATION_NODES
 from contact_plan import IONContactPlanParser
 from dag_topology_reduction import dag_reduction
 from report_generator import Reporter
-from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, TimeExpandedGraph
+from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, TimeExpandedGraph, \
+    write_time_expanded_graph
+from utils import FileType
 
-bit_rate = 1000
+src_node_bit_rate = 1000
+relay_node_bit_rate = 1000
+gs_node_bit_rate = 1000
+
+
+def get_bit_rate(node_id):
+    if node_id in SOURCE_NODES:
+        return src_node_bit_rate
+    elif node_id in RELAY_NODES:
+        return relay_node_bit_rate
+    elif node_id in DESTINATION_NODES:
+        return gs_node_bit_rate
+
+
+def get_num_lasers(node_id):
+    if node_id in SOURCE_NODES:
+        return 1
+    elif node_id in RELAY_NODES:
+        return 1
+    elif node_id in DESTINATION_NODES:
+        return 1
+
 
 max_matching = 2
 
@@ -66,6 +89,8 @@ class LLSModel:
         capacities = {relay_node: pulp.LpVariable(f"Capacity_{relay_node}", lowBound=0)
                       for relay_node in self.teg.nodes if relay_node in RELAY_NODES}
 
+        # TODO create new single hop capacity varaibles
+
         flow_model = pulp.LpProblem("Network_flow_model", pulp.LpMaximize)
         
         print(f"Initializing the objective function")
@@ -80,13 +105,21 @@ class LLSModel:
             # outflow
             flow_model += capacity <= pulp.lpSum([self.flow(relay_node, x)
                                                   for x in self.teg.nodes if x in DESTINATION_NODES])
+        
+        # TODO create new inflow and outflow capacity constraints for single hop
+
+        # Constraint for fairness of source nodes
+        source_nodes = [source_node for source_node in self.teg.nodes if source_node in SOURCE_NODES]
+        avg_ect = pulp.lpSum([self.ect(node) for node in source_nodes]) / len(source_nodes) - 1000
+        for source_node in source_nodes:
+            flow_model += self.ect(source_node) >= avg_ect
 
         # Constraint that each node can only be a part of a single selected edge per state
         print(f"Setting up 1 to 1 relationship between nodes per state k")
         for node in self.teg.nodes:
             for k in range(self.teg.K):
                 flow_model += (
-                    pulp.lpSum([self.edges[edge] for edge in self.edges_by_state[node][k]]) <= 1,
+                    pulp.lpSum([self.edges[edge] for edge in self.edges_by_state[node][k]]) <= get_num_lasers(node),
                     f"Max_edge_{node}_{k}",
                 )
 
@@ -115,25 +148,39 @@ class LLSModel:
             ipn_node_to_planet_map=self.teg.ipn_node_to_planet_map,
             W=self.teg.W,
             pos=self.teg.pos)
+    
+    def retargeting_delay(self, edge):
+        # For each edge, take the previous k, and for both i and j, see if they were selected for an edge in the
+        # previous k state. If not then assume retargeting delay is 0. If it was then use the position data to compute
+        # the retargeting delay.
+        # TODO finish this impl and probably create another pre-computation for getting seeing the edges in the last state
+        # so we don't have to search through everything
+        return 0
 
     def flow(self, i, j):
         edges = list(set(self.edges_by_node[i]) & set(self.edges_by_node[j]))
-        return sum([self.edges[edge] * self.T[edge[0]] * bit_rate for edge in edges])
+        bit_rate = min(get_bit_rate(i), get_bit_rate(j))
+        
+        return sum([self.edges[edge] * (self.T[edge[0]] - self.retargeting_delay(edge)) * bit_rate for edge in edges])
 
-    def dct(self, i):
+    def ect(self, i):
         """
-        In order to make the schedule fair to all the nodes we can use the disabled contact time (DCT) for each inflow edge
-        by taking the total duration of the schedule minus the enabled contact time
+        In order to make the schedule fair to all the nodes we can use the enabled contact time (ECT) for each inflow
+        edge.
         """
         selected_edges = [edge for edge in self.edges.keys() if i in edge]
         # T[edge[0]] gives the duration of the edge
-        return sum([self.schedule_duration - self.edges[edge] * self.T[edge[0]] for edge in selected_edges])
+        return sum([self.edges[edge] * self.T[edge[0]] for edge in selected_edges])
 
 
 if __name__ == "__main__":
-    EXPERIMENT_NAME = "mars_earth_m_scenario"
+    EXPERIMENT_NAME = "mars_earth_xs_scenario"
     solver = LLSModel(EXPERIMENT_NAME, True)
     teg = solver.solve()
+
+    contact_plan_parser = IONContactPlanParser()
+    write_time_expanded_graph(EXPERIMENT_NAME, teg, FileType.TEG_SCHEDULED)
+    print("Finished contact scheduling")
 
     reporter = Reporter(write_pkl=False)
     reporter.generate_report(

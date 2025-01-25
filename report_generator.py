@@ -47,9 +47,6 @@ class Reporter:
         print(f"Average delay: {scheduled_delay}")
 
     def write_report(self):
-        if not self.write_pkl:
-            return
-
         # Create CSV of runtimes, capacity, and wasted capacity
         basic_report_headers = ["Algorithm", "Scenario", "Execution duration", "Capacity", "Wasted capacity", "Wasted buffer capacity", "Jain's fairness index", "Scheduled delay"]
 
@@ -64,7 +61,10 @@ class Reporter:
             writer = csv.writer(f, delimiter=",", lineterminator="\n")
             writer.writerow(basic_report_headers)
             writer.writerows(self.reports)
-        
+            
+        if not self.write_pkl:
+            return
+
         # Save each teg as a pkl file to the reports directory so that it can be used for analysis later
         for teg_data_dict in self.time_expanded_graph_data:
             pkl_path = str(os.path.join(report_dir, f"{teg_data_dict['name']}.pkl"))
