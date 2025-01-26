@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 from tqdm import tqdm
 
-from constants import SOURCE_NODES, DESTINATION_NODES, RELAY_NODES, NODE_TO_PLANET_MAP
+from constants import SOURCE_NODES, DESTINATION_NODES, RELAY_NODES, NODE_TO_PLANET_MAP, EARTH
 from contact_plan import IONContactPlanParser
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, TimeExpandedGraph
 
@@ -37,7 +37,8 @@ def dag_reduction(teg: TimeExpandedGraph):
     and reduce the number of edges in the graph
     Requirement 1: The edge is a part of one of the follow path types: S -> D (one hop) and S -> R -> D (two hops), then
                    the specific edge types to be kept include: S -> D, S -> R, R -> D
-    Requirement 2: The source and relay nodes are both orbiting the same planet for any S -> R edge
+    Requirement 2: The source and relay nodes are both orbiting the same planet for any S -> R edge or if the relay node
+                   is orbiting the destination planet
     """
     reduced_graph = np.zeros((teg.K, teg.N, teg.N), dtype="int64")
 
@@ -56,13 +57,14 @@ def dag_reduction(teg: TimeExpandedGraph):
                     
                     # Req. 2
                     are_nodes_same_planet = NODE_TO_PLANET_MAP[tx_node] == NODE_TO_PLANET_MAP[rx_node]
+                    is_rly_on_dst_planet = NODE_TO_PLANET_MAP[rx_node] == EARTH
 
-                    if is_src_dst or (is_src_rly and are_nodes_same_planet) or is_rly_dst:
+                    if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
                         reduced_graph[k][tx_idx][rx_idx] = teg.graphs[k][tx_idx][rx_idx]
 
-    return TimeExpandedGraph(
+    reduced_teg = TimeExpandedGraph(
         graphs=reduced_graph,
-        contacts=[],
+        contacts=teg.contacts,
         state_durations=teg.state_durations,
         K=teg.K,
         N=teg.N,
@@ -71,6 +73,11 @@ def dag_reduction(teg: TimeExpandedGraph):
         ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
         W=teg.W,
         pos=teg.pos)
+
+    print(count_edges(teg), count_edges(reduced_teg))
+    print(f"Percent of edges removed = {100 * (1 - count_edges(reduced_teg) / count_edges(teg)):.3f}%")
+    
+    return reduced_teg
 
 
 def visualize(teg, name):

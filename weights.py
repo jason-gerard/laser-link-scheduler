@@ -17,7 +17,7 @@ def delta_capacity(
         contact_topology_k: np.ndarray,
         scheduled_contact_topology: np.ndarray,
         node_capacities: list[NodeCapacity],
-        ipn_node_to_planet_map: dict[int, str],
+        nodes: list[str],
         state_duration: int,
         positions: np.ndarray,
 ) -> np.ndarray:
@@ -47,7 +47,7 @@ def delta_capacity(
                     rx_idx,
                     interface_id,
                     state_duration,
-                    ipn_node_to_planet_map,
+                    nodes,
                     scheduled_contact_topology,
                     positions)
 
@@ -137,13 +137,13 @@ def compute_node_capacities(
         graphs: np.ndarray,
         state_durations: np.ndarray,
         K: int,
-        ipn_node_to_planet_map: dict[int, str],
+        nodes: list[str],
         scheduled_contact_topology: np.ndarray,
         positions: np.ndarray,
 ) -> list[NodeCapacity]:
     # For each graph in the TEG, compute the capacity
     node_capacities_by_graph = [
-        compute_node_capacity_by_graph(graphs[k], state_durations[k], ipn_node_to_planet_map, scheduled_contact_topology[:k], positions) for k in range(K)]
+        compute_node_capacity_by_graph(graphs[k], state_durations[k], nodes, scheduled_contact_topology[:k], positions) for k in range(K)]
 
     node_capacities = np.array(node_capacities_by_graph).flatten().tolist()
     return merge_many_node_capacities(node_capacities)
@@ -154,7 +154,7 @@ def compute_node_capacity_by_single_edge_graph(
         rx_idx: int,
         interface_id: int,
         duration: int,
-        ipn_node_to_planet_map: dict[int, str],
+        nodes: list[str],
         scheduled_contact_topology: np.ndarray,
         positions: np.ndarray,
 ) -> NodeCapacity | None:
@@ -170,18 +170,15 @@ def compute_node_capacity_by_single_edge_graph(
 
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
     # the tx and rx
-    if tx_idx not in ipn_node_to_planet_map.keys() and rx_idx in ipn_node_to_planet_map.keys():
-        # Capacity in is defined for the rx IPN node by the amount of data transmitted to the IPN node from a non-IPN
-        # node
+    # Inflow for single hop and two hop
+    if nodes[tx_idx] in constants.SOURCE_NODES and nodes[rx_idx] in constants.RELAY_NODES or nodes[rx_idx] in constants.DESTINATION_NODES:
         return NodeCapacity(
             id=rx_idx,
             capacity_in=effective_contact_duration * bit_rate,
-            capacity_out=0)
-    elif (tx_idx in ipn_node_to_planet_map.keys()
-          and rx_idx in ipn_node_to_planet_map.keys()
-          and ipn_node_to_planet_map[tx_idx] != ipn_node_to_planet_map[rx_idx]):
-        # Capacity out is defined for the tx IPN node by the amount of data transmitted by the tx IPN node to an rx IPN
-        # node where the tx and rx nodes are orbiting different central bodies
+            capacity_out=0 if nodes[rx_idx] in constants.RELAY_NODES else float("inf"))
+    # Outflow for two hop
+    elif (nodes[tx_idx] in constants.RELAY_NODES
+          and nodes[rx_idx] in constants.DESTINATION_NODES):
         return NodeCapacity(
             id=tx_idx,
             capacity_in=0,
@@ -193,18 +190,21 @@ def compute_node_capacity_by_single_edge_graph(
 def compute_node_capacity_by_graph(
         graph: np.ndarray,
         duration: int,
-        ipn_node_to_planet_map: dict[int, str],
+        nodes: list[str],
         scheduled_contact_topology: np.ndarray,
         positions: np.ndarray,
 ) -> list[NodeCapacity]:
     num_nodes = len(graph)
 
     capacities = []
-    for ipn_node_idx in ipn_node_to_planet_map.keys():
+    for node_idx, node in enumerate(nodes):
+        if node not in constants.RELAY_NODES and node not in constants.DESTINATION_NODES:
+            continue
+        
         node_capacity = NodeCapacity(
-            id=ipn_node_idx,
+            id=node_idx,
             capacity_in=0,
-            capacity_out=0)
+            capacity_out=0 if node in constants.RELAY_NODES else float("inf"))
 
         # The list if ipn_nodes contains the node idx i.e. its index in the adjacency matrix
         for tx_idx in range(num_nodes):
@@ -227,13 +227,12 @@ def compute_node_capacity_by_graph(
 
                 # Only one of these two conditions can ever be true since we don't count contacts with the same node as
                 # the tx and rx
-                if tx_idx not in ipn_node_to_planet_map.keys() and rx_idx == ipn_node_idx:
+                if nodes[tx_idx] in constants.SOURCE_NODES and rx_idx == node_idx:
                     # Compute the amount of data transmitted to the IPN node from a non-IPN node.
                     # ipn node == rx_node
                     node_capacity.capacity_in += effective_contact_duration * bit_rate
-                elif (tx_idx == ipn_node_idx
-                      and rx_idx in ipn_node_to_planet_map.keys()
-                      and ipn_node_to_planet_map[tx_idx] != ipn_node_to_planet_map[rx_idx]):
+                elif (tx_idx == node_idx
+                      and nodes[rx_idx] in constants.DESTINATION_NODES):
                     # Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
                     # destination planet.
                     # ipn node == tx_node
@@ -256,7 +255,7 @@ def compute_capacity(capacities: list[NodeCapacity]) -> float:
 
 def compute_wasted_capacity(capacities: list[NodeCapacity]) -> float:
     # Take the absolute difference between the capacity in and capacity out for each IPN node
-    wasted_capacities = [abs(capacity.capacity_in - capacity.capacity_out) for capacity in capacities]
+    wasted_capacities = [abs(capacity.capacity_in - capacity.capacity_out) for capacity in capacities if capacity.capacity_out != float("inf")]
 
     # This metric should be minimized
     # Sum the wasted capacities for each IPN nodes to get the network wasted capacity
@@ -268,7 +267,6 @@ def compute_wasted_buffer(capacities: list[NodeCapacity]) -> float:
     # outflow. Excess outflow data does not count as wasted buffer capacity. The main difference between wasted buffer
     # and wasted network capacity is that wasted network capacity includes excess inflow and outflow in the computation
     # where buffer only includes excess inflow.
-    print(capacities)
     wasted_capacities = [max(capacity.capacity_in - capacity.capacity_out, 0) for capacity in capacities]
 
     return sum(wasted_capacities)
@@ -277,7 +275,7 @@ def compute_wasted_buffer(capacities: list[NodeCapacity]) -> float:
 def compute_jains_fairness_index(
         graphs: np.ndarray,
         state_durations: np.ndarray,
-        ipn_node_to_planet_map: dict[int, str],
+        nodes: list[str],
         K: int,
         N: int
 ) -> float:
@@ -288,15 +286,15 @@ def compute_jains_fairness_index(
     to orbiter or relay to relay transmissions. This metrics tries to understand of fair/even the distribution of access
     opportunities is between the science satellites (orbiters) and the relay satellites.
     """
-    nodes = [node_idx for node_idx in range(N) if node_idx not in ipn_node_to_planet_map.keys()]  # Mars orbiter nodes
+    source_nodes = [node_idx for node_idx in range(N) if nodes[node_idx] in constants.SOURCE_NODES]  # Mars orbiter nodes
     # Create a single graph the sums the enabled contact times of all k states
     enabled_contact_times = np.zeros((K, N, N), dtype="int64")
     for k in range(K):
         for tx_idx in range(N):
             for rx_idx in range(N):
                 if (graphs[k][tx_idx][rx_idx] >= 1
-                        and tx_idx in nodes
-                        and rx_idx in ipn_node_to_planet_map.keys()):
+                        and tx_idx in source_nodes
+                        and (nodes[rx_idx] in constants.RELAY_NODES or nodes[rx_idx] in constants.DESTINATION_NODES)):
                     interface_id = graphs[k][tx_idx][rx_idx]
                     bit_rate = constants.R[interface_id]
 
@@ -304,16 +302,16 @@ def compute_jains_fairness_index(
 
     enabled_contact_time_graph = np.sum(enabled_contact_times, axis=0)
     # Compute a list of the amount of data each Mars orbiter transmitted to a Mars relay
-    enabled_contact_time_by_node = np.array([np.sum(enabled_contact_time_graph[node_idx]) for node_idx in nodes])
+    enabled_contact_time_by_node = np.array([np.sum(enabled_contact_time_graph[node_idx]) for node_idx in source_nodes])
 
     # Solve for the network level Jain's fairness index with x as the throughput of the Mars orbiter nodes
-    return (np.sum(enabled_contact_time_by_node) ** 2) / (len(nodes) * np.sum(enabled_contact_time_by_node ** 2))
+    return (np.sum(enabled_contact_time_by_node) ** 2) / (len(source_nodes) * np.sum(enabled_contact_time_by_node ** 2))
 
 
 def compute_scheduled_delay(
         graphs: np.ndarray,
         state_durations: np.ndarray,
-        ipn_node_to_planet_map: dict[int, str],
+        nodes: list[str],
         K: int,
         N: int
 ) -> float:
@@ -321,8 +319,8 @@ def compute_scheduled_delay(
     Compute the average delay between when an orbiter can transmit to a relay. This does not include orbiter to orbiter
     or relay to relay transmissions. This tries to understand the delay for Mars orbiter to Mars relay transmissions.
     """
-    orbiter_nodes = [node_idx for node_idx in range(N) if node_idx not in ipn_node_to_planet_map]
-    relay_nodes = [node_idx for node_idx in range(N) if node_idx in ipn_node_to_planet_map]
+    orbiter_nodes = [node_idx for node_idx in range(N) if nodes[node_idx] in constants.SOURCE_NODES]
+    non_source_nodes = [node_idx for node_idx in range(N) if nodes[node_idx] in constants.RELAY_NODES or nodes[node_idx] in constants.DESTINATION_NODES]
     node_delays = {node_idx: {"total_delay": 0, "num_contacts": 0} for node_idx in orbiter_nodes}
 
     # This list keeps track of the delays each orbiter node has between contact opportunities with the relay satellites.
@@ -330,7 +328,7 @@ def compute_scheduled_delay(
     # For each orbiter compute the average delay between relay contact times
     for k in range(K):
         for tx_idx in orbiter_nodes:
-            is_in_contact = len([rx_idx for rx_idx in relay_nodes if graphs[k][tx_idx][rx_idx] >= 1]) > 0
+            is_in_contact = len([rx_idx for rx_idx in non_source_nodes if graphs[k][tx_idx][rx_idx] >= 1]) > 0
             if is_in_contact and (node_contact_delays[tx_idx] > 0 or k == 0):
                 node_delays[tx_idx]["total_delay"] += node_contact_delays[tx_idx]
                 node_delays[tx_idx]["num_contacts"] += 1

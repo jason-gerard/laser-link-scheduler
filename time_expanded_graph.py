@@ -31,6 +31,7 @@ class TimeExpandedGraph:
         rep += f"num_nodes={len(self.nodes)}\n"
         rep += f"duration={end_time / 60 / 60} hours\n"
         rep += f"ipn_node_to_planet_map={self.ipn_node_to_planet_map}\n"
+        rep += f"nodes={self.nodes}\n"
         rep += "\n"
         for k in range(self.K):
             for row_idx in range(self.N):
@@ -55,12 +56,12 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
     # distances. We are defining interplanetary nodes here as nodes that can transmit and receive across interplanetary
     # distances. This depends on the scenario. Some definitions say that a non-ipn node cannot receive or transmit
     # across interplanetary distances, the code below supports both use cases.
-    interplanetary_contacts = [contact for contact in contact_plan.contacts
-                               if contact.range > constants.INTERPLANETARY_RANGE]
-    interplanetary_tx_nodes = [contact.tx_node for contact in interplanetary_contacts]
-    interplanetary_rx_nodes = [contact.rx_node for contact in interplanetary_contacts]
-    interplanetary_nodes = [node for node in interplanetary_tx_nodes + interplanetary_rx_nodes
-                            if node in interplanetary_tx_nodes and node in interplanetary_rx_nodes]
+    # interplanetary_contacts = [contact for contact in contact_plan.contacts
+    #                            if contact.range > constants.INTERPLANETARY_RANGE]
+    # interplanetary_tx_nodes = [contact.tx_node for contact in interplanetary_contacts]
+    # interplanetary_rx_nodes = [contact.rx_node for contact in interplanetary_contacts]
+    # interplanetary_nodes = [node for node in interplanetary_tx_nodes + interplanetary_rx_nodes
+    #                         if node in interplanetary_tx_nodes and node in interplanetary_rx_nodes]
 
     # Create a sets of all start times and end times, the combined length will equal numK
     start_times = list(set([contact.start_time for contact in contact_plan.contacts]))
@@ -76,6 +77,8 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
         [contact.rx_node for contact in contact_plan.contacts]
         + [contact.tx_node for contact in contact_plan.contacts]))
     node_map = {node: idx for idx, node in enumerate(unique_nodes)}
+    
+    interplanetary_nodes = [node for node in unique_nodes if node in constants.RELAY_NODES]
 
     # We want to split the list of interplanetary nodes into different sets of nodes for each planet. We can do this
     # by using the first digit of each node id to identify its constellation. We make the assumption that each planet
@@ -118,15 +121,18 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
                 contact_topology_graphs[k][tx_idx][rx_idx] = constants.default_a
                 
             # Add position data for the node
-            newest_contact = tx_included_contacts[0]
-            for contact in tx_included_contacts:
-                if contact.start_time > newest_contact.start_time:
-                    newest_contact = contact
-            
-            tx_x = newest_contact.tx_x
-            tx_y = newest_contact.tx_y
-            tx_z = newest_contact.tx_z
-            positions[k][tx_idx] = [tx_x, tx_y, tx_z]
+            if len(tx_included_contacts) > 0:
+                newest_contact = tx_included_contacts[0]
+                for contact in tx_included_contacts:
+                    if contact.start_time > newest_contact.start_time:
+                        newest_contact = contact
+                
+                tx_x = newest_contact.tx_x
+                tx_y = newest_contact.tx_y
+                tx_z = newest_contact.tx_z
+                positions[k][tx_idx] = [tx_x, tx_y, tx_z]
+            else:
+                positions[k][tx_idx] = positions[k-1][tx_idx]
 
     time_expanded_graph = TimeExpandedGraph(
         graphs=contact_topology_graphs,

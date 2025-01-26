@@ -48,7 +48,7 @@ class LaserLinkScheduler:
                 teg.graphs[k],
                 scheduled_graphs[:k],
                 node_capacities,
-                teg.ipn_node_to_planet_map,
+                teg.nodes,
                 teg.state_durations[k],
                 teg.pos)
 
@@ -67,7 +67,7 @@ class LaserLinkScheduler:
             scheduled_node_capacities = compute_node_capacity_by_graph(
                 L_k,
                 teg.state_durations[k],
-                teg.ipn_node_to_planet_map,
+                teg.nodes,
                 scheduled_graphs[:k],
                 teg.pos)
             node_capacities = merge_many_node_capacities(node_capacities + scheduled_node_capacities)

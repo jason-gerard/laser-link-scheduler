@@ -25,15 +25,15 @@ class Reporter:
             "teg": teg,
         })
         
-        node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.ipn_node_to_planet_map, teg.graphs, teg.pos)
+        node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.nodes, teg.graphs, teg.pos)
         network_capacity = int(compute_capacity(node_capacities))
         network_wasted_capacity = compute_wasted_capacity(node_capacities)
 
         wasted_buffer_capacity = int(compute_wasted_buffer(node_capacities))
 
-        jains_fairness_index = compute_jains_fairness_index(teg.graphs, teg.state_durations, teg.ipn_node_to_planet_map, teg.K, teg.N)
+        jains_fairness_index = compute_jains_fairness_index(teg.graphs, teg.state_durations, teg.nodes, teg.K, teg.N)
         
-        scheduled_delay = compute_scheduled_delay(teg.graphs, teg.state_durations, teg.ipn_node_to_planet_map, teg.K, teg.N)
+        scheduled_delay = compute_scheduled_delay(teg.graphs, teg.state_durations, teg.nodes, teg.K, teg.N)
 
         row = [scheduler_name, experiment_name, duration, network_capacity, network_wasted_capacity, wasted_buffer_capacity, jains_fairness_index, scheduled_delay]
         self.reports.append(row)
@@ -41,7 +41,7 @@ class Reporter:
         print(f"Scheduled network capacity: {network_capacity:,}")
         print(f"Scheduled network wasted capacity: {network_wasted_capacity:,}")
         
-        print(f"Wasted buffer capacity: {wasted_buffer_capacity}")
+        print(f"Wasted buffer capacity: {wasted_buffer_capacity:,}")
         
         print(f"Jain's fairness index: {jains_fairness_index}")
         print(f"Average delay: {scheduled_delay}")
