@@ -37,15 +37,13 @@ def delta_capacity(
         for rx_idx in range(num_nodes):
             # The id of the optical communication interface that the edge uses for the contact. An id of 0 corresponds
             # to no contact
-            interface_id: int = contact_topology_k[tx_idx][rx_idx]
             # For each edge in topology_k that is active i.e. graph[i][j] >= 1, create a new graph where only that edge
             # is active and compute the capacity if that edge was selected
-            if interface_id >= 1:
+            if contact_topology_k[tx_idx][rx_idx] >= 1:
                 # Compute the node capacity from the single edge graph
                 single_edge_node_capacity = compute_node_capacity_by_single_edge_graph(
                     tx_idx,
                     rx_idx,
-                    interface_id,
                     state_duration,
                     nodes,
                     scheduled_contact_topology,
@@ -152,14 +150,13 @@ def compute_node_capacities(
 def compute_node_capacity_by_single_edge_graph(
         tx_idx: int,
         rx_idx: int,
-        interface_id: int,
         duration: int,
         nodes: list[str],
         scheduled_contact_topology: np.ndarray,
         positions: np.ndarray,
 ) -> NodeCapacity | None:
-    bit_rate = constants.R[interface_id]
-    
+    bit_rate = min(constants.BIT_RATES[nodes[tx_idx]], constants.BIT_RATES[nodes[rx_idx]])
+
     effective_contact_duration = compute_effective_contact_time(
         tx_idx,
         rx_idx,
@@ -221,9 +218,7 @@ def compute_node_capacity_by_graph(
                     positions,
                 )
                 
-                # Get the bit_rate from the communication interface ID
-                a = graph[tx_idx][rx_idx]
-                bit_rate = constants.R[a]
+                bit_rate = min(constants.BIT_RATES[nodes[tx_idx]], constants.BIT_RATES[nodes[rx_idx]])
 
                 # Only one of these two conditions can ever be true since we don't count contacts with the same node as
                 # the tx and rx
@@ -295,9 +290,7 @@ def compute_jains_fairness_index(
                 if (graphs[k][tx_idx][rx_idx] >= 1
                         and tx_idx in source_nodes
                         and (nodes[rx_idx] in constants.RELAY_NODES or nodes[rx_idx] in constants.DESTINATION_NODES)):
-                    interface_id = graphs[k][tx_idx][rx_idx]
-                    bit_rate = constants.R[interface_id]
-
+                    bit_rate = min(constants.BIT_RATES[nodes[tx_idx]], constants.BIT_RATES[nodes[rx_idx]])
                     enabled_contact_times[k][tx_idx][rx_idx] = state_durations[k] * bit_rate
 
     enabled_contact_time_graph = np.sum(enabled_contact_times, axis=0)
@@ -354,6 +347,7 @@ effective_contact_time_cache = {}
 # L2 cache coordinates for a specific node
 coordinate_cache = {}
 
+
 def compute_effective_contact_time(
     idx1: int,
     idx2: int,
@@ -366,51 +360,26 @@ def compute_effective_contact_time(
     
     curr_k = min(len(scheduled_contact_topology), len(positions) - 1)
     
+    # For the first state we can always assume the lasers are pre-targeted
+    if curr_k == 0:
+        return state_duration
+    
     if ((idx1, idx2, curr_k) in effective_contact_time_cache or (idx2, idx1, curr_k) in effective_contact_time_cache) and curr_k != len(positions) - 1:
         return effective_contact_time_cache[(idx1, idx2, curr_k)]
+
+    def get_contact_in_prev_state(node_idx):
+        for rx_idx in range(len(scheduled_contact_topology[curr_k - 1])):
+            if scheduled_contact_topology[curr_k - 1][node_idx][rx_idx] >= 1:
+                coordinate_cache[(node_idx, curr_k)] = rx_idx
+                return rx_idx
+
+        return -1
+
+    # For each node check in the scheduled topology if it had a contact in the previous state and with which node
+    # Check the coordinates of it and the rx at that time, this will give the previous coordinates.
+    idx1_rx = coordinate_cache[(idx1, curr_k)] if (idx1, curr_k) in coordinate_cache else get_contact_in_prev_state(idx1)
+    idx2_rx = coordinate_cache[(idx2, curr_k)] if (idx2, curr_k) in coordinate_cache else get_contact_in_prev_state(idx2)
     
-    # For node1 check in the scheduled topology the last time it had a contact and with which node
-    # Take that k and check the coordinates of it and the rx at that time, this will give the previous coordinates
-    idx1_rx = -1
-    if (idx1, curr_k) in coordinate_cache:
-        idx1_rx = coordinate_cache[(idx1, curr_k)]
-    else:
-        for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
-            for rx_idx in range(len(scheduled_contact_topology[k])):
-                if scheduled_contact_topology[k][idx1][rx_idx] >= 1:
-                    idx1_rx = rx_idx
-                    coordinate_cache[(idx1, curr_k)] = rx_idx
-                    break
-
-    # Do the same for node 2
-    idx2_rx = -1
-    if (idx2, curr_k) in coordinate_cache:
-        idx2_rx = coordinate_cache[(idx2, curr_k)]
-    else:
-        for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
-            for rx_idx in range(len(scheduled_contact_topology[k])):
-                if scheduled_contact_topology[k][idx2][rx_idx] >= 1:
-                    idx2_rx = rx_idx
-                    coordinate_cache[(idx2, curr_k)] = rx_idx
-                    break
-
-    # For node1 check in the scheduled topology the last time it had a contact and with which node
-    # Take that k and check the coordinates of it and the rx at that time, this will give the previous coordinates
-    # idx1_rx = -1
-    # for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
-    #     for rx_idx in range(len(scheduled_contact_topology[k])):
-    #         if scheduled_contact_topology[k][idx1][rx_idx] >= 1:
-    #             idx1_rx = rx_idx
-    #             break
-
-    # Do the same for node 2
-    # idx2_rx = -1
-    # for k, _ in reversed(list(enumerate(scheduled_contact_topology))):
-    #     for rx_idx in range(len(scheduled_contact_topology[k])):
-    #         if scheduled_contact_topology[k][idx2][rx_idx] >= 1:
-    #             idx2_rx = rx_idx
-    #             break
-
     # Use PAT lib to compute delay
     if idx1_rx != -1 and idx2_rx != -1:
         idx1_coords = np.array(positions[curr_k][idx1])

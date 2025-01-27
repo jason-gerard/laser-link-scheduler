@@ -10,27 +10,15 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, Tim
     write_time_expanded_graph, convert_time_expanded_graph_to_contact_plan
 from utils import FileType
 
-src_node_bit_rate = 1000
-relay_node_bit_rate = 2000
-gs_node_bit_rate = 2000
-
-
-def get_bit_rate(node_id):
-    if node_id in SOURCE_NODES:
-        return src_node_bit_rate
-    elif node_id in RELAY_NODES:
-        return relay_node_bit_rate
-    elif node_id in DESTINATION_NODES:
-        return gs_node_bit_rate
-
-
 def get_num_lasers(node_id):
     if node_id in SOURCE_NODES:
         return 1
     elif node_id in RELAY_NODES:
-        return 2
+        return 1
+        # return 2
     elif node_id in DESTINATION_NODES:
-        return 2
+        return 1
+        # return 2
 
 
 class LLSModel:
@@ -41,7 +29,6 @@ class LLSModel:
         self.edges_by_state = None
         self.schedule_duration = sum(self.teg.state_durations)
         self.T = self.teg.state_durations
-        self.bit_rates = {node_id: get_bit_rate(node_id) for node_id in teg.nodes}
 
     def solve(self):
         # The contact plan topology here should be in the form of a list of tuples (state idx, i, j)
@@ -58,7 +45,9 @@ class LLSModel:
         print(f"Creating binary variables for {len(contact_topology)} number of edges")
         # This represents the constraint that a selected edge must be a part of the initial contact plan
         self.edges = pulp.LpVariable.dicts(
-            "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpInteger
+            # "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpInteger
+            # Uncomment this to enable pure LP problem
+            "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpContinuous
         )
         
         # In order to create these constraints faster we will first pre-process the data into a dict such that we can
@@ -135,7 +124,10 @@ class LLSModel:
         scheduled_contacts = []
         matched_edges_by_k = [[] for _ in range(self.teg.K)]
         for edge in self.edges.keys():
-            if self.edges[edge].value() == 1.0:
+            if self.edges[edge].value() != 0.0 and self.edges[edge].value() != 1.0:
+                print(self.edges[edge].value())
+            # if self.edges[edge].value() == 1.0:
+            if self.edges[edge].value() > 0.5:
                 k, tx_node, rx_node = edge
                 tx_idx = self.teg.node_map[tx_node]
                 rx_idx = self.teg.node_map[rx_node]
@@ -172,7 +164,7 @@ class LLSModel:
 
     def flow(self, i, j):
         edges = list(set(self.edges_by_node[i]) & set(self.edges_by_node[j]))
-        bit_rate = min(self.bit_rates[i], self.bit_rates[j])
+        bit_rate = min(constants.BIT_RATES[i], constants.BIT_RATES[j])
         
         return sum([self.edges[edge] * (self.T[edge[0]] - self.retargeting_delay(edge)) * bit_rate for edge in edges])
 
@@ -200,6 +192,15 @@ if __name__ == "__main__":
 
     solver = LLSModel(teg)
     scheduled_teg = solver.solve()
+
+    for k in range(scheduled_teg.K):
+        for tx_idx in range(scheduled_teg.N):
+            row_count = sum(scheduled_teg.graphs[k][tx_idx])
+            assert row_count == 1 or row_count == 0
+
+        for rx_idx in range(scheduled_teg.N):
+            row_count = sum(scheduled_teg.graphs[k][:, rx_idx])
+            assert row_count == 1 or row_count == 0
 
     write_time_expanded_graph(EXPERIMENT_NAME, scheduled_teg, FileType.TEG_SCHEDULED)
     print("Finished contact scheduling")

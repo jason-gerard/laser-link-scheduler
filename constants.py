@@ -70,7 +70,7 @@ R = [0, default_BIT_RATE]
 # For nodes 0, 1, 2, 3
 # X = [1, 3, 0, 3]
 
-should_bypass_retargeting_time = True
+should_bypass_retargeting_time = False
 
 # The interplanetary range we define is any contact over 100,000 kilometers. We then convert this to light seconds to
 # follow the ION contact plan standard
@@ -102,6 +102,12 @@ NODE_TO_PLANET_MAP = {
 
     "9001": EARTH, "9002": EARTH
 }
+
+SOURCE_NODE_BIT_RATE = 1000
+RELAY_NODE_BIT_RATE = 2000
+GS_NODE_BIT_RATE = 2000
+BIT_RATES = {node_id: SOURCE_NODE_BIT_RATE if node_id in SOURCE_NODES else RELAY_NODE_BIT_RATE for node_id in NODE_TO_PLANET_MAP}
+
 
 # DESTINATION_NODES = [
 #     "1001", "1002", "1003", "1004", "1005", "1006", "1007", "1008",
