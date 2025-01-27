@@ -5,6 +5,7 @@ import constants
 from constants import RELAY_NODES, SOURCE_NODES, DESTINATION_NODES
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
 from dag_topology_reduction import dag_reduction
+from pat_delay_model import pat_delay
 from report_generator import Reporter
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, TimeExpandedGraph, \
     write_time_expanded_graph, convert_time_expanded_graph_to_contact_plan
@@ -14,11 +15,11 @@ def get_num_lasers(node_id):
     if node_id in SOURCE_NODES:
         return 1
     elif node_id in RELAY_NODES:
-        return 1
-        # return 2
+        # return 1
+        return 2
     elif node_id in DESTINATION_NODES:
-        return 1
-        # return 2
+        # return 1
+        return 2
 
 
 class LLSModel:
@@ -27,8 +28,11 @@ class LLSModel:
         self.edges = None
         self.edges_by_node = None
         self.edges_by_state = None
+        self.retargeting_delays = None
         self.schedule_duration = sum(self.teg.state_durations)
         self.T = self.teg.state_durations
+        
+        self.model = None
 
     def solve(self):
         # The contact plan topology here should be in the form of a list of tuples (state idx, i, j)
@@ -46,8 +50,15 @@ class LLSModel:
         # This represents the constraint that a selected edge must be a part of the initial contact plan
         self.edges = pulp.LpVariable.dicts(
             # "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpInteger
-            # Uncomment this to enable pure LP problem
+            # Uncomment this to enable pure LP problem, by relaxing the MIP into a pure LP problem we can remove the
+            # integrality constraint of the decision variable, then use a threshold and a validation to assert that the
+            # solution remains feasible.
             "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpContinuous
+        )
+
+        print(f"Creating variables for retargeting delays")
+        self.retargeting_delays = pulp.LpVariable.dicts(
+            "retargeting_delays", contact_topology, lowBound=0, cat=pulp.LpContinuous
         )
         
         # In order to create these constraints faster we will first pre-process the data into a dict such that we can
@@ -75,20 +86,20 @@ class LLSModel:
         single_hop_capacities = {gs_node: pulp.LpVariable(f"Capacity_{gs_node}", lowBound=0)
                                  for gs_node in self.teg.nodes if gs_node in DESTINATION_NODES}
 
-        flow_model = pulp.LpProblem("Network_flow_model", pulp.LpMaximize)
+        self.flow_model = pulp.LpProblem("Network_flow_model", pulp.LpMaximize)
         
         print(f"Initializing the objective function")
         # objective function should maximize the summation of the capacity for each relay satellite and dst ground
         # stations
-        flow_model += pulp.lpSum(capacities.values()) + pulp.lpSum(single_hop_capacities.values())
+        self.flow_model += pulp.lpSum(capacities.values()) + pulp.lpSum(single_hop_capacities.values())
 
         for relay_node, capacity in capacities.items():
             print(f"Setting up inflow and outflow capacity constraints for node {relay_node}")
             # inflow
-            flow_model += capacity <= pulp.lpSum([self.flow(i, relay_node)
+            self.flow_model += capacity <= pulp.lpSum([self.flow(i, relay_node)
                                                   for i in self.teg.nodes if i in SOURCE_NODES])
             # outflow
-            flow_model += capacity <= pulp.lpSum([self.flow(relay_node, x)
+            self.flow_model += capacity <= pulp.lpSum([self.flow(relay_node, x)
                                                   for x in self.teg.nodes if x in DESTINATION_NODES])
         
         # Create new inflow and outflow capacity constraints for single hop
@@ -98,36 +109,46 @@ class LLSModel:
             # We only have inflow here, outflow is basically infinite since its the dst node. We don't look at inflow
             # from the relay nodes either since that capacity is already accounted for in the two hop capacity
             # constraint above.
-            flow_model += capacity <= pulp.lpSum([self.flow(i, gs_node)
+            self.flow_model += capacity <= pulp.lpSum([self.flow(i, gs_node)
                                                  for i in self.teg.nodes if i in SOURCE_NODES])
 
         # Constraint for fairness of source nodes
         source_nodes = [source_node for source_node in self.teg.nodes if source_node in SOURCE_NODES]
         avg_ect = pulp.lpSum([self.ect(node) for node in source_nodes]) / len(source_nodes) - 1000
         for source_node in source_nodes:
-            flow_model += self.ect(source_node) >= avg_ect
+            self.flow_model += self.ect(source_node) >= avg_ect
 
         # Constraint that each node can only be a part of a single selected edge per state
         print(f"Setting up 1 to 1 relationship between nodes per state k")
         for node in self.teg.nodes:
             for k in range(self.teg.K):
-                flow_model += (
+                self.flow_model += (
                     pulp.lpSum([self.edges[edge] for edge in self.edges_by_state[node][k]]) <= get_num_lasers(node),
                     f"Max_edge_{node}_{k}",
                 )
+        
+        # Constraint for retargeting delay being greater than or equal to the tx and rx retargeting delays. These will
+        # have downward pressure since as the retargeting delay decreases there is a higher effective contact time.
+        print("Create retargeting delay constraints for tx and rx...")
+        for edge in self.retargeting_delays:
+            tx_delay, rx_delay = self.compute_retargeting_delay(edge)
+            self.flow_model += self.retargeting_delays[edge] >= tx_delay
+            self.flow_model += self.retargeting_delays[edge] >= rx_delay
 
         print("Starting solve...")
-        flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=15))
+        self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=30))
 
         print(f"Generating adjacency matrix form of the scheduled contact plan")
         contact_plan = np.zeros((self.teg.K, self.teg.N, self.teg.N), dtype="int64")
         scheduled_contacts = []
         matched_edges_by_k = [[] for _ in range(self.teg.K)]
-        for edge in self.edges.keys():
-            if self.edges[edge].value() != 0.0 and self.edges[edge].value() != 1.0:
-                print(self.edges[edge].value())
-            # if self.edges[edge].value() == 1.0:
-            if self.edges[edge].value() > 0.5:
+        # y = (dict(sorted(self.edges.items(), key=lambda x: x[1].value(), reverse=True)))
+        # for k, v in y.items():
+        #     print(k, v.value())
+        for edge in dict(sorted(self.edges.items(), key=lambda x: x[1].value(), reverse=True)):
+            # if self.edges[edge].value() != 0.0 and self.edges[edge].value() != 1.0:
+            #     print(self.edges[edge].value())
+            if self.is_edge_selected(edge, contact_plan):
                 k, tx_node, rx_node = edge
                 tx_idx = self.teg.node_map[tx_node]
                 rx_idx = self.teg.node_map[rx_node]
@@ -154,19 +175,44 @@ class LLSModel:
             W=self.teg.W,
             pos=self.teg.pos)
     
-    def retargeting_delay(self, edge):
+    def compute_retargeting_delay(self, edge):
         # For each edge, take the previous k, and for both i and j, see if they were selected for an edge in the
         # previous k state. If not then assume retargeting delay is 0. If it was then use the position data to compute
         # the retargeting delay.
-        # TODO finish this impl and probably create another pre-computation for getting seeing the edges in the last state
-        # so we don't have to search through everything
-        return 0
-
+        k, tx_node, rx_node = edge
+        k = min(k, len(self.teg.pos) - 1)
+        
+        if k == 0:
+            return 0, 0
+        
+        def get_delay(node, new_node):  # retargeting_delay for prev edge
+            # Create a dict for each previous edge get retargeting delay
+            prev_edge_delays = {prev_edge: pat_delay(
+                np.array([
+                    np.array(self.teg.pos[k][self.teg.node_map[node]]),
+                    np.array(self.teg.pos[k][self.teg.node_map[prev_edge[1] if prev_edge[2] == node else prev_edge[2]]]),
+                    np.array(self.teg.pos[k][self.teg.node_map[new_node]])
+                ]),
+                np.array([
+                    np.array(self.teg.pos[k][self.teg.node_map[node]]),
+                    np.array(self.teg.pos[k][self.teg.node_map[prev_edge[1] if prev_edge[2] == node else prev_edge[2]]]),
+                    np.array(self.teg.pos[k][self.teg.node_map[new_node]])
+                ]),
+            ) for prev_edge in self.edges_by_state[node][k-1]}
+            return sum([self.edges[prev_edge] * prev_edge_delays[prev_edge] for prev_edge in self.edges_by_state[node][k-1]])
+        
+        return get_delay(tx_node, rx_node), get_delay(rx_node, tx_node)
+                
     def flow(self, i, j):
         edges = list(set(self.edges_by_node[i]) & set(self.edges_by_node[j]))
         bit_rate = min(constants.BIT_RATES[i], constants.BIT_RATES[j])
         
-        return sum([self.edges[edge] * (self.T[edge[0]] - self.retargeting_delay(edge)) * bit_rate for edge in edges])
+        # Apply our retargeting delay as a Big-M constraint here so that we maintain linearity in our model.
+        for edge in edges:
+            # Upward pressure on this constraint if the edge is selected, otherwise 0 will be less than the resulting value
+            self.flow_model += self.edges[edge] * self.T[edge[0]] * bit_rate <= (self.T[edge[0]] - self.retargeting_delays[edge]) * bit_rate
+            
+        return sum([self.edges[edge] * self.T[edge[0]] * bit_rate for edge in edges])
 
     def ect(self, i):
         """
@@ -177,6 +223,21 @@ class LLSModel:
         # T[edge[0]] gives the duration of the edge
         return sum([self.edges[edge] * self.T[edge[0]] for edge in selected_edges])
 
+    def is_edge_selected(self, edge, contact_plan):
+        # Here we want to check that the solution is still feasible if we add the edge
+        if self.edges[edge].value() == 0.0:
+            return False
+
+        # if self.edges[edge].value() > 0.5:
+        #     return True
+
+        k, tx_id, rx_id = edge
+        is_tx_good = sum(contact_plan[k][self.teg.node_map[tx_id]]) < get_num_lasers(tx_id)
+        is_rx_good = sum(contact_plan[k][:, self.teg.node_map[rx_id]]) < get_num_lasers(rx_id)
+        is_rx2_good = sum(contact_plan[k][self.teg.node_map[rx_id]]) < get_num_lasers(rx_id)
+        is_tx2_good = sum(contact_plan[k][:, self.teg.node_map[tx_id]]) < get_num_lasers(tx_id)
+
+        return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
 
 if __name__ == "__main__":
     use_reduction = True
@@ -196,11 +257,11 @@ if __name__ == "__main__":
     for k in range(scheduled_teg.K):
         for tx_idx in range(scheduled_teg.N):
             row_count = sum(scheduled_teg.graphs[k][tx_idx])
-            assert row_count == 1 or row_count == 0
+            assert row_count <= get_num_lasers(scheduled_teg.nodes[tx_idx]), f"{scheduled_teg.graphs[k]}"
 
         for rx_idx in range(scheduled_teg.N):
             row_count = sum(scheduled_teg.graphs[k][:, rx_idx])
-            assert row_count == 1 or row_count == 0
+            assert row_count <= get_num_lasers(scheduled_teg.nodes[rx_idx]), f"{scheduled_teg.graphs[k]}"
 
     write_time_expanded_graph(EXPERIMENT_NAME, scheduled_teg, FileType.TEG_SCHEDULED)
     print("Finished contact scheduling")
