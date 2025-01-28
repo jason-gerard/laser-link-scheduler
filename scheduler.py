@@ -88,6 +88,27 @@ class LaserLinkScheduler:
             pos=teg.pos)
 
 
+class BruteForceScheduler:
+    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
+        scheduled_graphs = np.empty((teg.K, teg.N, teg.N), dtype='int64')
+        scheduled_contacts = []
+        weights = np.empty((teg.K, teg.N, teg.N), dtype="float32")
+        
+        # See brute_force_matchings.py
+
+        return TimeExpandedGraph(
+            graphs=scheduled_graphs,
+            contacts=scheduled_contacts,
+            state_durations=teg.state_durations,
+            K=teg.K,
+            N=teg.N,
+            nodes=teg.nodes,
+            node_map=teg.node_map,
+            ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
+            W=weights,
+            pos=teg.pos)
+
+
 class FairContactPlan:
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         """
