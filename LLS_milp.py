@@ -11,6 +11,8 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, Tim
     write_time_expanded_graph, convert_time_expanded_graph_to_contact_plan
 from utils import FileType
 
+IS_MIP = False
+
 def get_num_lasers(node_id):
     if node_id in SOURCE_NODES:
         return 1
@@ -48,13 +50,17 @@ class LLSModel:
                         
         print(f"Creating binary variables for {len(contact_topology)} number of edges")
         # This represents the constraint that a selected edge must be a part of the initial contact plan
-        self.edges = pulp.LpVariable.dicts(
-            # "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpInteger
-            # Uncomment this to enable pure LP problem, by relaxing the MIP into a pure LP problem we can remove the
-            # integrality constraint of the decision variable, then use a threshold and a validation to assert that the
-            # solution remains feasible.
-            "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpContinuous
-        )
+        if IS_MIP:
+            self.edges = pulp.LpVariable.dicts(
+                "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpInteger
+            )
+        else:
+            self.edges = pulp.LpVariable.dicts(
+                # Pure LP problem, by relaxing the MIP into a pure LP problem we can remove the
+                # integrality constraint of the decision variable, then use a threshold and a validation to assert that the
+                # solution remains feasible.
+                "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpContinuous
+            )
 
         print(f"Creating variables for retargeting delays")
         self.retargeting_delays = pulp.LpVariable.dicts(
@@ -224,20 +230,23 @@ class LLSModel:
         return sum([self.edges[edge] * self.T[edge[0]] for edge in selected_edges])
 
     def is_edge_selected(self, edge, contact_plan):
-        # Here we want to check that the solution is still feasible if we add the edge
-        if self.edges[edge].value() == 0.0:
-            return False
+        if IS_MIP:
+            return self.edges[edge].value() == 1.0
+        else:
+            # Here we want to check that the solution is still feasible if we add the edge
+            if self.edges[edge].value() == 0.0:
+                return False
 
-        # if self.edges[edge].value() > 0.5:
-        #     return True
+            # if self.edges[edge].value() > 0.5:
+            #     return True
 
-        k, tx_id, rx_id = edge
-        is_tx_good = sum(contact_plan[k][self.teg.node_map[tx_id]]) < get_num_lasers(tx_id)
-        is_rx_good = sum(contact_plan[k][:, self.teg.node_map[rx_id]]) < get_num_lasers(rx_id)
-        is_rx2_good = sum(contact_plan[k][self.teg.node_map[rx_id]]) < get_num_lasers(rx_id)
-        is_tx2_good = sum(contact_plan[k][:, self.teg.node_map[tx_id]]) < get_num_lasers(tx_id)
+            k, tx_id, rx_id = edge
+            is_tx_good = sum(contact_plan[k][self.teg.node_map[tx_id]]) < get_num_lasers(tx_id)
+            is_rx_good = sum(contact_plan[k][:, self.teg.node_map[rx_id]]) < get_num_lasers(rx_id)
+            is_rx2_good = sum(contact_plan[k][self.teg.node_map[rx_id]]) < get_num_lasers(rx_id)
+            is_tx2_good = sum(contact_plan[k][:, self.teg.node_map[tx_id]]) < get_num_lasers(tx_id)
 
-        return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
+            return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
 
 if __name__ == "__main__":
     use_reduction = True
