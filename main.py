@@ -80,7 +80,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
 
 
 def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[str]):
-    reporter = Reporter(write_pkl=False)
+    reporter = Reporter(write_pkl=True)
 
     for experiment_name in experiment_names:
         for scheduler_name in scheduler_names:

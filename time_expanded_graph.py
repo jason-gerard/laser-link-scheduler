@@ -237,12 +237,13 @@ def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGra
             new_teg_durations[k + k_offset] = time_expanded_graph.state_durations[k]
             new_contacts[k + k_offset] = time_expanded_graph.contacts[k]
 
+
+    print(f"Finished graph fractionation, old k count: {time_expanded_graph.K}, new k count: {new_k}")
+
     time_expanded_graph.graphs = new_teg_graph
     time_expanded_graph.state_durations = new_teg_durations
     time_expanded_graph.contacts = new_contacts
     time_expanded_graph.K = new_k
-
-    print(f"Finished graph fractionation, the number of states is {new_k}")
 
     return time_expanded_graph
 

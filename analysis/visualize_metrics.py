@@ -9,22 +9,26 @@ plt.rcParams.update({'font.size': 18})
 plt.rc('legend', fontsize=14)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
-report_id = 1724207677
+report_id = 1738446918
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [{k: v for k, v in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
     
 for run in report:
-    run["Capacity"] = int(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
-    run["Wasted capacity"] = int(run["Wasted capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
-    run["Wasted buffer capacity"] = int(run["Wasted buffer capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+    run["Capacity"] = float(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+    run["Wasted capacity"] = float(run["Wasted capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+    run["Wasted buffer capacity"] = float(run["Wasted buffer capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
     run["Scheduled delay"] = float(run["Scheduled delay"]) / 60
     run["Jain's fairness index"] = float(run["Jain's fairness index"])
+    run["Execution duration"] = float(run["Execution duration"])
 
 # pprint.pprint(report)
 
 algorithms = [
-    ("lls", "LLS"),
+    ("lls", "LLS_Greedy"),
+    ("lls_pat_unaware", "LLS_PAT_Unaware"),
+    ("lls_mip", "LLS_MIP"),
+    ("lls_lp", "LLS_LP"),
     ("fcp", "FCP"),
     ("random", "Random"),
     ("alternating", "Alternating"),
@@ -36,14 +40,15 @@ metrics = [
     ("Wasted buffer capacity", "terabits/day", 20, 160, 20),
     ("Scheduled delay", "minutes", 60, 840, 120),
     ("Jain's fairness index", "", 0.2, 1.0, 0.2),
+    ("Execution duration", "seconds", 0.01, 10000, 30),
 ]
 
 x = [
     "X-Small",
     "Small",
     "Medium",
-    "Large",
-    "X-Large",
+    # "Large",
+    # "X-Large",
 ]
 
 for metric, unit, y_min, y_max, y_step in metrics:
@@ -62,8 +67,12 @@ for metric, unit, y_min, y_max, y_step in metrics:
 
     plt.grid(linestyle='-', color='0.95')
     
-    plt.ylim(max(y_min-y_step, 0), y_max)
-    ax.set_yticks([y_min] + np.arange(y_step, y_max+0.01, y_step).tolist())
+    if metric == "Execution duration":
+        plt.yscale("log")
+        plt.ylim(y_min, y_max)
+    else:
+        plt.ylim(max(y_min-y_step, 0), y_max)
+        ax.set_yticks([y_min] + np.arange(y_step, y_max+0.01, y_step).tolist())
 
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(

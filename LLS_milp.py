@@ -4,15 +4,15 @@ import numpy as np
 import constants
 from constants import RELAY_NODES, SOURCE_NODES, DESTINATION_NODES
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
-from dag_topology_reduction import dag_reduction
+from analysis.dag_topology_reduction import dag_reduction
 from pat_delay_model import pat_delay
 from report_generator import Reporter
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, TimeExpandedGraph, \
     write_time_expanded_graph, convert_time_expanded_graph_to_contact_plan
 from utils import FileType
 
-# MAX_TIME = 8 * 60 * 60  # seconds
-MAX_TIME = 120  # seconds
+MAX_TIME = 2.5 * 60 * 60  # seconds
+# MAX_TIME = 120  # seconds
 MAX_EDGES_PER_LASER = 1
 
 
