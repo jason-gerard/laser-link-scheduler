@@ -6,6 +6,7 @@ from tqdm import tqdm
 import constants
 from contact_plan import ContactPlan, Contact
 from utils import get_experiment_file, FileType
+from constants import SOURCE_NODES, RELAY_NODES, DESTINATION_NODES, NODE_TO_PLANET_MAP, EARTH
 
 
 @dataclass
@@ -60,7 +61,7 @@ class TimeExpandedGraph:
         return rep
 
 
-def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, should_fractionate: bool) -> TimeExpandedGraph:
+def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, should_fractionate: bool, should_reduce: bool) -> TimeExpandedGraph:
     # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
     # We are defining this as any contact with a range greater than 100,000 km.
     # A non-ipn node can receive across interplanetary distances, but cannot transmit across interplanetary
@@ -176,7 +177,9 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
     # This process of fractionation splits long contacts in the TEG into multiple smaller contacts, this will result in
     # each k state having a maximum duration of d_max. Since there are more states and more decision points some
     # algorithms will have better performance.
-    return fractionate_graph(time_expanded_graph) if should_fractionate else time_expanded_graph
+    time_expanded_graph = fractionate_graph(time_expanded_graph) if should_fractionate else time_expanded_graph
+    
+    return dag_reduction(time_expanded_graph) if should_reduce else time_expanded_graph
 
 
 def include_contact(contact: Contact, state_start_time: int, state_duration: int) -> bool:
@@ -302,3 +305,67 @@ def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExp
     path = get_experiment_file(experiment_name, file_type)
     with open(path, "w") as f:
         f.write(str(time_expanded_graph))
+
+
+def dag_reduction(teg: TimeExpandedGraph):
+    """
+    The directed-acyclic graph (DAG) topology reduction algorithm follows several rules and cases to remove cycles
+    and reduce the number of edges in the graph
+    Requirement 1: The edge is a part of one of the follow path types: S -> D (one hop) and S -> R -> D (two hops), then
+                   the specific edge types to be kept include: S -> D, S -> R, R -> D
+    Requirement 2: The source and relay nodes are both orbiting the same planet for any S -> R edge or if the relay node
+                   is orbiting the destination planet
+    """
+    reduced_graph = np.zeros((teg.K, teg.N, teg.N), dtype="int64")
+
+    print("Starting the DAG topology reduction algorithm")
+    for k in tqdm(range(teg.K)):
+        for tx_oi_idx in range(teg.N):
+            for rx_oi_idx in range(teg.N):
+                if teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
+                    tx_node = teg.nodes[teg.optical_interfaces_to_node[tx_oi_idx]]
+                    rx_node = teg.nodes[teg.optical_interfaces_to_node[rx_oi_idx]]
+
+                    # Req. 1
+                    is_src_dst = tx_node in SOURCE_NODES and rx_node in DESTINATION_NODES
+                    is_src_rly = tx_node in SOURCE_NODES and rx_node in RELAY_NODES
+                    is_rly_dst = tx_node in RELAY_NODES and rx_node in DESTINATION_NODES
+
+                    # Req. 2
+                    are_nodes_same_planet = NODE_TO_PLANET_MAP[tx_node] == NODE_TO_PLANET_MAP[rx_node]
+                    is_rly_on_dst_planet = NODE_TO_PLANET_MAP[rx_node] == EARTH
+
+                    if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
+                        reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+
+    reduced_teg = TimeExpandedGraph(
+        graphs=reduced_graph,
+        contacts=teg.contacts,
+        state_durations=teg.state_durations,
+        K=teg.K,
+        N=teg.N,
+        nodes=teg.nodes,
+        node_map=teg.node_map,
+        ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
+        W=teg.W,
+        pos=teg.pos,
+        optical_interfaces_to_node=teg.optical_interfaces_to_node,
+        node_to_optical_interfaces=teg.node_to_optical_interfaces,
+    )
+
+    print(count_edges(teg), count_edges(reduced_teg))
+    print(f"Percent of edges removed = {100 * (1 - count_edges(reduced_teg) / count_edges(teg)):.3f}%")
+
+    return reduced_teg
+
+
+def count_edges(teg):
+    count = 0
+
+    for k in range(teg.K):
+        for tx_idx in range(teg.N):
+            for rx_idx in range(teg.N):
+                if teg.graphs[k][tx_idx][rx_idx] >= 1:
+                    count += 1
+
+    return count

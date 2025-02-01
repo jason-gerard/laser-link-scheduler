@@ -11,12 +11,13 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, Tim
     write_time_expanded_graph, convert_time_expanded_graph_to_contact_plan
 from utils import FileType
 
-IS_MIP = False
-MAX_TIME = 8 * 60 * 60  # seconds
+# MAX_TIME = 8 * 60 * 60  # seconds
+MAX_TIME = 120  # seconds
 MAX_EDGES_PER_LASER = 1
 
+
 class LLSModel:
-    def __init__(self, teg: TimeExpandedGraph):
+    def __init__(self, teg: TimeExpandedGraph, is_mip: bool = False):
         self.teg = teg
         self.edges = None
         self.edges_by_node = None
@@ -26,7 +27,9 @@ class LLSModel:
         self.schedule_duration = sum(self.teg.state_durations)
         self.T = self.teg.state_durations
         
-        self.model = None
+        self.flow_model = None
+        
+        self.is_mip = is_mip
 
     def solve(self):
         # The contact plan topology here should be in the form of a list of tuples (state idx, i, j)
@@ -39,7 +42,7 @@ class LLSModel:
                         
         print(f"Creating binary variables for {len(contact_topology)} number of edges")
         # This represents the constraint that a selected edge must be a part of the initial contact plan
-        if IS_MIP:
+        if self.is_mip:
             self.edges = pulp.LpVariable.dicts(
                 "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpInteger
             )
@@ -230,7 +233,7 @@ class LLSModel:
         return sum([self.edges[edge] * self.T[edge[0]] for edge in self.edges_by_node[i]])
 
     def is_edge_selected(self, edge, contact_plan):
-        if IS_MIP:
+        if self.is_mip:
             return self.edges[edge].value() == 1.0
         else:
             if self.edges[edge].value() <= 0.1:
@@ -250,7 +253,7 @@ class LLSModel:
 
 if __name__ == "__main__":
     use_reduction = True
-    EXPERIMENT_NAME = "gs_mars_earth_l_scenario"
+    EXPERIMENT_NAME = "gs_mars_earth_xs_scenario"
 
     contact_plan_parser = IONContactPlanParser()
     contact_plan = contact_plan_parser.read(EXPERIMENT_NAME)
@@ -287,7 +290,7 @@ if __name__ == "__main__":
     reporter = Reporter(write_pkl=False)
     reporter.generate_report(
         EXPERIMENT_NAME,
-        "LLSModel",
-        10,
+        "LLS_MIP" if solver.is_mip else "LLS_LP",
+        solver.flow_model.solutionTime,
         scheduled_teg)
     reporter.write_report()

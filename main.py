@@ -3,6 +3,7 @@ from timeit import default_timer as timer
 
 import numpy as np
 
+from LLS_milp import LLSModel
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
 from report_generator import Reporter
 from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler, AlternatingScheduler
@@ -10,9 +11,16 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, wri
     convert_time_expanded_graph_to_contact_plan
 from utils import FileType
 import constants
+import weights
+import pat_delay_model
 
 
 def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Reporter):
+    # Clear all caches
+    weights.effective_contact_time_cache = {}
+    weights.coordinate_cache = {}
+    pat_delay_model.retargeting_delay_cache = {}
+
     start = timer()
 
     # Read contact plan from disk
@@ -22,9 +30,12 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
 
     # Convert contact plan into a time expanded graph (TEG). From our testing on the Fair Contact Plan algorithm
     # benefits from graph fractionation.
+    should_reduce = scheduler_name == "lls_mip" or scheduler_name == "lls_lp"
     time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
         contact_plan,
-        should_fractionate=True)
+        should_fractionate=True,
+        should_reduce=should_reduce
+    )
     write_time_expanded_graph(experiment_name, time_expanded_graph, FileType.TEG)
     print("Finished converting contact plan to time expanded graph")
 
@@ -35,6 +46,10 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
         constants.should_bypass_retargeting_time = True
         scheduled_time_expanded_graph = LaserLinkScheduler().schedule(time_expanded_graph)
         constants.should_bypass_retargeting_time = False
+    elif scheduler_name == "lls_mip":
+        scheduled_time_expanded_graph = LLSModel(time_expanded_graph, is_mip=True).solve()
+    elif scheduler_name == "lls_lp":
+        scheduled_time_expanded_graph = LLSModel(time_expanded_graph, is_mip=False).solve()
     elif scheduler_name == "fcp":
         scheduled_time_expanded_graph = FairContactPlan().schedule(time_expanded_graph)
     elif scheduler_name == "random":
