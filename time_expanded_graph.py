@@ -19,6 +19,9 @@ class TimeExpandedGraph:
     node_map: dict[str, int]
     ipn_node_to_planet_map: dict[int, str]
     
+    optical_interfaces_to_node: dict[int, int]
+    node_to_optical_interfaces: dict[int, list[int]]
+
     pos: np.ndarray
 
     W: np.ndarray  # 3D Weights matrix [k][tx_idx][rx_idx]
@@ -32,9 +35,17 @@ class TimeExpandedGraph:
         rep += f"duration={end_time / 60 / 60} hours\n"
         rep += f"ipn_node_to_planet_map={self.ipn_node_to_planet_map}\n"
         rep += f"nodes={self.nodes}\n"
+        rep += f"oi to node={self.optical_interfaces_to_node}\n"
+        rep += f"node to oi={self.node_to_optical_interfaces}\n"
         rep += "\n"
         for k in range(self.K):
+            rep += "  "
+            for oi_idx in range(self.N):
+                rep += f"{oi_idx},"
+            
+            rep += "\n"
             for row_idx in range(self.N):
+                rep += f"{row_idx} "
                 for col_idx in range(self.N):
                     if row_idx == col_idx:
                         rep += "*,"
@@ -77,6 +88,19 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
         [contact.rx_node for contact in contact_plan.contacts]
         + [contact.tx_node for contact in contact_plan.contacts]))
     node_map = {node: idx for idx, node in enumerate(unique_nodes)}
+
+    optical_interfaces_to_node = {}
+    node_to_optical_interfaces = {}
+
+    optical_interface_idx = 0
+    for node in unique_nodes:
+        num_interfaces = constants.get_num_lasers(node)
+        node_to_optical_interfaces[node_map[node]] = []
+        for i in range(num_interfaces):
+            optical_interfaces_to_node[optical_interface_idx+i] = node_map[node]
+            node_to_optical_interfaces[node_map[node]].append(optical_interface_idx+i)
+        
+        optical_interface_idx += num_interfaces
     
     interplanetary_nodes = [node for node in unique_nodes if node in constants.RELAY_NODES]
 
@@ -88,7 +112,7 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
         if node in interplanetary_nodes:
             ipn_node_to_planet_map[idx] = node[0]
 
-    N = len(unique_nodes)
+    N = len(optical_interfaces_to_node)
     K = len(time_steps) - 1
 
     contact_topology_graphs = np.zeros((K, N, N), dtype='int64')
@@ -110,15 +134,15 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
 
         # The index here will map the node name to its index in the adjacency matrix, by default the values are set to 0
         # which indicates there is no contact between the two nodes
-        for tx_idx, tx_node in enumerate(unique_nodes):
+        for tx_oi_idx, tx_idx in optical_interfaces_to_node.items():
             # List of rx_nodes that have a contact with the tx_node in this time step
-            tx_included_contacts = [contact for contact in included_contacts if contact.tx_node == tx_node]
+            tx_included_contacts = [contact for contact in included_contacts if contact.tx_node == unique_nodes[tx_idx]]
             rx_nodes = [contact.rx_node for contact in tx_included_contacts]
-            rx_idxs = [node_map[rx_node] for rx_node in rx_nodes]
+            rx_oi_idxs = [idx for idx in [node_to_optical_interfaces[node_map[rx_node]] for rx_node in rx_nodes]]
 
-            for rx_idx in rx_idxs:
+            for rx_oi_idx in rx_oi_idxs:
                 # For now, we assume all satellites only have a single default interface.
-                contact_topology_graphs[k][tx_idx][rx_idx] = constants.default_a
+                contact_topology_graphs[k][tx_oi_idx][rx_oi_idx] = 1
                 
             # Add position data for the node
             if len(tx_included_contacts) > 0:
@@ -144,7 +168,10 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
         node_map=node_map,
         ipn_node_to_planet_map=ipn_node_to_planet_map,
         W=np.array([]),
-        pos=positions)
+        pos=positions,
+        optical_interfaces_to_node=optical_interfaces_to_node,
+        node_to_optical_interfaces=node_to_optical_interfaces,
+    )
 
     # This process of fractionation splits long contacts in the TEG into multiple smaller contacts, this will result in
     # each k state having a maximum duration of d_max. Since there are more states and more decision points some
@@ -235,7 +262,7 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                 elif should_end_contact:
                     # Find the associated contact in the previous state since now the contact is over
                     possible_contact = [contact for contact in teg.contacts[k - 1]
-                                        if contact.tx_node == teg.nodes[tx_idx] and contact.rx_node == teg.nodes[rx_idx]]
+                                        if contact.tx_node == teg.nodes[teg.optical_interfaces_to_node[tx_idx]] and contact.rx_node == teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
                     
                     if possible_contact:
                         interface_id = teg.graphs[k - 1][tx_idx][rx_idx]
@@ -256,7 +283,7 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                 should_cleanup_contact = k == teg.K - 1 and (should_start_contact or is_contact_in_progress)
                 if should_cleanup_contact:
                     possible_contact = [contact for contact in teg.contacts[k]
-                                        if contact.tx_node == teg.nodes[tx_idx] and contact.rx_node == teg.nodes[rx_idx]]
+                                        if contact.tx_node == teg.nodes[teg.optical_interfaces_to_node[tx_idx]] and contact.rx_node == teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
 
                     if possible_contact:
                         interface_id = teg.graphs[k][tx_idx][rx_idx]

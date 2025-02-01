@@ -20,6 +20,8 @@ def delta_capacity(
         nodes: list[str],
         state_duration: int,
         positions: np.ndarray,
+        optical_interfaces_to_node: dict[int, int],
+        node_to_optical_interfaces: dict[int, list[int]]
 ) -> np.ndarray:
     """
     The delta cap method can be used with two different sub routines. Each of the sub routines will be applied to the
@@ -47,7 +49,10 @@ def delta_capacity(
                     state_duration,
                     nodes,
                     scheduled_contact_topology,
-                    positions)
+                    positions,
+                    optical_interfaces_to_node,
+                    node_to_optical_interfaces
+                )
 
                 # Since the delta caps matrix is already filled with zeros, if the single edge node capacity returns
                 # None i.e. there was no new capacity then we can just leave the delta as 0, otherwise compute
@@ -138,44 +143,53 @@ def compute_node_capacities(
         nodes: list[str],
         scheduled_contact_topology: np.ndarray,
         positions: np.ndarray,
+        optical_interfaces_to_node: dict[int, int],
+        node_to_optical_interfaces: dict[int, list[int]]
 ) -> list[NodeCapacity]:
     # For each graph in the TEG, compute the capacity
     node_capacities_by_graph = [
-        compute_node_capacity_by_graph(graphs[k], state_durations[k], nodes, scheduled_contact_topology[:k], positions) for k in range(K)]
+        compute_node_capacity_by_graph(graphs[k], state_durations[k], nodes, scheduled_contact_topology[:k], positions, optical_interfaces_to_node, node_to_optical_interfaces) for k in range(K)]
 
     node_capacities = np.array(node_capacities_by_graph).flatten().tolist()
     return merge_many_node_capacities(node_capacities)
 
 
 def compute_node_capacity_by_single_edge_graph(
-        tx_idx: int,
-        rx_idx: int,
+        tx_oi_idx: int,
+        rx_oi_idx: int,
         duration: int,
         nodes: list[str],
         scheduled_contact_topology: np.ndarray,
         positions: np.ndarray,
+        optical_interfaces_to_node,
+        node_to_optical_interfaces: dict[int, list[int]]
 ) -> NodeCapacity | None:
-    bit_rate = min(constants.BIT_RATES[nodes[tx_idx]], constants.BIT_RATES[nodes[rx_idx]])
+    bit_rate = min(constants.BIT_RATES[nodes[optical_interfaces_to_node[tx_oi_idx]]],
+                   constants.BIT_RATES[nodes[optical_interfaces_to_node[rx_oi_idx]]])
 
     effective_contact_duration = compute_effective_contact_time(
-        tx_idx,
-        rx_idx,
+        tx_oi_idx,
+        rx_oi_idx,
         scheduled_contact_topology,
         duration,
         positions,
+        optical_interfaces_to_node,
     )
 
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
     # the tx and rx
     # Inflow for single hop and two hop
-    if nodes[tx_idx] in constants.SOURCE_NODES and nodes[rx_idx] in constants.RELAY_NODES or nodes[rx_idx] in constants.DESTINATION_NODES:
+    if (nodes[optical_interfaces_to_node[tx_oi_idx]] in constants.SOURCE_NODES
+        and (nodes[optical_interfaces_to_node[rx_oi_idx]] in constants.RELAY_NODES or nodes[optical_interfaces_to_node[rx_oi_idx]] in constants.DESTINATION_NODES)):
+        rx_idx = optical_interfaces_to_node[rx_oi_idx]
         return NodeCapacity(
             id=rx_idx,
             capacity_in=effective_contact_duration * bit_rate,
             capacity_out=0 if nodes[rx_idx] in constants.RELAY_NODES else float("inf"))
     # Outflow for two hop
-    elif (nodes[tx_idx] in constants.RELAY_NODES
-          and nodes[rx_idx] in constants.DESTINATION_NODES):
+    elif (nodes[optical_interfaces_to_node[tx_oi_idx]] in constants.RELAY_NODES
+          and nodes[optical_interfaces_to_node[rx_oi_idx]] in constants.DESTINATION_NODES):
+        tx_idx = optical_interfaces_to_node[tx_oi_idx]
         return NodeCapacity(
             id=tx_idx,
             capacity_in=0,
@@ -190,6 +204,8 @@ def compute_node_capacity_by_graph(
         nodes: list[str],
         scheduled_contact_topology: np.ndarray,
         positions: np.ndarray,
+        optical_interfaces_to_node: dict[int, int],
+        node_to_optical_interfaces: dict[int, list[int]]
 ) -> list[NodeCapacity]:
     num_nodes = len(graph)
 
@@ -204,30 +220,31 @@ def compute_node_capacity_by_graph(
             capacity_out=0 if node in constants.RELAY_NODES else float("inf"))
 
         # The list if ipn_nodes contains the node idx i.e. its index in the adjacency matrix
-        for tx_idx in range(num_nodes):
-            for rx_idx in range(num_nodes):
+        for tx_oi_idx in range(num_nodes):
+            for rx_oi_idx in range(num_nodes):
                 # If there was no contact between those two nodes then skip
-                if graph[tx_idx][rx_idx] == 0:
+                if graph[tx_oi_idx][rx_oi_idx] == 0:
                     continue
 
                 effective_contact_duration = compute_effective_contact_time(
-                    tx_idx,
-                    rx_idx,
+                    tx_oi_idx,
+                    rx_oi_idx,
                     scheduled_contact_topology,
                     duration,
                     positions,
+                    optical_interfaces_to_node
                 )
                 
-                bit_rate = min(constants.BIT_RATES[nodes[tx_idx]], constants.BIT_RATES[nodes[rx_idx]])
+                bit_rate = min(constants.BIT_RATES[nodes[optical_interfaces_to_node[tx_oi_idx]]], constants.BIT_RATES[nodes[optical_interfaces_to_node[rx_oi_idx]]])
 
                 # Only one of these two conditions can ever be true since we don't count contacts with the same node as
                 # the tx and rx
-                if nodes[tx_idx] in constants.SOURCE_NODES and rx_idx == node_idx:
+                if nodes[optical_interfaces_to_node[tx_oi_idx]] in constants.SOURCE_NODES and rx_oi_idx in node_to_optical_interfaces[node_idx]:
                     # Compute the amount of data transmitted to the IPN node from a non-IPN node.
                     # ipn node == rx_node
                     node_capacity.capacity_in += effective_contact_duration * bit_rate
-                elif (tx_idx == node_idx
-                      and nodes[rx_idx] in constants.DESTINATION_NODES):
+                elif (tx_oi_idx in node_to_optical_interfaces[node_idx]
+                      and nodes[optical_interfaces_to_node[rx_oi_idx]] in constants.DESTINATION_NODES):
                     # Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
                     # destination planet.
                     # ipn node == tx_node
@@ -272,7 +289,8 @@ def compute_jains_fairness_index(
         state_durations: np.ndarray,
         nodes: list[str],
         K: int,
-        N: int
+        N: int,
+        optical_interfaces_to_node
 ) -> float:
     """
     Compute the fairness based on the scheduled duration a contact is enabled and the bit rate of the laser, which gives
@@ -281,7 +299,7 @@ def compute_jains_fairness_index(
     to orbiter or relay to relay transmissions. This metrics tries to understand of fair/even the distribution of access
     opportunities is between the science satellites (orbiters) and the relay satellites.
     """
-    source_nodes = [node_idx for node_idx in range(N) if nodes[node_idx] in constants.SOURCE_NODES]  # Mars orbiter nodes
+    source_nodes = [node_idx for node_idx in range(N) if nodes[optical_interfaces_to_node[node_idx]] in constants.SOURCE_NODES]  # Mars orbiter nodes
     # Create a single graph the sums the enabled contact times of all k states
     enabled_contact_times = np.zeros((K, N, N), dtype="int64")
     for k in range(K):
@@ -289,8 +307,10 @@ def compute_jains_fairness_index(
             for rx_idx in range(N):
                 if (graphs[k][tx_idx][rx_idx] >= 1
                         and tx_idx in source_nodes
-                        and (nodes[rx_idx] in constants.RELAY_NODES or nodes[rx_idx] in constants.DESTINATION_NODES)):
-                    bit_rate = min(constants.BIT_RATES[nodes[tx_idx]], constants.BIT_RATES[nodes[rx_idx]])
+                        and (nodes[optical_interfaces_to_node[rx_idx]] in constants.RELAY_NODES or nodes[optical_interfaces_to_node[rx_idx]] in constants.DESTINATION_NODES)):
+                    bit_rate = min(constants.BIT_RATES[nodes[optical_interfaces_to_node[tx_idx]]],
+                                   constants.BIT_RATES[nodes[optical_interfaces_to_node[rx_idx]]])
+
                     enabled_contact_times[k][tx_idx][rx_idx] = state_durations[k] * bit_rate
 
     enabled_contact_time_graph = np.sum(enabled_contact_times, axis=0)
@@ -306,14 +326,15 @@ def compute_scheduled_delay(
         state_durations: np.ndarray,
         nodes: list[str],
         K: int,
-        N: int
+        N: int,
+        optical_interfaces_to_node
 ) -> float:
     """
     Compute the average delay between when an orbiter can transmit to a relay. This does not include orbiter to orbiter
     or relay to relay transmissions. This tries to understand the delay for Mars orbiter to Mars relay transmissions.
     """
-    orbiter_nodes = [node_idx for node_idx in range(N) if nodes[node_idx] in constants.SOURCE_NODES]
-    non_source_nodes = [node_idx for node_idx in range(N) if nodes[node_idx] in constants.RELAY_NODES or nodes[node_idx] in constants.DESTINATION_NODES]
+    orbiter_nodes = [node_idx for node_idx in range(N) if nodes[optical_interfaces_to_node[node_idx]] in constants.SOURCE_NODES]
+    non_source_nodes = [node_idx for node_idx in range(N) if nodes[optical_interfaces_to_node[node_idx]] in constants.RELAY_NODES or nodes[optical_interfaces_to_node[node_idx]] in constants.DESTINATION_NODES]
     node_delays = {node_idx: {"total_delay": 0, "num_contacts": 0} for node_idx in orbiter_nodes}
 
     # This list keeps track of the delays each orbiter node has between contact opportunities with the relay satellites.
@@ -349,11 +370,12 @@ coordinate_cache = {}
 
 
 def compute_effective_contact_time(
-    idx1: int,
-    idx2: int,
+    oi_idx1: int,
+    oi_idx2: int,
     scheduled_contact_topology: np.ndarray,
     state_duration: int,
     positions: np.ndarray,
+    optical_interfaces_to_node: dict[int, int],
 ) -> float:
     if constants.should_bypass_retargeting_time:
         return state_duration
@@ -364,22 +386,25 @@ def compute_effective_contact_time(
     if curr_k == 0:
         return state_duration
     
-    if ((idx1, idx2, curr_k) in effective_contact_time_cache or (idx2, idx1, curr_k) in effective_contact_time_cache) and curr_k != len(positions) - 1:
-        return effective_contact_time_cache[(idx1, idx2, curr_k)]
+    if ((oi_idx1, oi_idx2, curr_k) in effective_contact_time_cache or (oi_idx2, oi_idx1, curr_k) in effective_contact_time_cache) and curr_k != len(positions) - 1:
+        return effective_contact_time_cache[(oi_idx1, oi_idx2, curr_k)]
 
-    def get_contact_in_prev_state(node_idx):
-        for rx_idx in range(len(scheduled_contact_topology[curr_k - 1])):
-            if scheduled_contact_topology[curr_k - 1][node_idx][rx_idx] >= 1:
-                coordinate_cache[(node_idx, curr_k)] = rx_idx
+    def get_contact_in_prev_state(oi_idx):
+        for rx_oi_idx in range(len(scheduled_contact_topology[curr_k - 1])):
+            if scheduled_contact_topology[curr_k - 1][oi_idx][rx_oi_idx] >= 1:
+                rx_idx = optical_interfaces_to_node[rx_oi_idx]
+                coordinate_cache[(oi_idx, curr_k)] = rx_idx
                 return rx_idx
 
         return -1
 
     # For each node check in the scheduled topology if it had a contact in the previous state and with which node
     # Check the coordinates of it and the rx at that time, this will give the previous coordinates.
-    idx1_rx = coordinate_cache[(idx1, curr_k)] if (idx1, curr_k) in coordinate_cache else get_contact_in_prev_state(idx1)
-    idx2_rx = coordinate_cache[(idx2, curr_k)] if (idx2, curr_k) in coordinate_cache else get_contact_in_prev_state(idx2)
+    idx1_rx = coordinate_cache[(oi_idx1, curr_k)] if (oi_idx1, curr_k) in coordinate_cache else get_contact_in_prev_state(oi_idx1)
+    idx2_rx = coordinate_cache[(oi_idx2, curr_k)] if (oi_idx2, curr_k) in coordinate_cache else get_contact_in_prev_state(oi_idx2)
     
+    idx1 = optical_interfaces_to_node[oi_idx1]
+    idx2 = optical_interfaces_to_node[oi_idx2]
     # Use PAT lib to compute delay
     if idx1_rx != -1 and idx2_rx != -1:
         idx1_coords = np.array(positions[curr_k][idx1])
@@ -421,7 +446,7 @@ def compute_effective_contact_time(
     # effective contact duration = contact duration - PAT_delay
     effective_contact_time = max(state_duration - PAT_delay, 0)
     
-    effective_contact_time_cache[(idx1, idx2, curr_k)] = effective_contact_time
-    effective_contact_time_cache[(idx2, idx1, curr_k)] = effective_contact_time
+    effective_contact_time_cache[(oi_idx1, oi_idx2, curr_k)] = effective_contact_time
+    effective_contact_time_cache[(oi_idx2, oi_idx1, curr_k)] = effective_contact_time
 
     return effective_contact_time

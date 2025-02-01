@@ -25,15 +25,16 @@ class Reporter:
             "teg": teg,
         })
         
-        node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.nodes, teg.graphs, teg.pos)
+        node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.nodes, teg.graphs, teg.pos, teg.optical_interfaces_to_node, teg.node_to_optical_interfaces)
+        print(node_capacities)
         network_capacity = int(compute_capacity(node_capacities))
         network_wasted_capacity = compute_wasted_capacity(node_capacities)
 
         wasted_buffer_capacity = int(compute_wasted_buffer(node_capacities))
 
-        jains_fairness_index = compute_jains_fairness_index(teg.graphs, teg.state_durations, teg.nodes, teg.K, teg.N)
+        jains_fairness_index = compute_jains_fairness_index(teg.graphs, teg.state_durations, teg.nodes, teg.K, teg.N, teg.optical_interfaces_to_node)
         
-        scheduled_delay = compute_scheduled_delay(teg.graphs, teg.state_durations, teg.nodes, teg.K, teg.N)
+        scheduled_delay = compute_scheduled_delay(teg.graphs, teg.state_durations, teg.nodes, teg.K, teg.N, teg.optical_interfaces_to_node)
 
         row = [scheduler_name, experiment_name, duration, network_capacity, network_wasted_capacity, wasted_buffer_capacity, jains_fairness_index, scheduled_delay]
         self.reports.append(row)

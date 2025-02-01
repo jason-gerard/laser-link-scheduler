@@ -81,32 +81,55 @@ MARS = "MARS"
 
 # GS
 DESTINATION_NODES = [
-    "9001", "9002"
+    "9001", "9002", "9003"
 ]
 
 # Mars Science sats
 SOURCE_NODES = [
-    "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016",
+    "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010",
+    "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020",
+    "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030",
+    "2031", "2032", "2033", "2034", "2035", "2036", "2037", "2038", "2039", "2040",
+    "2041", "2042", "2043", "2044", "2045", "2046", "2047", "2048", "2049", "2050",
+    "2051", "2052", "2053", "2054", "2055", "2056", "2057", "2058", "2059", "2060",
+    "2061", "2062", "2063", "2064"
 ]
 
 # Earth satellites
 RELAY_NODES = [
-    "1001", "1002"
+    "1001", "1002", "1003", "1004", "1005", "1006"
 ]
 
 NODE_TO_PLANET_MAP = {
-    "1001": EARTH, "1002": EARTH,
+    "1001": EARTH, "1002": EARTH, "1003": EARTH, "1004": EARTH, "1005": EARTH, "1006": EARTH,
 
     "2001": MARS, "2002": MARS, "2003": MARS, "2004": MARS, "2005": MARS, "2006": MARS, "2007": MARS, "2008": MARS,
     "2009": MARS, "2010": MARS, "2011": MARS, "2012": MARS, "2013": MARS, "2014": MARS, "2015": MARS, "2016": MARS,
+    "2017": MARS, "2018": MARS, "2019": MARS, "2020": MARS, "2021": MARS, "2022": MARS, "2023": MARS, "2024": MARS,
+    "2025": MARS, "2026": MARS, "2027": MARS, "2028": MARS, "2029": MARS, "2030": MARS, "2031": MARS, "2032": MARS,
+    "2033": MARS, "2034": MARS, "2035": MARS, "2036": MARS, "2037": MARS, "2038": MARS, "2039": MARS, "2040": MARS,
+    "2041": MARS, "2042": MARS, "2043": MARS, "2044": MARS, "2045": MARS, "2046": MARS, "2047": MARS, "2048": MARS,
+    "2049": MARS, "2050": MARS, "2051": MARS, "2052": MARS, "2053": MARS, "2054": MARS, "2055": MARS, "2056": MARS,
+    "2057": MARS, "2058": MARS, "2059": MARS, "2060": MARS, "2061": MARS, "2062": MARS, "2063": MARS, "2064": MARS,
 
-    "9001": EARTH, "9002": EARTH
+    "9001": EARTH, "9002": EARTH, "9003": EARTH
 }
 
 SOURCE_NODE_BIT_RATE = 1000
 RELAY_NODE_BIT_RATE = 2000
 GS_NODE_BIT_RATE = 2000
 BIT_RATES = {node_id: SOURCE_NODE_BIT_RATE if node_id in SOURCE_NODES else RELAY_NODE_BIT_RATE for node_id in NODE_TO_PLANET_MAP}
+
+
+def get_num_lasers(node_id: str):
+    if node_id in SOURCE_NODES:
+        return 1
+    elif node_id in RELAY_NODES:
+        # return 1
+        return 2
+    elif node_id in DESTINATION_NODES:
+        # return 1
+        return 2
 
 
 # DESTINATION_NODES = [

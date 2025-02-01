@@ -44,11 +44,11 @@ def dag_reduction(teg: TimeExpandedGraph):
 
     print("Starting the DAG topology reduction algorithm")
     for k in tqdm(range(teg.K)):
-        for tx_idx in range(teg.N):
-            for rx_idx in range(teg.N):
-                if teg.graphs[k][tx_idx][rx_idx] >= 1:
-                    tx_node = teg.nodes[tx_idx]
-                    rx_node = teg.nodes[rx_idx]
+        for tx_oi_idx in range(teg.N):
+            for rx_oi_idx in range(teg.N):
+                if teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
+                    tx_node = teg.nodes[teg.optical_interfaces_to_node[tx_oi_idx]]
+                    rx_node = teg.nodes[teg.optical_interfaces_to_node[rx_oi_idx]]
 
                     # Req. 1
                     is_src_dst = tx_node in SOURCE_NODES and rx_node in DESTINATION_NODES
@@ -60,7 +60,7 @@ def dag_reduction(teg: TimeExpandedGraph):
                     is_rly_on_dst_planet = NODE_TO_PLANET_MAP[rx_node] == EARTH
 
                     if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
-                        reduced_graph[k][tx_idx][rx_idx] = teg.graphs[k][tx_idx][rx_idx]
+                        reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
 
     reduced_teg = TimeExpandedGraph(
         graphs=reduced_graph,
@@ -72,7 +72,10 @@ def dag_reduction(teg: TimeExpandedGraph):
         node_map=teg.node_map,
         ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
         W=teg.W,
-        pos=teg.pos)
+        pos=teg.pos,
+        optical_interfaces_to_node=teg.optical_interfaces_to_node,
+        node_to_optical_interfaces=teg.node_to_optical_interfaces,
+    )
 
     print(count_edges(teg), count_edges(reduced_teg))
     print(f"Percent of edges removed = {100 * (1 - count_edges(reduced_teg) / count_edges(teg)):.3f}%")

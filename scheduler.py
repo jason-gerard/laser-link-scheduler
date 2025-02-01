@@ -50,7 +50,10 @@ class LaserLinkScheduler:
                 node_capacities,
                 teg.nodes,
                 teg.state_durations[k],
-                teg.pos)
+                teg.pos,
+                teg.optical_interfaces_to_node,
+                teg.node_to_optical_interfaces
+            )
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
             weights[k] = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
@@ -69,7 +72,10 @@ class LaserLinkScheduler:
                 teg.state_durations[k],
                 teg.nodes,
                 scheduled_graphs[:k],
-                teg.pos)
+                teg.pos,
+                teg.optical_interfaces_to_node,
+                teg.node_to_optical_interfaces
+            )
             node_capacities = merge_many_node_capacities(node_capacities + scheduled_node_capacities)
 
             # Update the matrix containing the disabled contact time for state k
@@ -85,7 +91,10 @@ class LaserLinkScheduler:
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
             W=weights,
-            pos=teg.pos)
+            pos=teg.pos,
+            optical_interfaces_to_node=teg.optical_interfaces_to_node,
+            node_to_optical_interfaces=teg.node_to_optical_interfaces
+        )
 
 
 class BruteForceScheduler:
@@ -106,7 +115,10 @@ class BruteForceScheduler:
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
             W=weights,
-            pos=teg.pos)
+            pos=teg.pos,
+            optical_interfaces_to_node=teg.optical_interfaces_to_node,
+            node_to_optical_interfaces=teg.node_to_optical_interfaces
+        )
 
 
 class FairContactPlan:
@@ -155,7 +167,10 @@ class FairContactPlan:
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
             W=weights,
-            pos=teg.pos)
+            pos=teg.pos,
+            optical_interfaces_to_node=teg.optical_interfaces_to_node,
+            node_to_optical_interfaces=teg.node_to_optical_interfaces
+        )
 
 
 class RandomScheduler:
@@ -206,7 +221,10 @@ class RandomScheduler:
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
             W=weights,
-            pos=teg.pos)
+            pos=teg.pos,
+            optical_interfaces_to_node=teg.optical_interfaces_to_node,
+            node_to_optical_interfaces=teg.node_to_optical_interfaces
+        )
 
 
 class AlternatingScheduler:
@@ -259,7 +277,10 @@ class AlternatingScheduler:
             node_map=teg.node_map,
             ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
             W=weights,
-            pos=teg.pos)
+            pos=teg.pos,
+            optical_interfaces_to_node=teg.optical_interfaces_to_node,
+            node_to_optical_interfaces=teg.node_to_optical_interfaces
+        )
 
 
 def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
