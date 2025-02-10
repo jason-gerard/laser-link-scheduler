@@ -14,6 +14,9 @@ SHOW_FIGS = False
 
 EXPERIMENT_NAME = "mars_earth_xs_scenario"
 
+plt.rcParams.update({'font.size': 18})
+plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.family': 'Times New Roman'})
 
 def count_reduced_edges(experiment_name):
     contact_plan_parser = IONContactPlanParser()

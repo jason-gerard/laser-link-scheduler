@@ -4,7 +4,6 @@ import numpy as np
 import constants
 from constants import RELAY_NODES, SOURCE_NODES, DESTINATION_NODES
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
-from analysis.dag_topology_reduction import dag_reduction
 from pat_delay_model import pat_delay
 from report_generator import Reporter
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, TimeExpandedGraph, \
@@ -141,7 +140,8 @@ class LLSModel:
             self.flow_model += self.retargeting_delays[edge] >= rx_delay
 
         print("Starting solve...")
-        self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
+        # self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
+        self.flow_model.solve(pulp.GUROBI_CMD(timeLimit=MAX_TIME))
 
         print(f"Generating adjacency matrix from the scheduled contact plan")
         contact_plan = np.zeros((self.teg.K, self.teg.N, self.teg.N), dtype="int64")
@@ -252,18 +252,18 @@ class LLSModel:
             return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
 
 if __name__ == "__main__":
-    use_reduction = True
-    EXPERIMENT_NAME = "gs_mars_earth_xs_scenario"
+    EXPERIMENT_NAME = "gs_mars_earth_xl_scenario"
 
     contact_plan_parser = IONContactPlanParser()
     contact_plan = contact_plan_parser.read(EXPERIMENT_NAME)
 
     initial_teg = convert_contact_plan_to_time_expanded_graph(
         contact_plan,
-        should_fractionate=True)
-    teg = dag_reduction(initial_teg) if use_reduction else initial_teg
+        should_fractionate=True,
+        should_reduce=True,
+    )
 
-    solver = LLSModel(teg)
+    solver = LLSModel(initial_teg, is_mip=False)
     scheduled_teg = solver.solve()
 
     for k in range(scheduled_teg.K):
