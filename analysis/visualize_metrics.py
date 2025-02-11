@@ -9,7 +9,7 @@ plt.rcParams.update({'font.size': 18})
 plt.rc('legend', fontsize=14)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
-report_id = 1738446918
+report_id = 1739218035
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [{k: v for k, v in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
@@ -35,20 +35,20 @@ algorithms = [
 ]
 
 metrics = [
-    ("Capacity", "terabits/day", 20, 200, 20),
-    ("Wasted capacity", "terabits/day", 40, 280, 40),
-    ("Wasted buffer capacity", "terabits/day", 20, 160, 20),
-    ("Scheduled delay", "minutes", 60, 840, 120),
+    ("Capacity", "terabits/day", 40, 280, 40),
+    ("Wasted capacity", "terabits/day", 20, 100, 20),
+    ("Wasted buffer capacity", "terabits/day", 5, 40, 5),
+    ("Scheduled delay", "minutes", 20, 200, 20),
     ("Jain's fairness index", "", 0.2, 1.0, 0.2),
-    ("Execution duration", "seconds", 0.01, 10000, 30),
+    ("Execution duration", "seconds", 0.01, 100000, 30),
 ]
 
 x = [
     "X-Small",
     "Small",
     "Medium",
-    # "Large",
-    # "X-Large",
+    "Large",
+    "X-Large",
 ]
 
 for metric, unit, y_min, y_max, y_step in metrics:
@@ -58,7 +58,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     for algorithm, display_name in algorithms:
         y = [run[metric] for run in report if run["Algorithm"] == algorithm]
 
-        plt.plot(x, y, label=display_name, linewidth=2.5)
+        plt.plot(x[:len(y)], y, label=display_name, linewidth=2.5)
 
     label = f"{metric} [{unit}]" if unit else metric
     plt.ylabel(label)

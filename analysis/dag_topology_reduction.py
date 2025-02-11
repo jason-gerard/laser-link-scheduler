@@ -112,7 +112,7 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
 
     y2 = [float(f"{100 * (1 - reduced_teg_counts[i] / frac_teg_counts[i]): .3f}") for i in range(len(teg_counts))]
-    ax2.plot(x, y2, "tab:cyan", linestyle="dashed", label="DAG Reduction")
+    ax2.plot(x, y2, "tab:cyan", linestyle="dashed", label="% DAG Reduction", linewidth=2.5)
     ax2.set_ylabel("Percent reduction")
     ax2.set_ylim(0, 100)
     ax2.yaxis.set_major_formatter(mtick.PercentFormatter())
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     all_labels = labels + labels2
 
     # Create a single legend
-    plt.legend(all_handles, all_labels)
+    plt.legend(all_handles, all_labels, loc='lower right')
 
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(
