@@ -9,15 +9,17 @@ plt.rcParams.update({'font.size': 18})
 plt.rc('legend', fontsize=14)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
-report_id = 1739324758
+report_id = 1739330482
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [{k: v for k, v in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
     
 scenarios = []
 for run in report:
-    scenarios.append(int(run["Scenario"].split("_")[-1]))
-    
+    num_nodes = int(run["Scenario"].split("_")[-1])
+    scenarios.append(num_nodes)
+
+    run["Capacity by node"] = float(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000 / num_nodes  # this has to come before capacity calculation
     run["Capacity"] = float(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
     run["Wasted capacity"] = float(run["Wasted capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
     run["Wasted buffer capacity"] = float(run["Wasted buffer capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
@@ -25,25 +27,26 @@ for run in report:
     run["Jain's fairness index"] = float(run["Jain's fairness index"])
     run["Execution duration"] = float(run["Execution duration"])
 
-x = list(set(scenarios))
+x = sorted(list(set(scenarios)))
 
 # pprint.pprint(report)
 
 algorithms = [
     ("lls", "LLS_Greedy"),
-    ("lls_pat_unaware", "LLS_PAT_Unaware"),
+    # ("lls_pat_unaware", "LLS_PAT_Unaware"),
     ("lls_mip", "LLS_MIP"),
     ("lls_lp", "LLS_LP"),
     ("fcp", "FCP"),
-    ("random", "Random"),
-    ("alternating", "Alternating"),
+    # ("random", "Random"),
+    # ("alternating", "Alternating"),
 ]
 
 metrics = [
     ("Capacity", "terabits/day", 5, 40, 5),
+    ("Capacity by node", "terabits/day", 0.5, 4, 0.5),
     ("Wasted capacity", "terabits/day", 20, 100, 20),
     ("Wasted buffer capacity", "terabits/day", 5, 40, 5),
-    ("Scheduled delay", "minutes", 20, 200, 20),
+    ("Scheduled delay", "minutes", 50, 400, 50),
     ("Jain's fairness index", "", 0.2, 1.0, 0.2),
     ("Execution duration", "seconds", 0.01, 100000, 30),
 ]
@@ -56,6 +59,11 @@ for metric, unit, y_min, y_max, y_step in metrics:
         y = [run[metric] for run in report if run["Algorithm"] == algorithm]
 
         plt.plot(x[:len(y)], y, label=display_name, linewidth=2.5)
+    
+    if metric == "Capacity":
+        # num_gs * duration * deep space data rate
+        y = [3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 for _ in range(len(x))]
+        plt.plot(x, y, label="GS Capacity", linewidth=2.5, color="gold", linestyle="dashed")
 
     label = f"{metric} [{unit}]" if unit else metric
     plt.ylabel(label)
@@ -71,7 +79,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
         plt.ylim(max(y_min-y_step, 0), y_max)
         ax.set_yticks([y_min] + np.arange(y_step, y_max+0.01, y_step).tolist())
 
-    ax.set_xticks(x)
+    ax.set_xticks([i for i in x if i % 8 == 0])
     
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(

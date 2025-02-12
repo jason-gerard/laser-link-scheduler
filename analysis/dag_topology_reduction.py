@@ -69,21 +69,42 @@ def visualize(teg, name):
 
 
 if __name__ == "__main__":
+    # EXPERIMENT_NAMES = [
+    #     "gs_mars_earth_xs_scenario",
+    #     "gs_mars_earth_s_scenario",
+    #     "gs_mars_earth_m_scenario",
+    #     "gs_mars_earth_l_scenario",
+    #     "gs_mars_earth_xl_scenario",
+    # ]
+    # 
+    # x = [
+    #     "X-Small",
+    #     "Small",
+    #     "Medium",
+    #     "Large",
+    #     "X-Large",
+    # ]
+
     EXPERIMENT_NAMES = [
-        "gs_mars_earth_xs_scenario",
-        "gs_mars_earth_s_scenario",
-        "gs_mars_earth_m_scenario",
-        "gs_mars_earth_l_scenario",
-        "gs_mars_earth_xl_scenario",
+        "gs_mars_earth_scenario_inc_4",
+        "gs_mars_earth_scenario_inc_8",
+        "gs_mars_earth_scenario_inc_12",
+        "gs_mars_earth_scenario_inc_16",
+        "gs_mars_earth_scenario_inc_20",
+        "gs_mars_earth_scenario_inc_24",
+        "gs_mars_earth_scenario_inc_28",
+        "gs_mars_earth_scenario_inc_32",
+        "gs_mars_earth_scenario_inc_36",
+        "gs_mars_earth_scenario_inc_40",
+        "gs_mars_earth_scenario_inc_44",
+        "gs_mars_earth_scenario_inc_48",
+        "gs_mars_earth_scenario_inc_52",
+        "gs_mars_earth_scenario_inc_56",
+        "gs_mars_earth_scenario_inc_60",
+        "gs_mars_earth_scenario_inc_64",
     ]
 
-    x = [
-        "X-Small",
-        "Small",
-        "Medium",
-        "Large",
-        "X-Large",
-    ]
+    x = [int(name.split("_")[-1]) for name in EXPERIMENT_NAMES]
     
     teg_counts = []
     frac_teg_counts = []
@@ -94,7 +115,10 @@ if __name__ == "__main__":
         frac_teg_counts.append(frac_teg_count)
         reduced_teg_counts.append(reduced_teg_count)
 
-    fig, ax1 = plt.subplots()
+    fig = plt.figure(figsize=(8, 4))
+    ax1 = fig.add_subplot()
+
+    ax1.set_xticks([i for i in x if i % 8 == 0])
 
     ax1.plot(x, teg_counts, label="Standard TEG", linewidth=2.5)
     ax1.plot(x, frac_teg_counts, label="Fractionated TEG", linewidth=2.5)
@@ -102,7 +126,7 @@ if __name__ == "__main__":
 
     label = "Number of decision variables"
     ax1.set_ylabel(label)
-    ax1.set_xlabel("Network Size")
+    ax1.set_xlabel("Source node count")
 
     ax1.set_yscale('log')
 
@@ -112,7 +136,7 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
 
     y2 = [float(f"{100 * (1 - reduced_teg_counts[i] / frac_teg_counts[i]): .3f}") for i in range(len(teg_counts))]
-    ax2.plot(x, y2, "tab:cyan", linestyle="dashed", label="% DAG Reduction", linewidth=2.5)
+    ax2.plot(x, y2, "tab:cyan", linestyle="dashed", label="% Edges Removed", linewidth=2.5)
     ax2.set_ylabel("Percent reduction")
     ax2.set_ylim(0, 100)
     ax2.yaxis.set_major_formatter(mtick.PercentFormatter())
