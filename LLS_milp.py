@@ -236,8 +236,8 @@ class LLSModel:
         if self.is_mip:
             return self.edges[edge].value() == 1.0
         else:
-            if self.edges[edge].value() <= 0.1:
-                return False
+            # if self.edges[edge].value() <= 0.1:
+            #     return False
 
             # if self.edges[edge].value() > 0.5:
             #     return True

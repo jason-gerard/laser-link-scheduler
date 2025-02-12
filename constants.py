@@ -115,7 +115,8 @@ NODE_TO_PLANET_MAP = {
     "9001": EARTH, "9002": EARTH, "9003": EARTH
 }
 
-SOURCE_NODE_BIT_RATE = 1000  # DSOC @ 267 mbps
+SOURCE_NODE_BIT_RATE = 187  # DSOC Psyche @ 100 million km 50 mbps
+# SOURCE_NODE_BIT_RATE = 1000  # DSOC Psyche @ 33 million km 267 mbps
 RELAY_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
 GS_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
 BIT_RATES = {node_id: SOURCE_NODE_BIT_RATE if node_id in SOURCE_NODES else RELAY_NODE_BIT_RATE for node_id in NODE_TO_PLANET_MAP}
@@ -128,8 +129,8 @@ def get_num_lasers(node_id: str):
         # return 1
         return 2
     elif node_id in DESTINATION_NODES:
-        # return 1
-        return 2
+        return 1
+        # return 2
 
 
 # DESTINATION_NODES = [
