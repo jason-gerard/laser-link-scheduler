@@ -39,44 +39,47 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
     write_time_expanded_graph(experiment_name, time_expanded_graph, FileType.TEG)
     print("Finished converting contact plan to time expanded graph")
 
-    print("Starting contact scheduling")
-    if scheduler_name == "lls":
-        scheduled_time_expanded_graph = LaserLinkScheduler().schedule(time_expanded_graph)
-    elif scheduler_name == "lls_pat_unaware":
-        constants.should_bypass_retargeting_time = True
-        scheduled_time_expanded_graph = LaserLinkScheduler().schedule(time_expanded_graph)
-        constants.should_bypass_retargeting_time = False
-    elif scheduler_name == "lls_mip":
-        scheduled_time_expanded_graph = LLSModel(time_expanded_graph, is_mip=True).solve()
-    elif scheduler_name == "lls_lp":
-        scheduled_time_expanded_graph = LLSModel(time_expanded_graph, is_mip=False).solve()
-    elif scheduler_name == "fcp":
-        scheduled_time_expanded_graph = FairContactPlan().schedule(time_expanded_graph)
-    elif scheduler_name == "random":
-        scheduled_time_expanded_graph = RandomScheduler().schedule(time_expanded_graph)
-    elif scheduler_name == "alternating":
-        scheduled_time_expanded_graph = AlternatingScheduler().schedule(time_expanded_graph)
-    else:
-        print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
-        raise Exception("No scheduler selected")
+    try:
+        print("Starting contact scheduling")
+        if scheduler_name == "lls":
+            scheduled_time_expanded_graph = LaserLinkScheduler().schedule(time_expanded_graph)
+        elif scheduler_name == "lls_pat_unaware":
+            constants.should_bypass_retargeting_time = True
+            scheduled_time_expanded_graph = LaserLinkScheduler().schedule(time_expanded_graph)
+            constants.should_bypass_retargeting_time = False
+        elif scheduler_name == "lls_mip":
+            scheduled_time_expanded_graph = LLSModel(time_expanded_graph, is_mip=True).solve()
+        elif scheduler_name == "lls_lp":
+            scheduled_time_expanded_graph = LLSModel(time_expanded_graph, is_mip=False).solve()
+        elif scheduler_name == "fcp":
+            scheduled_time_expanded_graph = FairContactPlan().schedule(time_expanded_graph)
+        elif scheduler_name == "random":
+            scheduled_time_expanded_graph = RandomScheduler().schedule(time_expanded_graph)
+        elif scheduler_name == "alternating":
+            scheduled_time_expanded_graph = AlternatingScheduler().schedule(time_expanded_graph)
+        else:
+            print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
+            raise Exception("No scheduler selected")
 
-    write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED)
-    print("Finished contact scheduling")
+        write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED)
+        print("Finished contact scheduling")
 
-    # Convert the TEG back to a contact plan
-    scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_time_expanded_graph)
-    contact_plan_parser.write(experiment_name, scheduled_contact_plan, FileType.SCHEDULED)
-    print("Finished converting time expanded graph to contact plan")
-    
-    # Write contact plan to disk as IPN-D contact plan, so we can visualize the output
-    ipnd_contact_plan_parser = IPNDContactPlanParser()
-    ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
+        # Convert the TEG back to a contact plan
+        scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_time_expanded_graph)
+        contact_plan_parser.write(experiment_name, scheduled_contact_plan, FileType.SCHEDULED)
+        print("Finished converting time expanded graph to contact plan")
+        
+        # Write contact plan to disk as IPN-D contact plan, so we can visualize the output
+        ipnd_contact_plan_parser = IPNDContactPlanParser()
+        ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
 
-    reporter.generate_report(
-        experiment_name,
-        scheduler_name,
-        timer() - start,
-        scheduled_time_expanded_graph)
+        reporter.generate_report(
+            experiment_name,
+            scheduler_name,
+            timer() - start,
+            scheduled_time_expanded_graph)
+    except Exception as e:
+        print(f"Execution of experiment: {experiment_name}, with scheduler: {scheduler_name} failed from {e}")
 
 
 def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[str]):
