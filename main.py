@@ -80,16 +80,21 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             scheduled_time_expanded_graph)
     except Exception as e:
         print(f"Execution of experiment: {experiment_name}, with scheduler: {scheduler_name} failed from {e}")
+        if scheduler_name == "lls_mip":
+            raise e
 
 
 def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[str]):
     reporter = Reporter(write_pkl=True)
 
     for experiment_name in experiment_names:
-        for scheduler_name in scheduler_names:
-            print(f"Starting execution of experiment: {experiment_name}, with scheduler: {scheduler_name}")
-            experiment_driver(experiment_name, scheduler_name, reporter)
-            print("\n\n")
+        try:
+            for scheduler_name in scheduler_names:
+                print(f"Starting execution of experiment: {experiment_name}, with scheduler: {scheduler_name}")
+                experiment_driver(experiment_name, scheduler_name, reporter)
+                print("\n\n")
+        except Exception as e:
+            raise e
 
     reporter.write_report()
 
