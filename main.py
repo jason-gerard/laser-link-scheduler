@@ -94,7 +94,7 @@ def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[s
                 experiment_driver(experiment_name, scheduler_name, reporter)
                 print("\n\n")
         except Exception as e:
-            raise e
+            break
 
     reporter.write_report()
 

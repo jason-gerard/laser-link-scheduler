@@ -22,7 +22,7 @@ class LLSModel:
         self.edges_by_node = None
         self.edges_by_state = None
         self.edges_by_state_oi = None
-        self.retargeting_delays = None
+        self.eff_contact_time = None
         self.edge_caps = None
         self.schedule_duration = sum(self.teg.state_durations)
         self.T = self.teg.state_durations
@@ -54,9 +54,9 @@ class LLSModel:
                 "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpContinuous
             )
 
-        print(f"Creating variables for retargeting delays")
-        self.retargeting_delays = pulp.LpVariable.dicts(
-            "retargeting_delays", contact_topology, lowBound=0, cat=pulp.LpContinuous
+        print(f"Creating variables for effective contact time")
+        self.eff_contact_time = pulp.LpVariable.dicts(
+            "effective_contact_time", contact_topology, lowBound=0, cat=pulp.LpContinuous
         )
         
         # In order to create these constraints faster we will first pre-process the data into a dict such that we can
@@ -109,7 +109,9 @@ class LLSModel:
         relay_inflow = []
         relay_outflow = []
         ogs_inflow = []
-        
+        # source_node_edge_caps = {source_node: [] for source_node in self.teg.nodes if source_node in SOURCE_NODES}
+
+        print(f"Setting up per edge capacity constraints")
         for edge, capacity in self.edge_caps.items():
             k, tx_oi_idx, rx_oi_idx = edge
             tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
@@ -121,13 +123,14 @@ class LLSModel:
                 relay_outflow.append(capacity)
             elif rx_node in constants.DESTINATION_NODES:
                 ogs_inflow.append(capacity)
+            
+            # if tx_node in constants.SOURCE_NODES:
+            #     source_node_edge_caps[tx_node].append(capacity)
 
             bit_rate = min(constants.BIT_RATES[tx_node], constants.BIT_RATES[rx_node])
-            tx_delay, rx_delay = self.compute_retargeting_delay(edge)
 
-            self.flow_model += capacity <= self.edges[edge] * self.T[edge[0]] * bit_rate
-            self.flow_model += capacity <= tx_delay * bit_rate
-            self.flow_model += capacity <= rx_delay * bit_rate
+            self.flow_model += capacity <= self.edges[edge] * self.T[edge[0]] * bit_rate  # flow
+            self.flow_model += capacity <= (self.T[edge[0]] - self.eff_contact_time[edge]) * bit_rate  # effective flow
 
         for relay_node, capacity in capacities.items():
             print(f"Setting up inflow and outflow capacity constraints for node {relay_node}")
@@ -173,6 +176,9 @@ class LLSModel:
             # This is the same as taking 95% of the average just unrolled so there is no division and everything is an integer
             # the model runs a bit faster like this
             self.flow_model += ect * len(source_node_ect_dict) * 20 >= sum_ect * 19
+        # sum_source_node_caps = pulp.lpSum([sum(source_node_caps) for source_node_caps in source_node_edge_caps.values()])
+        # for source_node_capacities in source_node_edge_caps.values():
+        #     self.flow_model += pulp.lpSum(source_node_capacities) * len(source_node_edge_caps) * 20 >= sum_source_node_caps * 19
 
         # Constraint that each optical interface can only be a part of a single selected edge per state
         print(f"Setting up 1 to 1 relationship between nodes per state k")
@@ -182,11 +188,11 @@ class LLSModel:
         
         # Constraint for retargeting delay being greater than or equal to the tx and rx retargeting delays. These will
         # have downward pressure since as the retargeting delay decreases there is a higher effective contact time.
-        # print("Create retargeting delay constraints for tx and rx...")
-        # for edge in self.retargeting_delays:
-        #     tx_delay, rx_delay = self.compute_retargeting_delay(edge)
-        #     self.flow_model += self.retargeting_delays[edge] <= tx_delay
-        #     self.flow_model += self.retargeting_delays[edge] <= rx_delay
+        print("Create effective contact time constraints for tx and rx...")
+        for edge in self.eff_contact_time:
+            tx_delay, rx_delay = self.compute_retargeting_delay(edge)
+            self.flow_model += self.eff_contact_time[edge] <= tx_delay
+            self.flow_model += self.eff_contact_time[edge] <= rx_delay
 
         print("Starting solve...")
         # self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
@@ -265,7 +271,7 @@ class LLSModel:
                     np.array(self.teg.pos[k][self.teg.node_map[new_node]])
                 ]),
             ) for prev_edge in self.edges_by_state_oi[oi_idx][k-1]}
-            return self.T[edge[0]] - sum([self.edges[prev_edge] * prev_edge_delays[prev_edge] for prev_edge in self.edges_by_state_oi[oi_idx][k-1]])
+            return sum([self.edges[prev_edge] * prev_edge_delays[prev_edge] for prev_edge in self.edges_by_state_oi[oi_idx][k-1]])
         
         tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
         rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
@@ -282,7 +288,7 @@ class LLSModel:
         bit_rate = min(constants.BIT_RATES[i], constants.BIT_RATES[j])
 
         # Apply our retargeting delay as a Big-M constraint here so that we maintain linearity in our model.
-        return sum([self.retargeting_delays[edge] * bit_rate for edge in edges])
+        return sum([self.eff_contact_time[edge] * bit_rate for edge in edges])
 
     def ect(self, i):
         """
@@ -290,19 +296,16 @@ class LLSModel:
         edge.
         """
         # T[edge[0]] gives the duration of the edge
-        return sum([self.edges[edge] * self.T[edge[0]] for edge in self.edges_by_node[i]])
+        return sum([self.edges[edge] for edge in self.edges_by_node[i]])
 
     def is_edge_selected(self, edge, contact_plan):
-        # The model may purposefully not select an edge when it could so it can use the time to slew to a node
-        # for the next contact, so don't add these edges even if the solution would be feasible.
-        if self.edges[edge].value() == 0.0:
-            return False
-
-        if self.is_mip:
-            # Gurobi will not round integer variables, so you have to leave some slack or some will not get
-            # picked up.
-            return self.edges[edge].value() > 0.9
-        else:
+        # if self.is_mip:
+        #     # The model may purposefully not select an edge when it could so it can use the time to slew to a node
+        #     # for the next contact, so don't add these edges even if the solution would be feasible.
+        #     # Gurobi will not round integer variables, so you have to leave some slack or some will not get
+        #     # picked up.
+        #     return self.edges[edge].value() > 0.9
+        # else:
             # Here we want to check that the solution is still feasible if we add the edge
             k, tx_oi_idx, rx_oi_idx = edge
             is_tx_good = sum(contact_plan[k][tx_oi_idx]) < 1
@@ -310,9 +313,9 @@ class LLSModel:
             is_rx2_good = sum(contact_plan[k][rx_oi_idx]) < 1
             is_tx2_good = sum(contact_plan[k][:, tx_oi_idx]) < 1
 
-            if 0.0 < self.edges[edge].value() < 0.001 and is_tx_good and is_rx_good and is_tx2_good and is_rx2_good:
-                print(f"Very low weighted selection... {edge}, {self.edges[edge].value()}")
-                return False
+            # if self.edges[edge].value() < 0.9 and is_tx_good and is_rx_good and is_tx2_good and is_rx2_good:
+            #     print(f"Very low weighted selection... {edge}, {self.edges[edge].value()}")
+            #     return False
 
             return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
 
