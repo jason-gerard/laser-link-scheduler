@@ -34,8 +34,8 @@ x = sorted(list(set(scenarios)))
 algorithms = [
     ("lls", "LLS_Greedy"),
     # ("lls_pat_unaware", "LLS_PAT_Unaware"),
-    ("lls_mip", "LLS_MIP"),
     ("lls_lp", "LLS_LP"),
+    ("lls_mip", "LLS_MIP"),
     ("fcp", "FCP"),
     # ("random", "Random"),
     # ("alternating", "Alternating"),
@@ -44,10 +44,10 @@ algorithms = [
 metrics = [
     ("Capacity", "terabits/day", 5, 40, 5),
     ("Capacity by node", "terabits/day", 0.5, 4, 0.5),
-    ("Wasted capacity", "terabits/day", 20, 100, 20),
+    ("Wasted capacity", "terabits/day", 10, 70, 10),
     ("Wasted buffer capacity", "terabits/day", 5, 40, 5),
-    ("Scheduled delay", "minutes", 50, 400, 50),
-    ("Jain's fairness index", "", 0.2, 1.0, 0.2),
+    ("Scheduled delay", "minutes", 5, 50, 5),
+    ("Jain's fairness index", "", 0.8, 1.0, 0.2),
     ("Execution duration", "seconds", 0.01, 100000, 30),
 ]
 
@@ -58,7 +58,12 @@ for metric, unit, y_min, y_max, y_step in metrics:
     for algorithm, display_name in algorithms:
         y = [run[metric] for run in report if run["Algorithm"] == algorithm]
 
-        plt.plot(x[:len(y)], y, label=display_name, linewidth=2.5)
+        if algorithm == "lls_lp":
+            plt.plot(x[:len(y)], y, linestyle="dashed", label=display_name, linewidth=3.5)
+        elif algorithm == "lls_mip":
+            plt.plot(x[:len(y)], y, linestyle="dotted", label=display_name, linewidth=3.5)
+        else:
+            plt.plot(x[:len(y)], y, label=display_name, linewidth=2.5)
     
     if metric == "Capacity":
         # num_gs * duration * deep space data rate
@@ -74,6 +79,8 @@ for metric, unit, y_min, y_max, y_step in metrics:
     
     if metric == "Execution duration":
         plt.yscale("log")
+        plt.ylim(y_min, y_max)
+    elif metric == "Jain's fairness index":
         plt.ylim(y_min, y_max)
     else:
         plt.ylim(max(y_min-y_step, 0), y_max)
