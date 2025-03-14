@@ -1,5 +1,6 @@
 import os
 import csv
+import math
 import pprint
 
 import matplotlib.pyplot as plt
@@ -66,17 +67,34 @@ for metric, unit, y_min, y_max, y_step in metrics:
             plt.plot(x[:len(y)], y, label=display_name, linewidth=2.5)
     
     if metric == "Capacity":
+        bbox = dict(boxstyle="round", fc="0.9")
+        arrowprops = dict(
+            arrowstyle="->",
+            connectionstyle="angle,angleA=0,angleB=90,rad=10")
+        ax.annotate("LLS_MIP intractable\nbeyond this point", fontsize=13, xy=(48, 30),
+                    # xytext=(-102, 24), textcoords='offset points',
+                    xytext=(-51, -150), textcoords='offset points',
+                    bbox=bbox, arrowprops=arrowprops)
+
         # num_gs * duration * deep space data rate
         y = [3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 for _ in range(len(x))]
-        plt.plot(x, y, label="GS Capacity", linewidth=2.5, color="gold", linestyle="dashed")
+        plt.plot(x, y, label="DTE Capacity", linewidth=2.5, color="gold", linestyle="dashed")
+
+    if metric == "Capacity by node":
+        # num_gs * duration * deep space data rate
+        y = [3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 / x for x in x]
+        plt.plot(x, y, label="DTE Capacity", linewidth=2.5, color="gold", linestyle="dashed")
 
     label = f"{metric} [{unit}]" if unit else metric
-    plt.ylabel(label)
-    plt.xlabel("Source node count")
+    if metric == "Scheduled delay":
+        plt.ylabel(f"Delay [{unit}]")
+    else:
+        plt.ylabel(label)
+    plt.xlabel("Source/relay node counts")
     plt.legend()
 
     plt.grid(linestyle='-', color='0.95')
-    
+
     if metric == "Execution duration":
         plt.yscale("log")
         plt.ylim(y_min, y_max)
@@ -87,6 +105,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
         ax.set_yticks([y_min] + np.arange(y_step, y_max+0.01, y_step).tolist())
 
     ax.set_xticks([i for i in x if i % 8 == 0])
+    ax.set_xticklabels([f"{i}/{math.ceil(i/16)}" for i in x if i % 8 == 0])
     
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(

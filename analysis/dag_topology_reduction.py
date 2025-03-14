@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import networkx as nx
 import numpy as np
+import math
 
 import os
 import sys
@@ -110,6 +111,7 @@ if __name__ == "__main__":
     frac_teg_counts = []
     reduced_teg_counts = []
     for name in EXPERIMENT_NAMES:
+        print(name)
         teg_count, frac_teg_count, reduced_teg_count = count_reduced_edges(name)
         teg_counts.append(teg_count)
         frac_teg_counts.append(frac_teg_count)
@@ -119,6 +121,7 @@ if __name__ == "__main__":
     ax1 = fig.add_subplot()
 
     ax1.set_xticks([i for i in x if i % 8 == 0])
+    ax1.set_xticklabels([f"{i}/{math.ceil(i/16)}" for i in x if i % 8 == 0])
 
     ax1.plot(x, teg_counts, label="Standard TEG", linewidth=2.5)
     ax1.plot(x, frac_teg_counts, label="Fractionated TEG", linewidth=2.5)
@@ -126,7 +129,7 @@ if __name__ == "__main__":
 
     label = "Number of decision variables"
     ax1.set_ylabel(label)
-    ax1.set_xlabel("Source node count")
+    ax1.set_xlabel("Source/relay node counts")
 
     ax1.set_yscale('log')
 
