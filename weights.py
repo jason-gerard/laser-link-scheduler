@@ -1,6 +1,7 @@
 import numpy as np
 import constants
-from pat_delay_model import pat_delay
+from pointing_delay_model import pointing_delay
+from link_acq_delay_model import link_acq_delay_ipn, link_acq_delay_leo
 from dataclasses import dataclass
 
 
@@ -174,6 +175,7 @@ def compute_node_capacity_by_single_edge_graph(
         duration,
         positions,
         optical_interfaces_to_node,
+        nodes
     )
 
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
@@ -197,6 +199,8 @@ def compute_node_capacity_by_single_edge_graph(
     else:
         return None
 
+
+eval_eff_ct = {}
 
 def compute_node_capacity_by_graph(
         graph: np.ndarray,
@@ -226,14 +230,25 @@ def compute_node_capacity_by_graph(
                 if graph[tx_oi_idx][rx_oi_idx] == 0:
                     continue
 
+
                 effective_contact_duration = compute_effective_contact_time(
                     tx_oi_idx,
                     rx_oi_idx,
                     scheduled_contact_topology,
                     duration,
                     positions,
-                    optical_interfaces_to_node
+                    optical_interfaces_to_node,
+                    nodes,
                 )
+
+                curr_k = min(len(scheduled_contact_topology), len(positions) - 1)
+                if 40 <= curr_k < 45:
+                    # print("K:", curr_k)
+                    tx_node = nodes[optical_interfaces_to_node[tx_oi_idx]]
+                    rx_node = nodes[optical_interfaces_to_node[rx_oi_idx]]
+                    eval_eff_ct[(curr_k, tx_node, rx_node, duration)] = effective_contact_duration
+
+                    # print("Edge", tx_node, rx_node, effective_contact_duration, duration)
                 
                 bit_rate = min(constants.BIT_RATES[nodes[optical_interfaces_to_node[tx_oi_idx]]], constants.BIT_RATES[nodes[optical_interfaces_to_node[rx_oi_idx]]])
 
@@ -376,6 +391,7 @@ def compute_effective_contact_time(
     state_duration: int,
     positions: np.ndarray,
     optical_interfaces_to_node: dict[int, int],
+    nodes: list[str],
 ) -> float:
     if constants.should_bypass_retargeting_time:
         return state_duration
@@ -413,7 +429,7 @@ def compute_effective_contact_time(
         idx2_coords = np.array(positions[curr_k][idx2])
         idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
         
-        PAT_delay = pat_delay(
+        node_pointing_delay = pointing_delay(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
         )
@@ -424,7 +440,7 @@ def compute_effective_contact_time(
 
         idx2_coords = np.array(positions[curr_k][idx2])
 
-        PAT_delay = pat_delay(
+        node_pointing_delay = pointing_delay(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
         )
@@ -435,16 +451,38 @@ def compute_effective_contact_time(
 
         idx1_coords = np.array(positions[curr_k][idx1])
 
-        PAT_delay = pat_delay(
+        node_pointing_delay = pointing_delay(
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
         )
     else:
-        PAT_delay = 0
+        node_pointing_delay = 0
+    
+    # If nodes keep their previous link, do not re-target
+    is_same_link = idx1_rx == idx2 or idx2_rx == idx1
+    if not is_same_link:
+        # Add link_acq delay, check if edge is an IPN or LEO link
+        node1 = nodes[optical_interfaces_to_node[oi_idx1]]
+        node2 = nodes[optical_interfaces_to_node[oi_idx2]]
+        is_ipn_edge = (
+                (node1 in constants.SOURCE_NODES and (node2 in constants.RELAY_NODES or node2 in constants.DESTINATION_NODES))
+                or
+                (node2 in constants.SOURCE_NODES and (node1 in constants.RELAY_NODES or node1 in constants.DESTINATION_NODES))
+        )
+        link_acq_delay = link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+    else:
+        # if node_pointing_delay != 0:
+        #     print(node_pointing_delay)
+        link_acq_delay = 0
+        return state_duration
+
+    retargeting_delay = node_pointing_delay + link_acq_delay
 
     # Subtract with state duration, bind it to a floor of 0, this will give
-    # effective contact duration = contact duration - PAT_delay
-    effective_contact_time = max(state_duration - PAT_delay, 0)
+    # effective contact duration = contact duration - retargeting_delay
+    effective_contact_time = max(state_duration - retargeting_delay, 0)
+    # if effective_contact_time == 0:
+    #     print(state_duration, retargeting_delay)
     
     effective_contact_time_cache[(oi_idx1, oi_idx2, curr_k)] = effective_contact_time
     effective_contact_time_cache[(oi_idx2, oi_idx1, curr_k)] = effective_contact_time

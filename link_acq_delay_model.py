@@ -5,7 +5,7 @@ IPN_CPA_SLEW_EL = 0.0
 IPN_FSM_TIP = 0.114592  # deg/s, 2 milliradian/s
 IPN_FSM_TILT = 0.114592  # deg/s, 2 milliradian/s
 IPN_DWELL_TIME = 0.5  # sec
-IPN_BEAM_WIDTH = 0.1  # deg
+IPN_BEAM_WIDTH = 0.2  # deg
 IPN_TX_OUTPUT_PWR = 0.0
 IPN_FOU = 2.0  # deg
 IPN_FOU_R = IPN_FOU/2  # deg
@@ -21,14 +21,6 @@ LEO_TX_OUTPUT_PWR = 0.0
 LEO_FOU = 1.5  # deg
 LEO_FOU_R = LEO_FOU/2  # deg
 LEO_QC_FOV = 0.0
-
-
-def pre_link_cal_delay() -> float:
-    return 5.0
-
-
-def pointing_delay() -> float:
-    pass
 
 
 def link_acq_delay(R: float, d: float, tip_rate: float, tilt_rate: float, dwell_time: float) -> float:
@@ -51,6 +43,26 @@ def link_acq_delay(R: float, d: float, tip_rate: float, tilt_rate: float, dwell_
         return 1.0
 
     return seek_stare_arch_hex_spiral_acq_delay() + acq_to_track_delay()
+
+
+def link_acq_delay_ipn() -> float:
+    return link_acq_delay(
+        IPN_FOU_R,
+        IPN_BEAM_WIDTH,
+        IPN_FSM_TIP,
+        IPN_FSM_TILT,
+        IPN_DWELL_TIME,
+    )
+
+
+def link_acq_delay_leo() -> float:
+    return link_acq_delay(
+        LEO_FOU_R,
+        LEO_BEAM_WIDTH,
+        LEO_FSM_TIP,
+        LEO_FSM_TILT,
+        LEO_DWELL_TIME,
+    )
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def pat_delay_single_node(src_node, curr_dst_node, new_dst_node) -> float:
+def pointing_delay_single_node(src_node, curr_dst_node, new_dst_node) -> float:
     # Parameters are coordinates with respect to some central point
     # so convert everything to have the src node as the central point
     # by subtracting the src node coordinates from all the nodes
@@ -23,23 +23,24 @@ def pat_delay_single_node(src_node, curr_dst_node, new_dst_node) -> float:
 # L2 cache delay value for same nodes idx1, idx1_rx, k
 retargeting_delay_cache = {}
 
-def pat_delay(node_set1, node_set2) -> float:
+
+def pointing_delay(node_set1, node_set2) -> float:
     # Compute the PAT delay for node sets 1 and 2
     if node_set1.tostring() in retargeting_delay_cache:
-        pat_delay_1 = retargeting_delay_cache[node_set1.tostring()]
+        pointing_delay_1 = retargeting_delay_cache[node_set1.tostring()]
     else:
-        pat_delay_1 = pat_delay_single_node(*node_set1)
-        retargeting_delay_cache[node_set1.tostring()] = pat_delay_1
+        pointing_delay_1 = pointing_delay_single_node(*node_set1)
+        retargeting_delay_cache[node_set1.tostring()] = pointing_delay_1
 
     if node_set2.tostring() in retargeting_delay_cache:
-        pat_delay_2 = retargeting_delay_cache[node_set2.tostring()]
+        pointing_delay_2 = retargeting_delay_cache[node_set2.tostring()]
     else:
-        pat_delay_2 = pat_delay_single_node(*node_set2)
-        retargeting_delay_cache[node_set2.tostring()] = pat_delay_2
+        pointing_delay_2 = pointing_delay_single_node(*node_set2)
+        retargeting_delay_cache[node_set2.tostring()] = pointing_delay_2
 
     # The max between them is the actual delay since both must be finished pointing
     # before starting acquisition
-    return max(pat_delay_1, pat_delay_2)
+    return max(pointing_delay_1, pointing_delay_2)
 
 
 if __name__ == "__main__":
@@ -55,5 +56,5 @@ if __name__ == "__main__":
         np.array([2, 0, 0]),  # dst21
         np.array([1, 0, 0]),  # dst22
     ])
-    delay = pat_delay(node_set_1, node_set_2)
+    delay = pointing_delay(node_set_1, node_set_2)
     print(delay)

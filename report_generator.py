@@ -6,6 +6,7 @@ import pickle
 import constants
 from time_expanded_graph import TimeExpandedGraph
 from utils import FileType
+import weights
 from weights import compute_node_capacities, compute_capacity, compute_wasted_capacity, compute_jains_fairness_index, \
     compute_scheduled_delay, compute_wasted_buffer
 
@@ -25,8 +26,16 @@ class Reporter:
             "teg": teg,
         })
         
+        weights.eval_eff_ct = {}
+        
         node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.nodes, teg.graphs, teg.pos, teg.optical_interfaces_to_node, teg.node_to_optical_interfaces)
-        print(node_capacities)
+        
+        for cap in node_capacities:
+            print(cap.id, min(cap.capacity_in, cap.capacity_out))
+
+        for (k, tx, rx, d), t in weights.eval_eff_ct.items():
+            print(k, tx, rx, t, d)
+
         network_capacity = int(compute_capacity(node_capacities))
         network_wasted_capacity = compute_wasted_capacity(node_capacities)
 

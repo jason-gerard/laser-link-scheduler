@@ -4,7 +4,8 @@ import numpy as np
 import constants
 from constants import RELAY_NODES, SOURCE_NODES, DESTINATION_NODES
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
-from pat_delay_model import pat_delay
+from pointing_delay_model import pointing_delay
+from link_acq_delay_model import link_acq_delay_ipn, link_acq_delay_leo
 from report_generator import Reporter
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, TimeExpandedGraph, \
     write_time_expanded_graph, convert_time_expanded_graph_to_contact_plan
@@ -54,7 +55,7 @@ class LLSModel:
                 "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpContinuous
             )
 
-        print(f"Creating variables for effective contact time")
+        print(f"Creating variables for retargeting time")
         self.eff_contact_time = pulp.LpVariable.dicts(
             "effective_contact_time", contact_topology, lowBound=0, cat=pulp.LpContinuous
         )
@@ -102,13 +103,16 @@ class LLSModel:
         # stations
         # The negative term applies downward pressure on the number of edges selected, so we don't take unnecessary edges
         # due to the upward pressure from the Big-M retargeting constraint
-        self.flow_model += pulp.lpSum(capacities.values()) + pulp.lpSum(single_hop_capacities.values())
+        self.flow_model += (
+                pulp.lpSum(capacities.values())
+                + pulp.lpSum(single_hop_capacities.values())
+        )
         # self.flow_model += pulp.lpSum(single_hop_capacities.values()) - pulp.lpSum(self.edges.values())
         # self.flow_model += pulp.lpSum(self.edge_caps.values())
-        
-        relay_inflow = []
-        relay_outflow = []
-        ogs_inflow = []
+
+        relay_inflow = {relay_node: [] for relay_node in self.teg.nodes if relay_node in RELAY_NODES}
+        relay_outflow = {relay_node: [] for relay_node in self.teg.nodes if relay_node in RELAY_NODES}
+        ogs_inflow = {ogs_node: [] for ogs_node in self.teg.nodes if ogs_node in DESTINATION_NODES}
         # source_node_edge_caps = {source_node: [] for source_node in self.teg.nodes if source_node in SOURCE_NODES}
 
         print(f"Setting up per edge capacity constraints")
@@ -117,12 +121,14 @@ class LLSModel:
             tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
             rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
             
-            if rx_node in constants.RELAY_NODES:
-                relay_inflow.append(capacity)
-            elif tx_node in constants.RELAY_NODES:
-                relay_outflow.append(capacity)
-            elif rx_node in constants.DESTINATION_NODES:
-                ogs_inflow.append(capacity)
+            if rx_node in constants.RELAY_NODES and tx_node in constants.SOURCE_NODES:
+                relay_inflow[rx_node].append(capacity)
+            elif tx_node in constants.RELAY_NODES and rx_node in constants.DESTINATION_NODES:
+                relay_outflow[tx_node].append(capacity)
+            elif rx_node in constants.DESTINATION_NODES and tx_node in constants.SOURCE_NODES:
+                ogs_inflow[rx_node].append(capacity)
+            else:
+                raise Exception("Bad input")
             
             # if tx_node in constants.SOURCE_NODES:
             #     source_node_edge_caps[tx_node].append(capacity)
@@ -130,12 +136,13 @@ class LLSModel:
             bit_rate = min(constants.BIT_RATES[tx_node], constants.BIT_RATES[rx_node])
 
             self.flow_model += capacity <= self.edges[edge] * self.T[edge[0]] * bit_rate  # flow
-            self.flow_model += capacity <= (self.T[edge[0]] - self.eff_contact_time[edge]) * bit_rate  # effective flow
+            # self.flow_model += capacity <= (self.T[edge[0]] - self.eff_contact_time[edge]) * bit_rate  # effective flow
+            self.flow_model += capacity <= self.eff_contact_time[edge] * bit_rate  # effective flow
 
         for relay_node, capacity in capacities.items():
             print(f"Setting up inflow and outflow capacity constraints for node {relay_node}")
-            self.flow_model += capacity <= pulp.lpSum(relay_inflow)
-            self.flow_model += capacity <= pulp.lpSum(relay_outflow)
+            self.flow_model += capacity <= pulp.lpSum(relay_inflow[relay_node])
+            self.flow_model += capacity <= pulp.lpSum(relay_outflow[relay_node])
             
             # # inflow
             # self.flow_model += capacity <= pulp.lpSum([self.flow(i, relay_node)
@@ -153,7 +160,7 @@ class LLSModel:
         # Create new inflow and outflow capacity constraints for single hop
         for gs_node, capacity in single_hop_capacities.items():
             print(f"Setting up inflow and outflow capacity constraints for ground station node {gs_node}")
-            self.flow_model += capacity <= pulp.lpSum(ogs_inflow)
+            self.flow_model += capacity <= pulp.lpSum(ogs_inflow[gs_node])
 
             # We only have inflow here, outflow is basically infinite since its the dst node. We don't look at inflow
             # from the relay nodes either since that capacity is already accounted for in the two hop capacity
@@ -175,7 +182,7 @@ class LLSModel:
             # self.flow_model += ect >= avg_ect * 0.95
             # This is the same as taking 95% of the average just unrolled so there is no division and everything is an integer
             # the model runs a bit faster like this
-            self.flow_model += ect * len(source_node_ect_dict) * 20 >= sum_ect * 19
+            self.flow_model += ect * len(source_node_ect_dict) * 20 >= sum_ect * 18
         # sum_source_node_caps = pulp.lpSum([sum(source_node_caps) for source_node_caps in source_node_edge_caps.values()])
         # for source_node_capacities in source_node_edge_caps.values():
         #     self.flow_model += pulp.lpSum(source_node_capacities) * len(source_node_edge_caps) * 20 >= sum_source_node_caps * 19
@@ -185,23 +192,36 @@ class LLSModel:
         for oi in self.teg.optical_interfaces_to_node:
             for k in range(self.teg.K):
                 self.flow_model += pulp.lpSum([self.edges[edge] for edge in self.edges_by_state_oi[oi][k]]) <= MAX_EDGES_PER_LASER
+                # for edge in self.edges_by_state_oi[oi][k]:
+                #     self.fl
         
         # Constraint for retargeting delay being greater than or equal to the tx and rx retargeting delays. These will
         # have downward pressure since as the retargeting delay decreases there is a higher effective contact time.
         print("Create effective contact time constraints for tx and rx...")
+        constraint_debug = {}
         for edge in self.eff_contact_time:
-            tx_delay, rx_delay = self.compute_retargeting_delay(edge)
+            tx_delay, rx_delay = self.compute_retargeting_delay(edge)  # this is actually the tx and rx effective contact time
+            # self.flow_model += self.eff_contact_time[edge] >= tx_delay
+            # self.flow_model += self.eff_contact_time[edge] >= rx_delay
+            
+            # self.flow_model += self.eff_contact_time[edge] <= self.T[edge[0]] - tx_delay
+            # self.flow_model += self.eff_contact_time[edge] <= self.T[edge[0]] - rx_delay
             self.flow_model += self.eff_contact_time[edge] <= tx_delay
             self.flow_model += self.eff_contact_time[edge] <= rx_delay
+            constraint_debug[edge] = (
+                tx_delay,
+                rx_delay,
+            )
 
         print("Starting solve...")
-        # self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
-        self.flow_model.solve(pulp.GUROBI_CMD(timeLimit=MAX_TIME))
+        self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
+        # self.flow_model.solve(pulp.GUROBI_CMD(timeLimit=MAX_TIME))
 
         print(f"Generating adjacency matrix from the scheduled contact plan")
         contact_plan = np.zeros((self.teg.K, self.teg.N, self.teg.N), dtype="int64")
         scheduled_contacts = []
         matched_edges_by_k = [[] for _ in range(self.teg.K)]
+        matched_edges_by_k_oi = [[] for _ in range(self.teg.K)]
         # y = (dict(sorted(self.edges.items(), key=lambda x: x[1].value(), reverse=True)))
         # for k, v in y.items():
         #     print(k, v.value())
@@ -209,6 +229,7 @@ class LLSModel:
             # if self.edges[edge].value() != 0.0 and self.edges[edge].value() != 1.0:
             #     print(self.edges[edge].value())
             if self.is_edge_selected(edge, contact_plan):
+                # print(self.retargeting_delay[edge].value())
                 k, tx_oi_idx, rx_oi_idx = edge
                 
                 contact_plan[k][tx_oi_idx][rx_oi_idx] = 1
@@ -217,7 +238,8 @@ class LLSModel:
                 tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
                 rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
                 matched_edges_by_k[k].append((tx_node, rx_node))
-        
+                matched_edges_by_k_oi[k].append((tx_oi_idx, rx_oi_idx))
+
         for k in range(len(matched_edges_by_k)):
             matched_edges = set(matched_edges_by_k[k])
             contacts = [contact for contact in self.teg.contacts[k] if (contact.tx_node, contact.rx_node) in matched_edges or (contact.rx_node, contact.tx_node) in matched_edges]
@@ -231,7 +253,32 @@ class LLSModel:
             for rx_idx in range(self.teg.N):
                 row_count = sum(contact_plan[k][:, rx_idx])
                 assert row_count <= 1, f"{contact_plan[k]}"
+                
+        # Eff contact time debug logs
+        for k in range(40, 45):
+            print("K:", k)
+            for tx_oi_idx, rx_oi_idx in matched_edges_by_k_oi[k]:
+                tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
+                rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
 
+                print("Edge", tx_oi_idx, tx_node, rx_oi_idx, rx_node, self.eff_contact_time[(k, tx_oi_idx, rx_oi_idx)].value())
+                # print(constraint_debug[(k, tx_oi_idx, rx_oi_idx)])
+                # print(self.eff_contact_time[(k, tx_oi_idx, rx_oi_idx)])
+                print_filled_expression(constraint_debug[(k, tx_oi_idx, rx_oi_idx)][0])
+                print_filled_expression(constraint_debug[(k, tx_oi_idx, rx_oi_idx)][1])
+
+        # Capacity debug logs
+        capacity = 0
+        for node in capacities.values():
+            print(node, node.value())
+            capacity += node.value()
+        for node in single_hop_capacities.values():
+            print(node, node.value())
+            capacity += node.value()
+        print("cap", capacity)
+
+        print("edge caps", sum([cap.value() for cap in self.edge_caps.values()]) / 2)
+        
         return TimeExpandedGraph(
             graphs=contact_plan,
             contacts=scheduled_contacts,
@@ -246,7 +293,7 @@ class LLSModel:
             optical_interfaces_to_node=self.teg.optical_interfaces_to_node,
             node_to_optical_interfaces=self.teg.node_to_optical_interfaces,
         )
-    
+
     def compute_retargeting_delay(self, edge):
         # For each edge, take the previous k, and for both i and j, see if they were selected for an edge in the
         # previous k state. If not then assume retargeting delay is 0. If it was then use the position data to compute
@@ -255,40 +302,79 @@ class LLSModel:
         k = min(k, len(self.teg.pos) - 1)
         
         if k == 0:
-            return self.T[edge[0]], self.T[edge[0]]
+            return 0, 0
         
         def get_delay(node, new_node, oi_idx):  # retargeting_delay for prev edge
             # Create a dict for each previous edge get retargeting delay
-            prev_edge_delays = {prev_edge: pat_delay(
-                np.array([
-                    np.array(self.teg.pos[k][self.teg.node_map[node]]),
-                    np.array(self.teg.pos[k][self.teg.optical_interfaces_to_node[prev_edge[1] if prev_edge[2] == oi_idx else prev_edge[2]]]),
-                    np.array(self.teg.pos[k][self.teg.node_map[new_node]])
-                ]),
-                np.array([
-                    np.array(self.teg.pos[k][self.teg.node_map[node]]),
-                    np.array(self.teg.pos[k][self.teg.optical_interfaces_to_node[prev_edge[1] if prev_edge[2] == oi_idx else prev_edge[2]]]),
-                    np.array(self.teg.pos[k][self.teg.node_map[new_node]])
-                ]),
-            ) for prev_edge in self.edges_by_state_oi[oi_idx][k-1]}
-            return sum([self.edges[prev_edge] * prev_edge_delays[prev_edge] for prev_edge in self.edges_by_state_oi[oi_idx][k-1]])
+            prev_edge_delays = {}
+            for prev_edge in self.edges_by_state_oi[oi_idx][k-1]:
+                node_idx = self.teg.node_map[node]
+                prev_node_idx = self.teg.optical_interfaces_to_node[prev_edge[1] if prev_edge[2] == oi_idx else prev_edge[2]]
+                new_node_idx = self.teg.node_map[new_node]
+
+                # If nodes keep their previous link, do not re-target
+                is_same_link = prev_node_idx == new_node_idx
+
+                # prev_edge_idx1 = self.teg.optical_interfaces_to_node[prev_edge[1]]
+                # prev_edge_idx2 = self.teg.optical_interfaces_to_node[prev_edge[2]]
+                # 
+                # is_same_link2 = (prev_edge_idx1 == new_node_idx) or (prev_edge_idx2 == new_node_idx)
+                # if is_same_link != is_same_link2:
+                #     print("testing\n\n\n\n\n")
+                # if k == 41 and (node == '2004' or node == '1001') and (new_node == '2004' or new_node == '1001'):
+                #     if is_same_link:
+                #         print(k, node, new_node, node_idx, new_node_idx, prev_node_idx)
+                        
+                if is_same_link:
+                    prev_edge_delays[prev_edge] = 0.0
+                else:
+                    pointing_nodes = np.array([
+                        np.array(self.teg.pos[k][node_idx]),
+                        np.array(self.teg.pos[k][prev_node_idx]),
+                        np.array(self.teg.pos[k][new_node_idx])
+                    ])
+                    node_pointing_delay = pointing_delay(pointing_nodes, pointing_nodes)
+
+                    # is the current edge an IPN or LEO link
+                    is_ipn_edge = (
+                        (node in SOURCE_NODES and (new_node in RELAY_NODES or new_node in DESTINATION_NODES))
+                        or
+                        (new_node in SOURCE_NODES and (node in RELAY_NODES or node in DESTINATION_NODES))
+                    )
+                    link_acq_delay = link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+                    
+                    prev_edge_delays[prev_edge] = min(node_pointing_delay + link_acq_delay, self.T[edge[0]])
+
+            # prev_edge_delays = {prev_edge: pointing_delay(
+            #     np.array([
+            #         np.array(self.teg.pos[k][self.teg.node_map[node]]),
+            #         np.array(self.teg.pos[k][self.teg.optical_interfaces_to_node[prev_edge[1] if prev_edge[2] == oi_idx else prev_edge[2]]]),
+            #         np.array(self.teg.pos[k][self.teg.node_map[new_node]])
+            #     ]),
+            #     np.array([
+            #         np.array(self.teg.pos[k][self.teg.node_map[node]]),
+            #         np.array(self.teg.pos[k][self.teg.optical_interfaces_to_node[prev_edge[1] if prev_edge[2] == oi_idx else prev_edge[2]]]),
+            #         np.array(self.teg.pos[k][self.teg.node_map[new_node]])
+            #     ]),
+            # ) for prev_edge in self.edges_by_state_oi[oi_idx][k-1]}
+            return pulp.lpSum([self.edges[prev_edge] * (self.T[edge[0]] - prev_edge_delays[prev_edge]) for prev_edge in self.edges_by_state_oi[oi_idx][k-1]])
         
         tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
         rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
         return get_delay(tx_node, rx_node, tx_oi_idx), get_delay(rx_node, tx_node, rx_oi_idx)
                 
-    def flow(self, i, j):
-        edges = list(set(self.edges_by_node[i]) & set(self.edges_by_node[j]))
-        bit_rate = min(constants.BIT_RATES[i], constants.BIT_RATES[j])
+    # def flow(self, i, j):
+    #     edges = list(set(self.edges_by_node[i]) & set(self.edges_by_node[j]))
+    #     bit_rate = min(constants.BIT_RATES[i], constants.BIT_RATES[j])
+    # 
+    #     return sum([self.edges[edge] * self.T[edge[0]] * bit_rate for edge in edges])
 
-        return sum([self.edges[edge] * self.T[edge[0]] * bit_rate for edge in edges])
-
-    def eff_flow(self, i, j):
-        edges = list(set(self.edges_by_node[i]) & set(self.edges_by_node[j]))
-        bit_rate = min(constants.BIT_RATES[i], constants.BIT_RATES[j])
-
-        # Apply our retargeting delay as a Big-M constraint here so that we maintain linearity in our model.
-        return sum([self.eff_contact_time[edge] * bit_rate for edge in edges])
+    # def eff_flow(self, i, j):
+    #     edges = list(set(self.edges_by_node[i]) & set(self.edges_by_node[j]))
+    #     bit_rate = min(constants.BIT_RATES[i], constants.BIT_RATES[j])
+    # 
+    #     # Apply our retargeting delay as a Big-M constraint here so that we maintain linearity in our model.
+    #     return sum([self.eff_contact_time[edge] * bit_rate for edge in edges])
 
     def ect(self, i):
         """
@@ -318,6 +404,7 @@ class LLSModel:
             #     return False
 
             return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
+
 
 if __name__ == "__main__":
     EXPERIMENT_NAME = "gs_mars_earth_xl_scenario"
@@ -362,3 +449,12 @@ if __name__ == "__main__":
         solver.flow_model.solutionTime,
         scheduled_teg)
     reporter.write_report()
+
+
+def print_filled_expression(expr):
+    terms = []
+    for var, coeff in expr.items():
+        terms.append(f"{coeff}*{var.name}({var.varValue})")
+    const = expr.constant
+    terms.append(str(const))
+    print(" + ".join(terms))

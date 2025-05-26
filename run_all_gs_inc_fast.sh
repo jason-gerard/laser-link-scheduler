@@ -34,3 +34,7 @@ python3 main.py \
 -e gs_mars_earth_scenario_inc_44 gs_mars_earth_scenario_inc_48 \
 gs_mars_earth_scenario_inc_52 gs_mars_earth_scenario_inc_56 gs_mars_earth_scenario_inc_60 gs_mars_earth_scenario_inc_64 \
 -s lls_mip
+
+python3 main.py \
+-e gs_mars_earth_scenario_inc_4 \
+-s lls

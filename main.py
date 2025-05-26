@@ -12,14 +12,14 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, wri
 from utils import FileType
 import constants
 import weights
-import pat_delay_model
+import pointing_delay_model
 
 
 def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Reporter):
     # Clear all caches
     weights.effective_contact_time_cache = {}
     weights.coordinate_cache = {}
-    pat_delay_model.retargeting_delay_cache = {}
+    pointing_delay_model.retargeting_delay_cache = {}
 
     start = timer()
 
