@@ -93,7 +93,8 @@ class LaserLinkScheduler:
             W=weights,
             pos=teg.pos,
             optical_interfaces_to_node=teg.optical_interfaces_to_node,
-            node_to_optical_interfaces=teg.node_to_optical_interfaces
+            node_to_optical_interfaces=teg.node_to_optical_interfaces,
+            effective_contact_durations=teg.effective_contact_durations,
         )
 
 
@@ -117,7 +118,8 @@ class BruteForceScheduler:
             W=weights,
             pos=teg.pos,
             optical_interfaces_to_node=teg.optical_interfaces_to_node,
-            node_to_optical_interfaces=teg.node_to_optical_interfaces
+            node_to_optical_interfaces=teg.node_to_optical_interfaces,
+            effective_contact_durations=teg.effective_contact_durations,
         )
 
 
@@ -169,7 +171,8 @@ class FairContactPlan:
             W=weights,
             pos=teg.pos,
             optical_interfaces_to_node=teg.optical_interfaces_to_node,
-            node_to_optical_interfaces=teg.node_to_optical_interfaces
+            node_to_optical_interfaces=teg.node_to_optical_interfaces,
+            effective_contact_durations=teg.effective_contact_durations,
         )
 
 
@@ -223,7 +226,8 @@ class RandomScheduler:
             W=weights,
             pos=teg.pos,
             optical_interfaces_to_node=teg.optical_interfaces_to_node,
-            node_to_optical_interfaces=teg.node_to_optical_interfaces
+            node_to_optical_interfaces=teg.node_to_optical_interfaces,
+            effective_contact_durations=teg.effective_contact_durations,
         )
 
 
@@ -279,7 +283,8 @@ class AlternatingScheduler:
             W=weights,
             pos=teg.pos,
             optical_interfaces_to_node=teg.optical_interfaces_to_node,
-            node_to_optical_interfaces=teg.node_to_optical_interfaces
+            node_to_optical_interfaces=teg.node_to_optical_interfaces,
+            effective_contact_durations=teg.effective_contact_durations,
         )
 
 

@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Tuple
 import constants
 from pointing_delay_model import pointing_delay
 from link_acq_delay_model import link_acq_delay_ipn, link_acq_delay_leo
@@ -471,9 +472,6 @@ def compute_effective_contact_time(
         )
         link_acq_delay = link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
     else:
-        # if node_pointing_delay != 0:
-        #     print(node_pointing_delay)
-        link_acq_delay = 0
         return state_duration
 
     retargeting_delay = node_pointing_delay + link_acq_delay
@@ -481,10 +479,96 @@ def compute_effective_contact_time(
     # Subtract with state duration, bind it to a floor of 0, this will give
     # effective contact duration = contact duration - retargeting_delay
     effective_contact_time = max(state_duration - retargeting_delay, 0)
-    # if effective_contact_time == 0:
-    #     print(state_duration, retargeting_delay)
     
     effective_contact_time_cache[(oi_idx1, oi_idx2, curr_k)] = effective_contact_time
     effective_contact_time_cache[(oi_idx2, oi_idx1, curr_k)] = effective_contact_time
 
     return effective_contact_time
+
+
+def compute_delays(
+        oi_idx1: int,
+        oi_idx2: int,
+        scheduled_contact_topology: np.ndarray,
+        state_duration: int,
+        positions: np.ndarray,
+        optical_interfaces_to_node: dict[int, int],
+        nodes: list[str],
+) -> Tuple[float, float]:  # pointing delay, acq delay
+    curr_k = min(len(scheduled_contact_topology), len(positions) - 1)
+
+    # For the first state we can always assume the lasers are pre-targeted
+    if curr_k == 0:
+        return 0, 0
+
+    def get_contact_in_prev_state(oi_idx):
+        for rx_oi_idx in range(len(scheduled_contact_topology[curr_k - 1])):
+            if scheduled_contact_topology[curr_k - 1][oi_idx][rx_oi_idx] >= 1:
+                rx_idx = optical_interfaces_to_node[rx_oi_idx]
+                return rx_idx
+
+        return -1
+
+    # For each node check in the scheduled topology if it had a contact in the previous state and with which node
+    # Check the coordinates of it and the rx at that time, this will give the previous coordinates.
+    idx1_rx = get_contact_in_prev_state(oi_idx1)
+    idx2_rx = get_contact_in_prev_state(oi_idx2)
+
+    idx1 = optical_interfaces_to_node[oi_idx1]
+    idx2 = optical_interfaces_to_node[oi_idx2]
+    # Use PAT lib to compute delay
+    if idx1_rx != -1 and idx2_rx != -1:
+        idx1_coords = np.array(positions[curr_k][idx1])
+        idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
+
+        idx2_coords = np.array(positions[curr_k][idx2])
+        idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
+
+        node_pointing_delay = pointing_delay(
+            np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
+            np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
+        )
+    elif idx1_rx != -1 and idx2_rx == -1:
+        # idx2 first contact
+        idx1_coords = np.array(positions[curr_k][idx1])
+        idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
+
+        idx2_coords = np.array(positions[curr_k][idx2])
+
+        node_pointing_delay = pointing_delay(
+            np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
+            np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
+        )
+    elif idx1_rx == -1 and idx2_rx != -1:
+        # idx1 first contact
+        idx2_coords = np.array(positions[curr_k][idx2])
+        idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
+
+        idx1_coords = np.array(positions[curr_k][idx1])
+
+        node_pointing_delay = pointing_delay(
+            np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
+            np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
+        )
+    else:
+        # idx1 and idx2 first contact for both
+        node_pointing_delay = 0
+
+    # If nodes keep their previous link, do not re-target
+    is_same_link = idx1_rx == idx2 or idx2_rx == idx1
+    if not is_same_link:
+        # Add link_acq delay, check if edge is an IPN or LEO link
+        node1 = nodes[optical_interfaces_to_node[oi_idx1]]
+        node2 = nodes[optical_interfaces_to_node[oi_idx2]]
+        is_ipn_edge = (
+                (node1 in constants.SOURCE_NODES and (
+                            node2 in constants.RELAY_NODES or node2 in constants.DESTINATION_NODES))
+                or
+                (node2 in constants.SOURCE_NODES and (
+                            node1 in constants.RELAY_NODES or node1 in constants.DESTINATION_NODES))
+        )
+        link_acq_delay = link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+    else:
+        return 0, 0
+
+    return node_pointing_delay, link_acq_delay

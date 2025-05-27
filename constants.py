@@ -29,7 +29,7 @@ default_a = 1
 # alpha must be set greater than or equal to 0 and less than or equal to 1, i.e. [0, 1]
 # if alpha = 1 then only consider fairness
 # if alpha = 0 then only consider capacity
-alpha = 0.9
+alpha = 0.6
 
 # The matrix A, contains the integer IDs of the communication interfaces for each node. Each laser
 # communication interface is associated in an integer ID, a, where a >= 1.

@@ -26,6 +26,7 @@ class TimeExpandedGraph:
     pos: np.ndarray
 
     W: np.ndarray  # 3D Weights matrix [k][tx_idx][rx_idx]
+    effective_contact_durations: np.ndarray
 
     def __repr__(self):
         end_time = sum(self.state_durations)
@@ -172,6 +173,7 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
         pos=positions,
         optical_interfaces_to_node=optical_interfaces_to_node,
         node_to_optical_interfaces=node_to_optical_interfaces,
+        effective_contact_durations=np.zeros((K, N, N), dtype='int64'),
     )
 
     # This process of fractionation splits long contacts in the TEG into multiple smaller contacts, this will result in
@@ -352,6 +354,7 @@ def dag_reduction(teg: TimeExpandedGraph):
         pos=teg.pos,
         optical_interfaces_to_node=teg.optical_interfaces_to_node,
         node_to_optical_interfaces=teg.node_to_optical_interfaces,
+        effective_contact_durations=teg.effective_contact_durations,
     )
 
     print(count_edges(teg), count_edges(reduced_teg))
