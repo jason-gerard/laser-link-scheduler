@@ -22,7 +22,7 @@ class LLSModel:
         teg: TimeExpandedGraph,
         is_mip: bool = False,
         approx_eff_ct: bool = True,
-        use_gurobi: bool = False,
+        use_gurobi: bool = True,
         use_convex_penalty: bool = False,
     ):
         self.teg = teg
@@ -67,11 +67,10 @@ class LLSModel:
                 "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpContinuous
             )
 
-        if not self.approx_eff_ct:
-            print(f"Creating variables for retargeting time")
-            self.eff_contact_time = pulp.LpVariable.dicts(
-                "effective_contact_time", contact_topology, lowBound=0, cat=pulp.LpContinuous
-            )
+        print(f"Creating variables for retargeting time")
+        self.eff_contact_time = pulp.LpVariable.dicts(
+            "effective_contact_time", contact_topology, lowBound=0, cat=pulp.LpContinuous
+        )
         
         # In order to create these constraints faster we will first pre-process the data into a dict such that we can
         # isolate the edges by state k by node
@@ -167,11 +166,7 @@ class LLSModel:
             bit_rate = min(constants.BIT_RATES[tx_node], constants.BIT_RATES[rx_node])
 
             self.flow_model += capacity <= self.edges[edge] * self.T[edge[0]] * bit_rate  # max flow
-            if self.approx_eff_ct:
-                eff_ct = self.compute_eff_contact_time_simple(edge)
-                self.flow_model += capacity <= eff_ct * bit_rate  # effective flow
-            else:
-                self.flow_model += capacity <= self.eff_contact_time[edge] * bit_rate  # effective flow
+            self.flow_model += capacity <= self.eff_contact_time[edge] * bit_rate  # effective flow
 
         for relay_node, capacity in capacities.items():
             print(f"Setting up inflow and outflow capacity constraints for node {relay_node}")
@@ -188,10 +183,7 @@ class LLSModel:
         source_node_ect_dict = {source_node: self.ect(source_node) for source_node in self.teg.nodes if source_node in SOURCE_NODES}
         sum_ect = pulp.lpSum([source_node_ect_dict.values()])
         for ect in source_node_ect_dict.values():
-            # This is the same as taking 95% of the average just unrolled so there is no division and everything is an
-            # integer the model runs a bit faster like this
-            # self.flow_model += ect >= avg_ect * 0.95
-            self.flow_model += ect * len(source_node_ect_dict) * 20 >= sum_ect * 15
+            self.flow_model += ect >= (sum_ect / len(source_node_ect_dict)) * 0.70
 
         # Constraint that each optical interface can only be a part of a single selected edge per state
         print(f"Setting up 1 to 1 relationship between nodes per state k")
@@ -199,7 +191,12 @@ class LLSModel:
             for k in range(self.teg.K):
                 self.flow_model += pulp.lpSum([self.edges[edge] for edge in self.edges_by_state_oi[oi][k]]) <= MAX_EDGES_PER_LASER
         
-        if not self.approx_eff_ct:
+        if self.approx_eff_ct:
+            print("Create approximate effective contact time constraints for tx and rx...")
+            for edge in self.eff_contact_time:
+                eff_ct = self.compute_eff_contact_time_simple(edge)
+                self.flow_model += self.eff_contact_time[edge] <= eff_ct
+        else:
             # Constraint for retargeting delay being greater than or equal to the tx and rx retargeting delays. These
             # will have downward pressure since as the retargeting delay decreases there is a higher effective contact
             # time.
@@ -217,7 +214,7 @@ class LLSModel:
 
         print("Starting solve...")
         if self.use_gurobi:
-            self.flow_model.solve(pulp.GUROBI_CMD(timeLimit=MAX_TIME))
+            self.flow_model.solve(pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01))
         else:
             self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
 
@@ -367,12 +364,10 @@ class LLSModel:
         if self.T[edge[0]] < link_acq_delay:
             link_acq_delay = self.T[edge[0]]
         
-        for prev_edge in self.edges_by_state_oi[tx_oi_idx][k - 1]:
+        prev_edges = self.edges_by_state_oi[tx_oi_idx][k - 1] + self.edges_by_state_oi[rx_oi_idx][k - 1]
+        for prev_edge in prev_edges:
             if (tx_oi_idx == prev_edge[1] and rx_oi_idx == prev_edge[2]) or (tx_oi_idx == prev_edge[2] and rx_oi_idx == prev_edge[1]):
-                return self.T[edge[0]] - ((1 - self.edges[prev_edge]) * link_acq_delay)
-        for prev_edge in self.edges_by_state_oi[rx_oi_idx][k - 1]:
-            if (tx_oi_idx == prev_edge[1] and rx_oi_idx == prev_edge[2]) or (tx_oi_idx == prev_edge[2] and rx_oi_idx == prev_edge[1]):
-                return self.T[edge[0]] - ((1 - self.edges[prev_edge]) * link_acq_delay)
+                return (self.T[edge[0]] - link_acq_delay) * (1 - self.edges[prev_edge]) + self.T[edge[0]] * self.edges[prev_edge]
 
         return self.T[edge[0]] - link_acq_delay
 
@@ -381,7 +376,7 @@ class LLSModel:
         In order to make the schedule fair to all the nodes we can use the enabled contact time (ECT) for each inflow
         edge.
         """
-        return sum([self.edges[edge] for edge in self.edges_by_node[i]])
+        return pulp.lpSum([self.edges[edge] for edge in self.edges_by_node[i]])
 
     def is_edge_selected(self, edge, contact_plan):
         if self.is_mip:

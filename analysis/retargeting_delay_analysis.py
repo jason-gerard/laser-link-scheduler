@@ -2,6 +2,8 @@ import os
 import pickle
 import pprint
 import sys
+import re
+import math
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -19,22 +21,36 @@ plt.rcParams.update({'font.size': 18})
 plt.rc('legend', fontsize=14)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
+algorithms = ['lls', 'lls_pat_unaware', 'lls_mip', 'fcp']
+
+report_id = 1748949730
 tegs = []
 
-report_id = 1748302473
-# report_id = 1748302518
-# report_id = 1748302577
-file_name = "lls_gs_mars_earth_scenario_inc_24.pkl"
-# file_name = "lls_mip_gs_mars_earth_scenario_inc_reduced_4.pkl"
-# file_name = "lls_gs_mars_earth_scenario_inc_reduced_4.pkl"
-with open(f"reports/{report_id}/{file_name}", "rb") as f:
-    teg: TimeExpandedGraph = pickle.load(f)
-    tegs.append(teg)
+pattern = re.compile(r"^([a-zA-Z_]+)_gs_.*?_(\d+)\.pkl$")
+
+report_dir = os.path.join("reports", str(report_id))
+for file_name in os.listdir(report_dir):
+    if file_name.endswith(".pkl"):
+        file_path = os.path.join(report_dir, file_name)
+
+        match = pattern.match(file_name)
+        algorithm = match.group(1)
+        number = int(match.group(2))
+
+        if algorithm not in algorithms:
+            continue
+
+        with open(file_path, "rb") as f:
+            teg: TimeExpandedGraph = pickle.load(f)
+            tegs.append((algorithm, number, teg))
 
 all_pointing_delays = []
 all_link_acq_delays = []
 
-for teg in tegs:
+retargeting_duty_cycles = []
+
+for algorithm, node_count, teg in tegs:
+    print(f"Processing {algorithm} node count {node_count}")
     delays_by_node = {node: [] for node in teg.nodes}
 
     for k in range(teg.K):
@@ -82,35 +98,56 @@ for teg in tegs:
 
     network_retargeting_duty_cycle = network_total_eff_time / network_total_time
     print("network retargeting duty cycle", network_retargeting_duty_cycle)
+    retargeting_duty_cycles.append((algorithm, node_count, network_retargeting_duty_cycle))
 
-all_pointing_delays = np.array(all_pointing_delays)
-all_link_acq_delays = np.array(all_link_acq_delays)
+algorithms = [
+    ("lls", "LLS_Greedy"),
+    ("lls_pat_unaware", "LLS_Greedy (ZRK)"),
+    ("lls_mip", "LLS_MIP"),
+    ("fcp", "FCP"),
+]
 
-all_pointing_delays = all_pointing_delays[all_pointing_delays > 0]
-all_link_acq_delays = all_link_acq_delays[all_link_acq_delays > 0]
+# X-axis ticks
+x = sorted(list(set([node_count for _, node_count, _ in retargeting_duty_cycles])))
 
-kde_pointing = gaussian_kde(all_pointing_delays)
-kde_acquisition = gaussian_kde(all_link_acq_delays)
+# Plot setup
+fig = plt.figure()
+ax = fig.add_subplot(111)
 
-# Create an x-axis range for each
-x_pointing = np.linspace(0, all_pointing_delays.max() + 5, 200)
-x_acquisition = np.linspace(0, all_link_acq_delays.max() + 20, 200)
+# Plot for each algorithm
+for algorithm, display_name in algorithms:
+    y = [
+        duty for (alg, node_count, duty) in retargeting_duty_cycles
+        if alg == algorithm
+    ]
+    x_vals = [
+        node_count for (alg, node_count, duty) in retargeting_duty_cycles
+        if alg == algorithm
+    ]
+    
+    # Sort by x for proper line plotting
+    sorted_pairs = sorted(zip(x_vals, y))
+    x_sorted, y_sorted = zip(*sorted_pairs) if sorted_pairs else ([], [])
 
-pointing_bins = np.linspace(0, all_pointing_delays.max() + 5, 40)
-acquisition_bins = np.linspace(0, all_link_acq_delays.max() + 20, 40)
+    if algorithm == "lls_mip":
+        plt.plot(x_sorted, y_sorted, linestyle="dotted", label=display_name, linewidth=3.5)
+    else:
+        plt.plot(x_sorted, y_sorted, label=display_name, linewidth=2.5)
 
-plt.figure(figsize=(10, 6))
+# Labels and formatting
+plt.ylabel("Retargeting Duty Cycle [%]")
+plt.xlabel("Source/Relay Node Count")
+plt.ylim(0.6, 1.0)
+plt.yticks(np.arange(0.6, 1.01, 0.05))
+plt.grid(linestyle='-', color='0.95')
+plt.legend(loc="lower right")
 
-plt.hist(all_pointing_delays, bins=pointing_bins, density=True, alpha=0.4, color='blue', label='Pointing Delay Histogram')
-plt.hist(all_link_acq_delays, bins=acquisition_bins, density=True, alpha=0.4, color='orange', label='Acquisition Delay Histogram')
+# Custom X-axis ticks and labels
+ax.set_xticks([i for i in x if i % 8 == 0])
+ax.set_xticklabels([f"{i}/{math.ceil(i/16)}" for i in x if i % 8 == 0])
 
-plt.plot(x_pointing, kde_pointing(x_pointing), label='Pointing Delay PDF', color='blue')
-plt.plot(x_acquisition, kde_acquisition(x_acquisition), label='Acquisition Delay PDF', color='orange')
-
-plt.title('Probability Distribution of Pointing and Acquisition Delays')
-plt.xlabel('Delay (seconds)')
-plt.ylabel('Probability Density')
-plt.grid(True)
-plt.legend()
-plt.tight_layout()
-plt.show()
+# Save the figure
+file_name = "network_retargeting_duty_cycle"
+os.makedirs("analysis", exist_ok=True)
+plt.savefig(os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight")
+plt.savefig(os.path.join("analysis", f"{file_name}.png"), format="png", bbox_inches="tight", dpi=300)

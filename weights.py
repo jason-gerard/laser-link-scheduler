@@ -2,7 +2,7 @@ import numpy as np
 from typing import Tuple
 import constants
 from pointing_delay_model import pointing_delay
-from link_acq_delay_model import link_acq_delay_ipn, link_acq_delay_leo
+from link_acq_delay_model import link_acq_delay_ipn_rand, link_acq_delay_leo_rand, link_acq_delay_ipn, link_acq_delay_leo
 from dataclasses import dataclass
 
 
@@ -567,7 +567,7 @@ def compute_delays(
                 (node2 in constants.SOURCE_NODES and (
                             node1 in constants.RELAY_NODES or node1 in constants.DESTINATION_NODES))
         )
-        link_acq_delay = link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+        link_acq_delay = link_acq_delay_ipn_rand() if is_ipn_edge else link_acq_delay_leo_rand()
     else:
         return 0, 0
 

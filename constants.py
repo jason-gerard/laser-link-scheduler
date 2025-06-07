@@ -16,7 +16,7 @@ d_min = 5
 # multiple contacts of duration t_max, which then translates into multiple k states. There is a tradeoff with this
 # variable between the overhead of setting up the link and being able to transition to contacts with different nodes
 # to improve the fairness.
-d_max = 500
+d_max = 600
 
 # The default communication interface to use, a = 1 is the default laser that each node is equipped with.
 # The default interface, a = 1, has the default bit rate of 100 mbps.
@@ -29,7 +29,7 @@ default_a = 1
 # alpha must be set greater than or equal to 0 and less than or equal to 1, i.e. [0, 1]
 # if alpha = 1 then only consider fairness
 # if alpha = 0 then only consider capacity
-alpha = 0.6
+alpha = 0.99
 
 # The matrix A, contains the integer IDs of the communication interfaces for each node. Each laser
 # communication interface is associated in an integer ID, a, where a >= 1.

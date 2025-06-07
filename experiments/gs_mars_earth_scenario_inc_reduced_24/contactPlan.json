@@ -1,0 +1,420 @@
+{
+    "ContactPlan": [
+        {
+            "SourceID": 2013,
+            "DestinationID": 2020,
+            "StartTime": 725805064.184,
+            "EndTime": 725805664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2020,
+            "DestinationID": 2013,
+            "StartTime": 725805064.184,
+            "EndTime": 725805664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2010,
+            "DestinationID": 2021,
+            "StartTime": 725805664.184,
+            "EndTime": 725806264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2013,
+            "DestinationID": 2018,
+            "StartTime": 725805664.184,
+            "EndTime": 725806264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2018,
+            "DestinationID": 2013,
+            "StartTime": 725805664.184,
+            "EndTime": 725806264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2021,
+            "DestinationID": 2010,
+            "StartTime": 725805664.184,
+            "EndTime": 725806264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2004,
+            "DestinationID": 9002,
+            "StartTime": 725808664.184,
+            "EndTime": 725809264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9002,
+            "DestinationID": 2004,
+            "StartTime": 725808664.184,
+            "EndTime": 725809264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2004,
+            "DestinationID": 2021,
+            "StartTime": 725809264.184,
+            "EndTime": 725809864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2021,
+            "DestinationID": 2004,
+            "StartTime": 725809264.184,
+            "EndTime": 725809864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 1002,
+            "DestinationID": 2009,
+            "StartTime": 725810464.184,
+            "EndTime": 725811064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2009,
+            "DestinationID": 1002,
+            "StartTime": 725810464.184,
+            "EndTime": 725811064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2007,
+            "DestinationID": 2013,
+            "StartTime": 725811064.184,
+            "EndTime": 725811664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2013,
+            "DestinationID": 2007,
+            "StartTime": 725811064.184,
+            "EndTime": 725811664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 1002,
+            "DestinationID": 2010,
+            "StartTime": 725811664.184,
+            "EndTime": 725812264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2010,
+            "DestinationID": 1002,
+            "StartTime": 725811664.184,
+            "EndTime": 725812264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2002,
+            "DestinationID": 2022,
+            "StartTime": 725812264.184,
+            "EndTime": 725812864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2022,
+            "DestinationID": 2002,
+            "StartTime": 725812264.184,
+            "EndTime": 725812864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 1002,
+            "DestinationID": 2011,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2005,
+            "DestinationID": 2023,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2006,
+            "DestinationID": 2016,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2011,
+            "DestinationID": 1002,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2016,
+            "DestinationID": 2006,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2023,
+            "DestinationID": 2005,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2008,
+            "DestinationID": 2014,
+            "StartTime": 725813464.184,
+            "EndTime": 725814064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2009,
+            "DestinationID": 9001,
+            "StartTime": 725813464.184,
+            "EndTime": 725814064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2014,
+            "DestinationID": 2008,
+            "StartTime": 725813464.184,
+            "EndTime": 725814064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9001,
+            "DestinationID": 2009,
+            "StartTime": 725813464.184,
+            "EndTime": 725814064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2009,
+            "DestinationID": 9002,
+            "StartTime": 725814664.184,
+            "EndTime": 725815264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9002,
+            "DestinationID": 2009,
+            "StartTime": 725814664.184,
+            "EndTime": 725815264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2013,
+            "DestinationID": 2014,
+            "StartTime": 725815264.184,
+            "EndTime": 725815864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2014,
+            "DestinationID": 2013,
+            "StartTime": 725815264.184,
+            "EndTime": 725815864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2012,
+            "DestinationID": 9002,
+            "StartTime": 725817064.184,
+            "EndTime": 725817664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2019,
+            "DestinationID": 2023,
+            "StartTime": 725817064.184,
+            "EndTime": 725817664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2023,
+            "DestinationID": 2019,
+            "StartTime": 725817064.184,
+            "EndTime": 725817664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9002,
+            "DestinationID": 2012,
+            "StartTime": 725817064.184,
+            "EndTime": 725817664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 1002,
+            "DestinationID": 2018,
+            "StartTime": 725818264.184,
+            "EndTime": 725818864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2018,
+            "DestinationID": 1002,
+            "StartTime": 725818264.184,
+            "EndTime": 725818864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2007,
+            "DestinationID": 2008,
+            "StartTime": 725819464.184,
+            "EndTime": 725820064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2008,
+            "DestinationID": 2007,
+            "StartTime": 725819464.184,
+            "EndTime": 725820064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2011,
+            "DestinationID": 2016,
+            "StartTime": 725819464.184,
+            "EndTime": 725820064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2016,
+            "DestinationID": 2011,
+            "StartTime": 725819464.184,
+            "EndTime": 725820064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2009,
+            "DestinationID": 2022,
+            "StartTime": 725820064.184,
+            "EndTime": 725820664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2022,
+            "DestinationID": 2009,
+            "StartTime": 725820064.184,
+            "EndTime": 725820664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2009,
+            "DestinationID": 2021,
+            "StartTime": 725821264.184,
+            "EndTime": 725821864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2021,
+            "DestinationID": 2009,
+            "StartTime": 725821264.184,
+            "EndTime": 725821864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2002,
+            "DestinationID": 9002,
+            "StartTime": 725821864.184,
+            "EndTime": 725822464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2014,
+            "DestinationID": 2018,
+            "StartTime": 725821864.184,
+            "EndTime": 725822464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2018,
+            "DestinationID": 2014,
+            "StartTime": 725821864.184,
+            "EndTime": 725822464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9002,
+            "DestinationID": 2002,
+            "StartTime": 725821864.184,
+            "EndTime": 725822464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 1002,
+            "DestinationID": 9001,
+            "StartTime": 725823664.184,
+            "EndTime": 725824264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9001,
+            "DestinationID": 1002,
+            "StartTime": 725823664.184,
+            "EndTime": 725824264.184,
+            "Duration": 600.0,
+            "Color": []
+        }
+    ]
+}

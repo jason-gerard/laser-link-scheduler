@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 IPN_CPA_SLEW_AZ = 0.0
 IPN_CPA_SLEW_EL = 0.0
@@ -59,6 +60,49 @@ def link_acq_delay_leo() -> float:
     return link_acq_delay(
         LEO_FOU_R,
         LEO_BEAM_WIDTH,
+        LEO_FSM_TIP,
+        LEO_FSM_TILT,
+        LEO_DWELL_TIME,
+    )
+
+def link_acq_delay_ipn() -> float:
+    return link_acq_delay(
+        IPN_FOU_R,
+        IPN_BEAM_WIDTH,
+        IPN_FSM_TIP,
+        IPN_FSM_TILT,
+        IPN_DWELL_TIME,
+    )
+
+
+def link_acq_delay_leo() -> float:
+    return link_acq_delay(
+        LEO_FOU_R,
+        LEO_BEAM_WIDTH,
+        LEO_FSM_TIP,
+        LEO_FSM_TILT,
+        LEO_DWELL_TIME,
+    )
+
+np.random.seed(42)
+
+def link_acq_delay_ipn_rand() -> float:
+    fou_r = np.clip(np.random.normal(loc=IPN_FOU_R, scale=0.010), 0.85, 1.15)  # Clamp to [0.5°, 1.5°]
+    beam_width = np.clip(np.random.normal(loc=IPN_BEAM_WIDTH, scale=0.005), 0.18, 0.22)  # Clamp to [0.1°, 0.3°]
+    return link_acq_delay(
+        fou_r,
+        beam_width,
+        IPN_FSM_TIP,
+        IPN_FSM_TILT,
+        IPN_DWELL_TIME,
+    )
+
+def link_acq_delay_leo_rand() -> float:
+    fou_r = np.clip(np.random.normal(loc=LEO_FOU_R, scale=0.01), 0.6, 0.9)  # Clamp to [0.6°, 0.9°]
+    beam_width = np.clip(np.random.normal(loc=LEO_BEAM_WIDTH, scale=0.005), 0.15, 0.25)  # Clamp to [0.15°, 0.25°]
+    return link_acq_delay(
+        fou_r,
+        beam_width,
         LEO_FSM_TIP,
         LEO_FSM_TILT,
         LEO_DWELL_TIME,

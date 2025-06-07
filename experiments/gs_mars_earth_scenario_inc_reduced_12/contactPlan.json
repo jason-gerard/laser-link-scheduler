@@ -1,0 +1,148 @@
+{
+    "ContactPlan": [
+        {
+            "SourceID": 2003,
+            "DestinationID": 2012,
+            "StartTime": 725804464.184,
+            "EndTime": 725805064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2012,
+            "DestinationID": 2003,
+            "StartTime": 725804464.184,
+            "EndTime": 725805064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2001,
+            "DestinationID": 2009,
+            "StartTime": 725809264.184,
+            "EndTime": 725809864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2005,
+            "DestinationID": 9002,
+            "StartTime": 725809264.184,
+            "EndTime": 725809864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2009,
+            "DestinationID": 2001,
+            "StartTime": 725809264.184,
+            "EndTime": 725809864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9002,
+            "DestinationID": 2005,
+            "StartTime": 725809264.184,
+            "EndTime": 725809864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2005,
+            "DestinationID": 9001,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2006,
+            "DestinationID": 9002,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9001,
+            "DestinationID": 2005,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 9002,
+            "DestinationID": 2006,
+            "StartTime": 725812864.184,
+            "EndTime": 725813464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 1001,
+            "DestinationID": 2012,
+            "StartTime": 725814064.184,
+            "EndTime": 725814664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2012,
+            "DestinationID": 1001,
+            "StartTime": 725814064.184,
+            "EndTime": 725814664.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2003,
+            "DestinationID": 2005,
+            "StartTime": 725816464.184,
+            "EndTime": 725817064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2005,
+            "DestinationID": 2003,
+            "StartTime": 725816464.184,
+            "EndTime": 725817064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2001,
+            "DestinationID": 2006,
+            "StartTime": 725818864.184,
+            "EndTime": 725819464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2006,
+            "DestinationID": 2001,
+            "StartTime": 725818864.184,
+            "EndTime": 725819464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2002,
+            "DestinationID": 2006,
+            "StartTime": 725823664.184,
+            "EndTime": 725824264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2006,
+            "DestinationID": 2002,
+            "StartTime": 725823664.184,
+            "EndTime": 725824264.184,
+            "Duration": 600.0,
+            "Color": []
+        }
+    ]
+}

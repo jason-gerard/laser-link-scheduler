@@ -38,3 +38,8 @@ gs_mars_earth_scenario_inc_52 gs_mars_earth_scenario_inc_56 gs_mars_earth_scenar
 python3 main.py \
 -e gs_mars_earth_scenario_inc_4 \
 -s lls
+
+python3 main.py \
+-e gs_mars_earth_scenario_inc_reduced_4 gs_mars_earth_scenario_inc_reduced_8 gs_mars_earth_scenario_inc_reduced_12 gs_mars_earth_scenario_inc_reduced_16 \
+gs_mars_earth_scenario_inc_reduced_20 \
+-s fcp lls lls_mip
