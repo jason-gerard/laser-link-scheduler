@@ -109,6 +109,25 @@ def link_acq_delay_leo_rand() -> float:
     )
 
 
+def link_acq_delay_ipn_fou(fou_r) -> float:
+    return link_acq_delay(
+        fou_r,
+        IPN_BEAM_WIDTH,
+        IPN_FSM_TIP,
+        IPN_FSM_TILT,
+        IPN_DWELL_TIME,
+    )
+
+def link_acq_delay_leo_fou(fou_r) -> float:
+    return link_acq_delay(
+        fou_r,
+        LEO_BEAM_WIDTH,
+        LEO_FSM_TIP,
+        LEO_FSM_TILT,
+        LEO_DWELL_TIME,
+    )
+
+
 if __name__ == "__main__":
     D_acq_ipn = link_acq_delay(
         IPN_FOU_R,

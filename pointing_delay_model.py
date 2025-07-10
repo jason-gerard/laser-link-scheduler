@@ -1,7 +1,10 @@
 import numpy as np
 
 
-def pointing_delay_single_node(src_node, curr_dst_node, new_dst_node) -> float:
+SLEW_RATE = 0.0349066  # radians or 2 deg/s
+
+
+def pointing_delay_single_node(src_node, curr_dst_node, new_dst_node, slew_rate=SLEW_RATE) -> float:
     # Parameters are coordinates with respect to some central point
     # so convert everything to have the src node as the central point
     # by subtracting the src node coordinates from all the nodes
@@ -16,8 +19,7 @@ def pointing_delay_single_node(src_node, curr_dst_node, new_dst_node) -> float:
 
     # Based on the slew rate, angular velocity, of the CPA compute the time it
     # takes to make that rotation
-    SLEW_RATE = 0.0349066  # radians or 2 deg/s
-    return theta / SLEW_RATE
+    return theta / slew_rate
 
 
 # L2 cache delay value for same nodes idx1, idx1_rx, k
@@ -41,6 +43,16 @@ def pointing_delay(node_set1, node_set2) -> float:
     # The max between them is the actual delay since both must be finished pointing
     # before starting acquisition
     return max(pointing_delay_1, pointing_delay_2)
+
+
+def all_pointing_delay(node_set1, node_set2, slew_rate=SLEW_RATE) -> float:
+    # Compute the PAT delay for node sets 1 and 2
+    pointing_delay_1 = pointing_delay_single_node(*node_set1, slew_rate=slew_rate)
+    pointing_delay_2 = pointing_delay_single_node(*node_set2, slew_rate=slew_rate)
+
+    # The max between them is the actual delay since both must be finished pointing
+    # before starting acquisition
+    return pointing_delay_1, pointing_delay_2
 
 
 if __name__ == "__main__":
