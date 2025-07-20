@@ -15,8 +15,8 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
 from time_expanded_graph import TimeExpandedGraph
 from weights import compute_all_delays
 
-plt.rcParams.update({'font.size': 18})
-plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.size': 26})
+plt.rc('legend', fontsize=18)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
 tegs = []
@@ -124,18 +124,25 @@ acquisition_bins = np.linspace(2, all_link_acq_delays.max() + 20, 40)
 
 plt.figure(figsize=(10, 6))
 
+ax = plt.gca()
+ax.set_axisbelow(True)
+
 plt.hist(all_pointing_delays, bins=pointing_bins, density=True, alpha=0.4, color='blue', label='Pointing Delay Histogram')
 plt.hist(all_link_acq_delays, bins=acquisition_bins, density=True, alpha=0.4, color='orange', label='Acquisition Delay Histogram')
 
 plt.plot(x_pointing, kde_pointing(x_pointing), label='Pointing Delay PDF', color='blue')
 plt.plot(x_acquisition, kde_acquisition(x_acquisition), label='Acquisition Delay PDF', color='orange')
 
-plt.ylim(0.0, 0.18)
+plt.xlim(-0.25, 250)
+plt.xticks(np.arange(0, 251, 25))
+
+plt.ylim(0, 0.18)
+plt.yticks(np.arange(0, 0.17, 0.02))
 
 # plt.title('Probability Distribution of Pointing and Acquisition Delays')
 plt.xlabel('Delay (seconds)')
 plt.ylabel('Probability Density')
-plt.grid(True)
+plt.grid(linestyle='-', color='0.95')
 plt.legend()
 
 bbox = dict(boxstyle="round", fc="0.9")
@@ -143,21 +150,21 @@ arrowprops = dict(
     arrowstyle="->",
     connectionstyle="angle,angleA=0,angleB=90,rad=10")
 
-plt.annotate("IPN 2 IPN", fontsize=13, xy=(3.0, 0.135),
-            xytext=(2.0, 0.16), textcoords='data',
+plt.annotate("IPN-to-IPN", fontsize=16, xy=(3.0, 0.135),
+            xytext=(4.0, 0.16), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='left', va='bottom')
-plt.annotate("Intra-Mars 2 IPN", fontsize=13, xy=(37, 0.02),
-            xytext=(37, 0.14), textcoords='data',
+plt.annotate("Ground/LEO-to-IPN", fontsize=16, xy=(37, 0.02),
+            xytext=(45, 0.14), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='center', va='bottom')
-plt.annotate("Intra-Earth 2 IPN", fontsize=13, xy=(85, 0.015),
+plt.annotate("LEO-to-LEO", fontsize=16, xy=(85, 0.015),
             xytext=(85, 0.05), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='center', va='bottom')
 
-plt.annotate("LEO Acq", fontsize=13, xy=(48.0, 0.085),
+plt.annotate("LEO Acq", fontsize=16, xy=(48.0, 0.085),
             xytext=(46.0, 0.1), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='left', va='bottom')
 
-plt.annotate("IPN Acq", fontsize=13, xy=(210.0, 0.012),
+plt.annotate("IPN Acq", fontsize=16, xy=(210.0, 0.012),
             xytext=(210.0, 0.04), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='center', va='bottom')
 

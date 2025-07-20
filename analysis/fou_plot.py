@@ -48,8 +48,8 @@ for fou in fou_r:
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-plt.plot(fou_r, ipn_acq, label="IPN Acquisition Delay", linewidth=2.5)
 plt.plot(fou_r, leo_acq, label="LEO Acquisition Delay", linewidth=2.5)
+plt.plot(fou_r, ipn_acq, label="IPN Acquisition Delay", linewidth=2.5)
 
 plt.ylabel("Acquisition Delay [sec]")
 plt.xlabel("Field of Uncertainty [deg]")
@@ -61,7 +61,7 @@ y_min = 0
 y_max = max(ipn_acq) + 10
 y_step = 100
 
-plt.ylim(y_min, y_max)
+plt.ylim(y_min, y_max+10)
 ax.set_yticks([y_min] + list(np.arange(y_step, y_max + 0.01, y_step)))
 
 ax.set_xticks(fou_r)
