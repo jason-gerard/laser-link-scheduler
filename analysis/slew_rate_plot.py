@@ -17,8 +17,8 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
 from time_expanded_graph import TimeExpandedGraph
 from weights import compute_all_delays
 
-plt.rcParams.update({'font.size': 18})
-plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.size': 22})
+plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
 tegs = []
@@ -126,7 +126,7 @@ plt.grid(linestyle='-', color='0.95')
 y_min = 0
 # y_max = max(max(y), max(y_gs)) + 5
 y_max = max(y) + 3
-y_step = 5
+y_step = 10
 
 plt.ylim(y_min, y_max)
 ax.set_yticks([y_min] + list(np.arange(y_step, y_max + 0.01, y_step)))
@@ -157,7 +157,7 @@ plt.text(
     2.0,
     y_max - 20,
     "Stepper motor",
-    fontsize=13,
+    fontsize=18,
     ha='left',
     va='top',
     bbox=bbox
@@ -175,7 +175,7 @@ plt.text(
     8.0,
     y_max-35,
     "Brushless DC\nw/ encoder",
-    fontsize=13,
+    fontsize=18,
     ha='right',
     va='top',
     bbox=bbox

@@ -18,8 +18,8 @@ from time_expanded_graph import TimeExpandedGraph
 from weights import compute_all_delays
 from link_acq_delay_model import link_acq_delay_ipn_fou, link_acq_delay_leo_fou
 
-plt.rcParams.update({'font.size': 18})
-plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.size': 22})
+plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
 tegs = []

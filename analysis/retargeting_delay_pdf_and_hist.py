@@ -16,7 +16,7 @@ from time_expanded_graph import TimeExpandedGraph
 from weights import compute_all_delays
 
 plt.rcParams.update({'font.size': 26})
-plt.rc('legend', fontsize=18)
+plt.rc('legend', fontsize=22)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
 tegs = []
@@ -150,21 +150,21 @@ arrowprops = dict(
     arrowstyle="->",
     connectionstyle="angle,angleA=0,angleB=90,rad=10")
 
-plt.annotate("IPN-to-IPN", fontsize=16, xy=(3.0, 0.135),
+plt.annotate("IPN-to-IPN", fontsize=20, xy=(3.0, 0.135),
             xytext=(4.0, 0.16), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='left', va='bottom')
-plt.annotate("Ground/LEO-to-IPN", fontsize=16, xy=(37, 0.02),
-            xytext=(45, 0.14), textcoords='data',
+plt.annotate("Ground/LEO-to-IPN", fontsize=20, xy=(37, 0.02),
+            xytext=(50, 0.13), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='center', va='bottom')
-plt.annotate("LEO-to-LEO", fontsize=16, xy=(85, 0.015),
+plt.annotate("LEO-to-LEO", fontsize=20, xy=(85, 0.015),
             xytext=(85, 0.05), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='center', va='bottom')
 
-plt.annotate("LEO Acq", fontsize=16, xy=(48.0, 0.085),
+plt.annotate("LEO Acq", fontsize=20, xy=(48.0, 0.085),
             xytext=(46.0, 0.1), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='left', va='bottom')
 
-plt.annotate("IPN Acq", fontsize=16, xy=(210.0, 0.012),
+plt.annotate("IPN Acq", fontsize=20, xy=(210.0, 0.012),
             xytext=(210.0, 0.04), textcoords='data',
             bbox=bbox, arrowprops=arrowprops, ha='center', va='bottom')
 
