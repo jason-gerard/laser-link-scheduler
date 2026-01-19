@@ -5,11 +5,11 @@ from constants import SOURCES_ROOT
 
 
 class FileType(Enum):
-    CONTACT_PLAN = "contact_plan"
-    SCHEDULED = "contact_plan_scheduled"
-    TEG = "teg"
-    TEG_SCHEDULED = "teg_scheduled"
-    REPORT = "report"
+    CONTACT_PLAN    = "contact_plan"
+    SCHEDULED       = "contact_plan_scheduled"
+    TEG             = "teg"
+    TEG_SCHEDULED   = "teg_scheduled"
+    REPORT          = "report"
 
 
 def get_experiment_file(experiment_name, file_type: FileType) -> str:
