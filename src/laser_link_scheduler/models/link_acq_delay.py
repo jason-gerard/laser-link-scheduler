@@ -65,25 +65,6 @@ def link_acq_delay_leo() -> float:
         LEO_DWELL_TIME,
     )
 
-def link_acq_delay_ipn() -> float:
-    return link_acq_delay(
-        IPN_FOU_R,
-        IPN_BEAM_WIDTH,
-        IPN_FSM_TIP,
-        IPN_FSM_TILT,
-        IPN_DWELL_TIME,
-    )
-
-
-def link_acq_delay_leo() -> float:
-    return link_acq_delay(
-        LEO_FOU_R,
-        LEO_BEAM_WIDTH,
-        LEO_FSM_TIP,
-        LEO_FSM_TILT,
-        LEO_DWELL_TIME,
-    )
-
 np.random.seed(42)
 
 def link_acq_delay_ipn_rand() -> float:
@@ -129,20 +110,8 @@ def link_acq_delay_leo_fou(fou_r) -> float:
 
 
 if __name__ == "__main__":
-    D_acq_ipn = link_acq_delay(
-        IPN_FOU_R,
-        IPN_BEAM_WIDTH,
-        IPN_FSM_TIP,
-        IPN_FSM_TILT,
-        IPN_DWELL_TIME,
-    )  # seconds
+    D_acq_ipn = link_acq_delay_ipn()    # seconds
     print(f"IPN link acq takes {D_acq_ipn} seconds or {D_acq_ipn / 60} minutes")
 
-    D_acq_LEO = link_acq_delay(
-        LEO_FOU_R,
-        LEO_BEAM_WIDTH,
-        LEO_FSM_TIP,
-        LEO_FSM_TILT,
-        LEO_DWELL_TIME,
-    )  # seconds
+    D_acq_LEO = link_acq_delay_leo()    # seconds
     print(f"LEO optical link acq takes {D_acq_LEO} seconds or {D_acq_LEO / 60} minutes")
