@@ -3,10 +3,10 @@ from dataclasses import dataclass, replace
 import numpy as np
 from tqdm import tqdm
 
-import constants
-from contact_plan import ContactPlan, Contact
-from utils import get_experiment_file, FileType
-from constants import (
+from laser_link_scheduler import constants
+from laser_link_scheduler.topology.contact_plan import ContactPlan, Contact
+from laser_link_scheduler.utils import get_experiment_file, FileType
+from laser_link_scheduler.constants import (
     SOURCE_NODES,
     RELAY_NODES,
     DESTINATION_NODES,

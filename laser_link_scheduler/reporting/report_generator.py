@@ -3,11 +3,11 @@ import os
 import time
 import pickle
 
-import constants
-from time_expanded_graph import TimeExpandedGraph
-from utils import FileType
-import weights
-from weights import (
+from laser_link_scheduler import constants
+from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
+from laser_link_scheduler.utils import FileType
+from laser_link_scheduler.topology import weights
+from laser_link_scheduler.topology.weights import (
     compute_node_capacities,
     compute_capacity,
     compute_wasted_capacity,

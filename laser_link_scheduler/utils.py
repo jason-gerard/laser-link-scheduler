@@ -1,7 +1,7 @@
 import os
 from enum import Enum
 
-from constants import SOURCES_ROOT
+from laser_link_scheduler.constants import SOURCES_ROOT
 
 
 class FileType(Enum):

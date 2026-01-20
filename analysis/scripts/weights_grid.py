@@ -10,8 +10,12 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
-sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
-from time_expanded_graph import TimeExpandedGraph
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+SRC_ROOT = os.path.join(REPO_ROOT, "src")
+if SRC_ROOT not in sys.path:
+    sys.path.append(SRC_ROOT)
+
+from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
 
 # weights[k] = W_delta_cap + W_dct
 # if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:

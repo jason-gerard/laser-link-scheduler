@@ -1,8 +1,11 @@
 import numpy as np
 from typing import Tuple
-import constants
-from pointing_delay_model import pointing_delay, all_pointing_delay
-from link_acq_delay_model import (
+from laser_link_scheduler import constants
+from laser_link_scheduler.models.pointing_delay import (
+    pointing_delay,
+    all_pointing_delay,
+)
+from laser_link_scheduler.models.link_acq_delay import (
     link_acq_delay_ipn_rand,
     link_acq_delay_leo_rand,
     link_acq_delay_ipn,

@@ -2,10 +2,10 @@ import networkx as nx
 import numpy as np
 from tqdm import tqdm
 
-import constants
-from contact_plan import Contact
-from time_expanded_graph import TimeExpandedGraph
-from weights import (
+from laser_link_scheduler import constants
+from laser_link_scheduler.topology.contact_plan import Contact
+from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
+from laser_link_scheduler.topology.weights import (
     disabled_contact_time,
     compute_node_capacity_by_graph,
     delta_capacity,

@@ -13,10 +13,17 @@ import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 from collections import defaultdict
 
-sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
-from time_expanded_graph import TimeExpandedGraph
-from weights import compute_all_delays
-from link_acq_delay_model import link_acq_delay_ipn_fou, link_acq_delay_leo_fou
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+SRC_ROOT = os.path.join(REPO_ROOT, "src")
+if SRC_ROOT not in sys.path:
+    sys.path.append(SRC_ROOT)
+
+from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
+from laser_link_scheduler.topology.weights import compute_all_delays
+from laser_link_scheduler.models.link_acq_delay import (
+    link_acq_delay_ipn_fou,
+    link_acq_delay_leo_fou,
+)
 
 plt.rcParams.update({"font.size": 22})
 plt.rc("legend", fontsize=16)

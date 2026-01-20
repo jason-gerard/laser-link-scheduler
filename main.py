@@ -4,25 +4,28 @@ from timeit import default_timer as timer
 
 import numpy as np
 
-from LLS_milp import LLSModel
-from path_solver import PathSchedulerModel
-from contact_plan import IONContactPlanParser, IPNDContactPlanParser
-from report_generator import Reporter
-from scheduler import (
+from laser_link_scheduler.scheduling.milp_lls import LLSModel
+from laser_link_scheduler.graph.path_solver import PathSchedulerModel
+from laser_link_scheduler.topology.contact_plan import (
+    IONContactPlanParser,
+    IPNDContactPlanParser,
+)
+from laser_link_scheduler.reporting.report_generator import Reporter
+from laser_link_scheduler.scheduling.scheduler import (
     LaserLinkScheduler,
     FairContactPlan,
     RandomScheduler,
     AlternatingScheduler,
 )
-from time_expanded_graph import (
+from laser_link_scheduler.graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
     write_time_expanded_graph,
     convert_time_expanded_graph_to_contact_plan,
 )
-from utils import FileType
-import constants
-import weights
-import pointing_delay_model
+from laser_link_scheduler.utils import FileType
+from laser_link_scheduler import constants
+from laser_link_scheduler.topology import weights
+from laser_link_scheduler.models import pointing_delay as pointing_delay_model
 
 
 def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Reporter):

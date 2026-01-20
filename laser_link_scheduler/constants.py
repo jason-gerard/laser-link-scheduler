@@ -1,5 +1,8 @@
-SOURCES_ROOT = "experiments"
-REPORTS_ROOT = "reports"
+import os
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SOURCES_ROOT = os.path.join(REPO_ROOT, "scenarios", "experiments", "experiments")
+REPORTS_ROOT = os.path.join(REPO_ROOT, "output", "reports")
 
 # Minimum duration an edge i,j in state k can have
 # There is a minimum amount of time required for acquisition, tracking, and pointing (ATP). If there is a contact in the

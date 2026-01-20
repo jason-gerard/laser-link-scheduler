@@ -3,8 +3,10 @@ import networkx as nx
 import numpy as np
 from itertools import combinations, chain, product
 
-from contact_plan import IONContactPlanParser
-from time_expanded_graph import convert_contact_plan_to_time_expanded_graph
+from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
+from laser_link_scheduler.graph.time_expanded_graph import (
+    convert_contact_plan_to_time_expanded_graph,
+)
 
 
 def all_maximal_matchings(T):

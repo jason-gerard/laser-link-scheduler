@@ -1,6 +1,6 @@
-from contact_plan import IONContactPlanParser
-from scheduler import LaserLinkScheduler
-from time_expanded_graph import (
+from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
+from laser_link_scheduler.scheduling.scheduler import LaserLinkScheduler
+from laser_link_scheduler.graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
     fractionate_graph,
 )

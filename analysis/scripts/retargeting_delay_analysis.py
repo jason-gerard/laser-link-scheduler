@@ -13,9 +13,13 @@ from scipy.stats import gaussian_kde
 import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
-sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
-from time_expanded_graph import TimeExpandedGraph
-from weights import compute_delays
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+SRC_ROOT = os.path.join(REPO_ROOT, "src")
+if SRC_ROOT not in sys.path:
+    sys.path.append(SRC_ROOT)
+
+from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
+from laser_link_scheduler.topology.weights import compute_delays
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)

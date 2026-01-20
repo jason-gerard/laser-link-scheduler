@@ -7,9 +7,13 @@ import math
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
-from contact_plan import IONContactPlanParser
-from time_expanded_graph import (
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+SRC_ROOT = os.path.join(REPO_ROOT, "src")
+if SRC_ROOT not in sys.path:
+    sys.path.append(SRC_ROOT)
+
+from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
+from laser_link_scheduler.graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
     dag_reduction,
     fractionate_graph,
