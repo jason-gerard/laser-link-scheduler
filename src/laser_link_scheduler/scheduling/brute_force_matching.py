@@ -8,9 +8,8 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph
 
 
 def all_maximal_matchings(T):
-
     maximal_matchings = []
-    partial_matchings = [{(u,v)} for (u,v) in T.edges()]
+    partial_matchings = [{(u, v)} for (u, v) in T.edges()]
 
     while partial_matchings:
         # get current partial matching
@@ -18,12 +17,12 @@ def all_maximal_matchings(T):
         nodes_m = set(chain(*m))
 
         extended = False
-        for (u,v) in T.edges():
+        for u, v in T.edges():
             if u not in nodes_m and v not in nodes_m:
                 extended = True
                 # copy m, extend it and add it to the list of partial matchings
                 m_extended = set(m)
-                m_extended.add((u,v))
+                m_extended.add((u, v))
                 partial_matchings.append(m_extended)
 
         if not extended and m not in maximal_matchings:
@@ -38,13 +37,13 @@ contact_plan_parser = IONContactPlanParser()
 contact_plan = contact_plan_parser.read(EXPERIMENT_NAME)
 
 time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
-    contact_plan,
-    should_fractionate=True)
+    contact_plan, should_fractionate=True
+)
 
 possible_graphs = []
 # Tested with max k at 7 states, anything past that takes too long to run
 for k in range(time_expanded_graph.K):
-# for k in range(5):
+    # for k in range(5):
     edges = []
     for tx_idx in range(time_expanded_graph.N):
         for rx_idx in range(time_expanded_graph.N):

@@ -4,7 +4,9 @@ import numpy as np
 SLEW_RATE = 0.0349066  # radians or 2 deg/s
 
 
-def pointing_delay_single_node(src_node, curr_dst_node, new_dst_node, slew_rate=SLEW_RATE) -> float:
+def pointing_delay_single_node(
+    src_node, curr_dst_node, new_dst_node, slew_rate=SLEW_RATE
+) -> float:
     # Parameters are coordinates with respect to some central point
     # so convert everything to have the src node as the central point
     # by subtracting the src node coordinates from all the nodes
@@ -58,15 +60,19 @@ def all_pointing_delay(node_set1, node_set2, slew_rate=SLEW_RATE) -> float:
 if __name__ == "__main__":
     # dst12 is src2
     # src1 is dst22
-    node_set_1 = np.array([
-        np.array([1, 0, 0]),  # src1
-        np.array([1, 1, 1]),  # dst11
-        np.array([0, 2, 1]),  # dst12
-    ])
-    node_set_2 = np.array([
-        np.array([0, 2, 1]),  # src2
-        np.array([2, 0, 0]),  # dst21
-        np.array([1, 0, 0]),  # dst22
-    ])
+    node_set_1 = np.array(
+        [
+            np.array([1, 0, 0]),  # src1
+            np.array([1, 1, 1]),  # dst11
+            np.array([0, 2, 1]),  # dst12
+        ]
+    )
+    node_set_2 = np.array(
+        [
+            np.array([0, 2, 1]),  # src2
+            np.array([2, 0, 0]),  # dst21
+            np.array([1, 0, 0]),  # dst22
+        ]
+    )
     delay = pointing_delay(node_set_1, node_set_2)
     print(delay)

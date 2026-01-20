@@ -18,9 +18,9 @@ from time_expanded_graph import TimeExpandedGraph
 from weights import compute_all_delays
 from link_acq_delay_model import link_acq_delay_ipn_fou, link_acq_delay_leo_fou
 
-plt.rcParams.update({'font.size': 22})
-plt.rc('legend', fontsize=16)
-plt.rcParams.update({'font.family': 'Times New Roman'})
+plt.rcParams.update({"font.size": 22})
+plt.rc("legend", fontsize=16)
+plt.rcParams.update({"font.family": "Times New Roman"})
 
 tegs = []
 
@@ -55,27 +55,23 @@ plt.ylabel("Acquisition Delay [sec]")
 plt.xlabel("Field of Uncertainty [deg]")
 plt.legend()
 
-plt.grid(linestyle='-', color='0.95')
+plt.grid(linestyle="-", color="0.95")
 
 y_min = 0
 y_max = max(ipn_acq) + 10
 y_step = 100
 
-plt.ylim(y_min, y_max+10)
+plt.ylim(y_min, y_max + 10)
 ax.set_yticks([y_min] + list(np.arange(y_step, y_max + 0.01, y_step)))
 
 ax.set_xticks(fou_r)
 
 bbox = dict(boxstyle="round", fc="0.9")
-arrowprops = dict(
-    arrowstyle="->",
-    connectionstyle="angle,angleA=0,angleB=90,rad=10")
+arrowprops = dict(arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10")
 
 file_name = "acq_delay_by_fou"
 plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"),
-    format="pdf",
-    bbox_inches="tight"
+    os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
 )
 plt.savefig(
     os.path.join("analysis", f"{file_name}.png"),

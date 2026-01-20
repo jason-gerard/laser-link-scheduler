@@ -1,7 +1,4 @@
-def transmission_energy(
-        power: float,
-        duration: float
-    ) -> float:
+def transmission_energy(power: float, duration: float) -> float:
     """
     Compute the energy consumed during transmission.
 
@@ -19,17 +16,18 @@ def transmission_energy(
     """
     return power * duration
 
+
 # TODO: implement this function
-def optical_trasnmit_power()-> float:
-    ...
+def optical_trasnmit_power() -> float: ...
+
 
 def transmission_duration(
-        N_bits: int,
-        M: int,
-        L: int,
-        T_chip: float,
-        T_guard: float,
-    ) -> float:
+    N_bits: int,
+    M: int,
+    L: int,
+    T_chip: float,
+    T_guard: float,
+) -> float:
     """
     Compute the total transmission duration for pulse position modulation (PPM).
 
@@ -53,15 +51,16 @@ def transmission_duration(
     """
     if L != 2**M:
         raise ValueError("L must be equal to 2^M")
-    
+
     return (N_bits / (2**M)) * (M / (L * T_chip + T_guard))
 
+
 def bit_rate(
-        M: int,
-        L: int,
-        T_chip: float,
-        T_guard: float,
-    ) -> float:
+    M: int,
+    L: int,
+    T_chip: float,
+    T_guard: float,
+) -> float:
     """
     Compute the bit rate for pulse position modulation (PPM).
 
@@ -83,7 +82,7 @@ def bit_rate(
     """
     if L != 2**M:
         raise ValueError("L must be equal to 2^M")
-    
+
     return M / (L * T_chip + T_guard)
 
 
@@ -99,7 +98,7 @@ if __name__ == "__main__":
 
     N_bits = 1e6  # bits
     M = 40  # bits per slot
-    L = 2**M # slots
+    L = 2**M  # slots
     T_chip = 1e-6  # seconds
     T_guard = 1e-7  # seconds
 

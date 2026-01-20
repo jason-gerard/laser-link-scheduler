@@ -17,11 +17,11 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
 from time_expanded_graph import TimeExpandedGraph
 from weights import compute_delays
 
-plt.rcParams.update({'font.size': 18})
-plt.rc('legend', fontsize=14)
-plt.rcParams.update({'font.family': 'Times New Roman'})
+plt.rcParams.update({"font.size": 18})
+plt.rc("legend", fontsize=14)
+plt.rcParams.update({"font.family": "Times New Roman"})
 
-algorithms = ['lls', 'lls_pat_unaware', 'lls_mip', 'fcp']
+algorithms = ["lls", "lls_pat_unaware", "lls_mip", "fcp"]
 
 report_id = 1748949730
 tegs = []
@@ -66,14 +66,18 @@ for algorithm, node_count, teg in tegs:
                         teg.optical_interfaces_to_node,
                         teg.nodes,
                     )
-                
+
                     tx_node = teg.nodes[teg.optical_interfaces_to_node[tx_oi_idx]]
                     rx_node = teg.nodes[teg.optical_interfaces_to_node[rx_oi_idx]]
-                    
+
                     # state duration, pointing delay, link acq delay
-                    delays_by_node[tx_node].append((teg.state_durations[k], pointing_delay, link_acq_delay))
-                    delays_by_node[rx_node].append((teg.state_durations[k], pointing_delay, link_acq_delay))
-                    
+                    delays_by_node[tx_node].append(
+                        (teg.state_durations[k], pointing_delay, link_acq_delay)
+                    )
+                    delays_by_node[rx_node].append(
+                        (teg.state_durations[k], pointing_delay, link_acq_delay)
+                    )
+
                     all_pointing_delays.append(pointing_delay)
                     all_link_acq_delays.append(link_acq_delay)
 
@@ -98,7 +102,9 @@ for algorithm, node_count, teg in tegs:
 
     network_retargeting_duty_cycle = network_total_eff_time / network_total_time
     print("network retargeting duty cycle", network_retargeting_duty_cycle)
-    retargeting_duty_cycles.append((algorithm, node_count, network_retargeting_duty_cycle))
+    retargeting_duty_cycles.append(
+        (algorithm, node_count, network_retargeting_duty_cycle)
+    )
 
 algorithms = [
     ("lls", "LLS_Greedy"),
@@ -117,20 +123,22 @@ ax = fig.add_subplot(111)
 # Plot for each algorithm
 for algorithm, display_name in algorithms:
     y = [
-        duty for (alg, node_count, duty) in retargeting_duty_cycles
-        if alg == algorithm
+        duty for (alg, node_count, duty) in retargeting_duty_cycles if alg == algorithm
     ]
     x_vals = [
-        node_count for (alg, node_count, duty) in retargeting_duty_cycles
+        node_count
+        for (alg, node_count, duty) in retargeting_duty_cycles
         if alg == algorithm
     ]
-    
+
     # Sort by x for proper line plotting
     sorted_pairs = sorted(zip(x_vals, y))
     x_sorted, y_sorted = zip(*sorted_pairs) if sorted_pairs else ([], [])
 
     if algorithm == "lls_mip":
-        plt.plot(x_sorted, y_sorted, linestyle="dotted", label=display_name, linewidth=3.5)
+        plt.plot(
+            x_sorted, y_sorted, linestyle="dotted", label=display_name, linewidth=3.5
+        )
     else:
         plt.plot(x_sorted, y_sorted, label=display_name, linewidth=2.5)
 
@@ -139,15 +147,22 @@ plt.ylabel("Retargeting Duty Cycle [%]")
 plt.xlabel("Source/Relay Node Count")
 plt.ylim(0.6, 1.0)
 plt.yticks(np.arange(0.6, 1.01, 0.05))
-plt.grid(linestyle='-', color='0.95')
+plt.grid(linestyle="-", color="0.95")
 plt.legend(loc="lower right")
 
 # Custom X-axis ticks and labels
 ax.set_xticks([i for i in x if i % 8 == 0])
-ax.set_xticklabels([f"{i}/{math.ceil(i/16)}" for i in x if i % 8 == 0])
+ax.set_xticklabels([f"{i}/{math.ceil(i / 16)}" for i in x if i % 8 == 0])
 
 # Save the figure
 file_name = "network_retargeting_duty_cycle"
 os.makedirs("analysis", exist_ok=True)
-plt.savefig(os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight")
-plt.savefig(os.path.join("analysis", f"{file_name}.png"), format="png", bbox_inches="tight", dpi=300)
+plt.savefig(
+    os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
+)
+plt.savefig(
+    os.path.join("analysis", f"{file_name}.png"),
+    format="png",
+    bbox_inches="tight",
+    dpi=300,
+)

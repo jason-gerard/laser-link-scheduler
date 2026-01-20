@@ -17,9 +17,9 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
 from time_expanded_graph import TimeExpandedGraph
 from weights import compute_all_delays
 
-plt.rcParams.update({'font.size': 22})
-plt.rc('legend', fontsize=16)
-plt.rcParams.update({'font.family': 'Times New Roman'})
+plt.rcParams.update({"font.size": 22})
+plt.rc("legend", fontsize=16)
+plt.rcParams.update({"font.family": "Times New Roman"})
 
 tegs = []
 
@@ -55,7 +55,7 @@ for teg in tegs:
                             teg.pos,
                             teg.optical_interfaces_to_node,
                             teg.nodes,
-                            slew_rate=i * slew_rate_mult
+                            slew_rate=i * slew_rate_mult,
                         )
                         if res is None:
                             continue
@@ -63,17 +63,25 @@ for teg in tegs:
                             link_acq_delay = res[0]
                             pd1, idx1, idx2, idx1_rx = res[1]
                             pd2, idx2, idx1, idx2_rx = res[2]
-                        
-                        if teg.nodes[idx1].startswith("2") and teg.nodes[idx2].startswith("2") and teg.nodes[idx1_rx].startswith("2"):
+
+                        if (
+                            teg.nodes[idx1].startswith("2")
+                            and teg.nodes[idx2].startswith("2")
+                            and teg.nodes[idx1_rx].startswith("2")
+                        ):
                             all_pointing_delays.append((i, pd1))
                             all_pointing_delays.append((i, pd2))
-                        elif teg.nodes[idx1].startswith("2") and teg.nodes[idx2].startswith("2") and teg.nodes[idx2_rx].startswith("2"):
+                        elif (
+                            teg.nodes[idx1].startswith("2")
+                            and teg.nodes[idx2].startswith("2")
+                            and teg.nodes[idx2_rx].startswith("2")
+                        ):
                             all_pointing_delays.append((i, pd1))
                             all_pointing_delays.append((i, pd2))
                         else:
-                            all_pointing_delays_gs.append((i, pd1+2))
-                            all_pointing_delays_gs.append((i, pd2+2))
-                    
+                            all_pointing_delays_gs.append((i, pd1 + 2))
+                            all_pointing_delays_gs.append((i, pd2 + 2))
+
                         # tx_node = teg.nodes[teg.optical_interfaces_to_node[tx_oi_idx]]
                         # rx_node = teg.nodes[teg.optical_interfaces_to_node[rx_oi_idx]]
 
@@ -121,7 +129,7 @@ plt.ylabel("Average Pointing Delay [sec]")
 plt.xlabel("Slew Rate [deg/s]")
 plt.legend()
 
-plt.grid(linestyle='-', color='0.95')
+plt.grid(linestyle="-", color="0.95")
 
 y_min = 0
 # y_max = max(max(y), max(y_gs)) + 5
@@ -132,12 +140,10 @@ plt.ylim(y_min, y_max)
 ax.set_yticks([y_min] + list(np.arange(y_step, y_max + 0.01, y_step)))
 
 ax.set_xticks(range(1, 9))
-plt.xlim(0.75,8.25)
+plt.xlim(0.75, 8.25)
 
 bbox = dict(boxstyle="round", fc="0.9")
-arrowprops = dict(
-    arrowstyle="->",
-    connectionstyle="angle,angleA=0,angleB=90,rad=10")
+arrowprops = dict(arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10")
 
 # plt.annotate("Stepper motor", fontsize=13, xy=(2.0, 31),
 #             xytext=(1.75, 45), textcoords='data',
@@ -148,44 +154,34 @@ arrowprops = dict(
 
 plt.axvline(
     x=2.0,
-    color='black',
-    linestyle='--',
+    color="black",
+    linestyle="--",
     linewidth=1,
     zorder=0,
 )
-plt.text(
-    2.0,
-    y_max - 20,
-    "Stepper motor",
-    fontsize=18,
-    ha='left',
-    va='top',
-    bbox=bbox
-)
+plt.text(2.0, y_max - 20, "Stepper motor", fontsize=18, ha="left", va="top", bbox=bbox)
 
 # Brushless DC marker
 plt.axvline(
     x=8.0,
-    color='black',
-    linestyle='--',
+    color="black",
+    linestyle="--",
     linewidth=1,
     zorder=0,
 )
 plt.text(
     8.0,
-    y_max-35,
+    y_max - 35,
     "Brushless DC\nw/ encoder",
     fontsize=18,
-    ha='right',
-    va='top',
-    bbox=bbox
+    ha="right",
+    va="top",
+    bbox=bbox,
 )
 
 file_name = "average_pointing_delay_by_slew_rate"
 plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"),
-    format="pdf",
-    bbox_inches="tight"
+    os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
 )
 plt.savefig(
     os.path.join("analysis", f"{file_name}.png"),
