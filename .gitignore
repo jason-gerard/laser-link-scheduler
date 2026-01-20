@@ -1,6 +1,7 @@
 .idea
 .venv
 **/__pycache__
-output/{plots, reports}/*
+output/plots/*
+output/reports/*
 analysis/*.json
 *.egg-info/
