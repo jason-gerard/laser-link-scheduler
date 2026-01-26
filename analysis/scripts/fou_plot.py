@@ -1,29 +1,24 @@
 import os
-import math
 import pickle
-import pprint
 import sys
 
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
-from scipy.stats import gaussian_kde
 
-import matplotlib as mpl
-from matplotlib.colors import ListedColormap
-from collections import defaultdict
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 SRC_ROOT = os.path.join(REPO_ROOT, "src")
 if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
 from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
-from laser_link_scheduler.topology.weights import compute_all_delays
 from laser_link_scheduler.models.link_acq_delay import (
     link_acq_delay_ipn_fou,
     link_acq_delay_leo_fou,
 )
+
 
 plt.rcParams.update({"font.size": 22})
 plt.rc("legend", fontsize=16)
@@ -74,11 +69,15 @@ ax.set_yticks([y_min] + list(np.arange(y_step, y_max + 0.01, y_step)))
 ax.set_xticks(fou_r)
 
 bbox = dict(boxstyle="round", fc="0.9")
-arrowprops = dict(arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10")
+arrowprops = dict(
+    arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10"
+)
 
 file_name = "acq_delay_by_fou"
 plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
+    os.path.join("analysis", f"{file_name}.pdf"),
+    format="pdf",
+    bbox_inches="tight",
 )
 plt.savefig(
     os.path.join("analysis", f"{file_name}.png"),

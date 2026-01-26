@@ -1,25 +1,22 @@
+from collections import defaultdict
 import os
-import math
 import pickle
-import pprint
 import sys
 
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
-from scipy.stats import gaussian_kde
 
-import matplotlib as mpl
-from matplotlib.colors import ListedColormap
-from collections import defaultdict
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 SRC_ROOT = os.path.join(REPO_ROOT, "src")
 if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
 from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
 from laser_link_scheduler.topology.weights import compute_all_delays
+
 
 plt.rcParams.update({"font.size": 22})
 plt.rc("legend", fontsize=16)
@@ -147,7 +144,9 @@ ax.set_xticks(range(1, 9))
 plt.xlim(0.75, 8.25)
 
 bbox = dict(boxstyle="round", fc="0.9")
-arrowprops = dict(arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10")
+arrowprops = dict(
+    arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10"
+)
 
 # plt.annotate("Stepper motor", fontsize=13, xy=(2.0, 31),
 #             xytext=(1.75, 45), textcoords='data',
@@ -163,7 +162,15 @@ plt.axvline(
     linewidth=1,
     zorder=0,
 )
-plt.text(2.0, y_max - 20, "Stepper motor", fontsize=18, ha="left", va="top", bbox=bbox)
+plt.text(
+    2.0,
+    y_max - 20,
+    "Stepper motor",
+    fontsize=18,
+    ha="left",
+    va="top",
+    bbox=bbox,
+)
 
 # Brushless DC marker
 plt.axvline(
@@ -185,7 +192,9 @@ plt.text(
 
 file_name = "average_pointing_delay_by_slew_rate"
 plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
+    os.path.join("analysis", f"{file_name}.pdf"),
+    format="pdf",
+    bbox_inches="tight",
 )
 plt.savefig(
     os.path.join("analysis", f"{file_name}.png"),

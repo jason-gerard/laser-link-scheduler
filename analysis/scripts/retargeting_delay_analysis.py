@@ -1,25 +1,23 @@
+import math
 import os
 import pickle
-import pprint
-import sys
 import re
-import math
+import sys
 
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
-from scipy.stats import gaussian_kde
 
-import matplotlib as mpl
-from matplotlib.colors import ListedColormap
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 SRC_ROOT = os.path.join(REPO_ROOT, "src")
 if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
 from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
 from laser_link_scheduler.topology.weights import compute_delays
+
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
@@ -71,15 +69,27 @@ for algorithm, node_count, teg in tegs:
                         teg.nodes,
                     )
 
-                    tx_node = teg.nodes[teg.optical_interfaces_to_node[tx_oi_idx]]
-                    rx_node = teg.nodes[teg.optical_interfaces_to_node[rx_oi_idx]]
+                    tx_node = teg.nodes[
+                        teg.optical_interfaces_to_node[tx_oi_idx]
+                    ]
+                    rx_node = teg.nodes[
+                        teg.optical_interfaces_to_node[rx_oi_idx]
+                    ]
 
                     # state duration, pointing delay, link acq delay
                     delays_by_node[tx_node].append(
-                        (teg.state_durations[k], pointing_delay, link_acq_delay)
+                        (
+                            teg.state_durations[k],
+                            pointing_delay,
+                            link_acq_delay,
+                        )
                     )
                     delays_by_node[rx_node].append(
-                        (teg.state_durations[k], pointing_delay, link_acq_delay)
+                        (
+                            teg.state_durations[k],
+                            pointing_delay,
+                            link_acq_delay,
+                        )
                     )
 
                     all_pointing_delays.append(pointing_delay)
@@ -93,10 +103,14 @@ for algorithm, node_count, teg in tegs:
         total_eff_time = 0
         for state_duration, pointing_delay, link_acq_delay in delays:
             total_time += state_duration
-            total_eff_time += state_duration - (pointing_delay + link_acq_delay)
+            total_eff_time += state_duration - (
+                pointing_delay + link_acq_delay
+            )
 
             network_total_time += state_duration
-            network_total_eff_time += state_duration - (pointing_delay + link_acq_delay)
+            network_total_eff_time += state_duration - (
+                pointing_delay + link_acq_delay
+            )
 
         # proportion of time spent transmitting vs total time
         retargeting_duty_cycle[node] = total_eff_time / total_time
@@ -104,7 +118,9 @@ for algorithm, node_count, teg in tegs:
 
     # pprint.pprint(retargeting_duty_cycle)
 
-    network_retargeting_duty_cycle = network_total_eff_time / network_total_time
+    network_retargeting_duty_cycle = (
+        network_total_eff_time / network_total_time
+    )
     print("network retargeting duty cycle", network_retargeting_duty_cycle)
     retargeting_duty_cycles.append(
         (algorithm, node_count, network_retargeting_duty_cycle)
@@ -118,7 +134,9 @@ algorithms = [
 ]
 
 # X-axis ticks
-x = sorted(list(set([node_count for _, node_count, _ in retargeting_duty_cycles])))
+x = sorted(
+    list(set([node_count for _, node_count, _ in retargeting_duty_cycles]))
+)
 
 # Plot setup
 fig = plt.figure()
@@ -127,7 +145,9 @@ ax = fig.add_subplot(111)
 # Plot for each algorithm
 for algorithm, display_name in algorithms:
     y = [
-        duty for (alg, node_count, duty) in retargeting_duty_cycles if alg == algorithm
+        duty
+        for (alg, node_count, duty) in retargeting_duty_cycles
+        if alg == algorithm
     ]
     x_vals = [
         node_count
@@ -141,7 +161,11 @@ for algorithm, display_name in algorithms:
 
     if algorithm == "lls_mip":
         plt.plot(
-            x_sorted, y_sorted, linestyle="dotted", label=display_name, linewidth=3.5
+            x_sorted,
+            y_sorted,
+            linestyle="dotted",
+            label=display_name,
+            linewidth=3.5,
         )
     else:
         plt.plot(x_sorted, y_sorted, label=display_name, linewidth=2.5)
@@ -162,7 +186,9 @@ ax.set_xticklabels([f"{i}/{math.ceil(i / 16)}" for i in x if i % 8 == 0])
 file_name = "network_retargeting_duty_cycle"
 os.makedirs("analysis", exist_ok=True)
 plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
+    os.path.join("analysis", f"{file_name}.pdf"),
+    format="pdf",
+    bbox_inches="tight",
 )
 plt.savefig(
     os.path.join("analysis", f"{file_name}.png"),

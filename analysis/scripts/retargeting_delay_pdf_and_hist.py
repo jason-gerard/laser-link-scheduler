@@ -1,23 +1,22 @@
 import os
 import pickle
-import pprint
 import sys
 
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 from scipy.stats import gaussian_kde
 
-import matplotlib as mpl
-from matplotlib.colors import ListedColormap
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 SRC_ROOT = os.path.join(REPO_ROOT, "src")
 if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
 from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
 from laser_link_scheduler.topology.weights import compute_all_delays
+
 
 plt.rcParams.update({"font.size": 26})
 plt.rc("legend", fontsize=22)
@@ -69,8 +68,12 @@ for teg in tegs:
                         pd1 += 2
                         pd2 += 2
 
-                    tx_node = teg.nodes[teg.optical_interfaces_to_node[tx_oi_idx]]
-                    rx_node = teg.nodes[teg.optical_interfaces_to_node[rx_oi_idx]]
+                    tx_node = teg.nodes[
+                        teg.optical_interfaces_to_node[tx_oi_idx]
+                    ]
+                    rx_node = teg.nodes[
+                        teg.optical_interfaces_to_node[rx_oi_idx]
+                    ]
 
                     # state duration, pointing delay, link acq delay
                     delays_by_node[tx_node].append(
@@ -90,7 +93,12 @@ for teg in tegs:
                         pass
                     else:
                         all_pointing_delays_with_node.append(
-                            (teg.nodes[idx1], teg.nodes[idx2], teg.nodes[idx1_rx], pd1)
+                            (
+                                teg.nodes[idx1],
+                                teg.nodes[idx2],
+                                teg.nodes[idx1_rx],
+                                pd1,
+                            )
                         )
                     if (
                         teg.nodes[idx1].startswith("2")
@@ -100,7 +108,12 @@ for teg in tegs:
                         pass
                     else:
                         all_pointing_delays_with_node.append(
-                            (teg.nodes[idx2], teg.nodes[idx1], teg.nodes[idx2_rx], pd2)
+                            (
+                                teg.nodes[idx2],
+                                teg.nodes[idx1],
+                                teg.nodes[idx2_rx],
+                                pd2,
+                            )
                         )
                     all_link_acq_delays.append(link_acq_delay)
 
@@ -112,10 +125,14 @@ for teg in tegs:
         total_eff_time = 0
         for state_duration, pointing_delay, link_acq_delay in delays:
             total_time += state_duration
-            total_eff_time += state_duration - (pointing_delay + link_acq_delay)
+            total_eff_time += state_duration - (
+                pointing_delay + link_acq_delay
+            )
 
             network_total_time += state_duration
-            network_total_eff_time += state_duration - (pointing_delay + link_acq_delay)
+            network_total_eff_time += state_duration - (
+                pointing_delay + link_acq_delay
+            )
 
         # proportion of time spent transmitting vs total time
         retargeting_duty_cycle[node] = total_eff_time / total_time
@@ -123,7 +140,9 @@ for teg in tegs:
 
     # pprint.pprint(retargeting_duty_cycle)
 
-    network_retargeting_duty_cycle = network_total_eff_time / network_total_time
+    network_retargeting_duty_cycle = (
+        network_total_eff_time / network_total_time
+    )
     print("network retargeting duty cycle", network_retargeting_duty_cycle)
 
 all_pointing_delays = np.array(all_pointing_delays)
@@ -169,7 +188,12 @@ plt.hist(
     label="Acquisition Delay Histogram",
 )
 
-plt.plot(x_pointing, kde_pointing(x_pointing), label="Pointing Delay PDF", color="blue")
+plt.plot(
+    x_pointing,
+    kde_pointing(x_pointing),
+    label="Pointing Delay PDF",
+    color="blue",
+)
 plt.plot(
     x_acquisition,
     kde_acquisition(x_acquisition),
@@ -190,7 +214,9 @@ plt.grid(linestyle="-", color="0.95")
 plt.legend()
 
 bbox = dict(boxstyle="round", fc="0.9")
-arrowprops = dict(arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10")
+arrowprops = dict(
+    arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10"
+)
 
 plt.annotate(
     "IPN-to-IPN",
@@ -254,7 +280,9 @@ plt.tight_layout()
 
 file_name = "retargeting delay pdf".replace(" ", "_").replace("/", "_")
 plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
+    os.path.join("analysis", f"{file_name}.pdf"),
+    format="pdf",
+    bbox_inches="tight",
 )
 plt.savefig(
     os.path.join("analysis", f"{file_name}.png"),

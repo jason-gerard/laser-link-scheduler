@@ -1,25 +1,30 @@
-import pulp
 import numpy as np
+import pulp
 
 from laser_link_scheduler import constants
-from laser_link_scheduler.constants import RELAY_NODES, SOURCE_NODES, DESTINATION_NODES
-from laser_link_scheduler.topology.contact_plan import (
-    IONContactPlanParser,
-    IPNDContactPlanParser,
+from laser_link_scheduler.constants import (
+    DESTINATION_NODES,
+    RELAY_NODES,
+    SOURCE_NODES,
 )
-from laser_link_scheduler.models.pointing_delay import pointing_delay
+from laser_link_scheduler.graph.time_expanded_graph import (
+    convert_contact_plan_to_time_expanded_graph,
+    convert_time_expanded_graph_to_contact_plan,
+    TimeExpandedGraph,
+    write_time_expanded_graph,
+)
 from laser_link_scheduler.models.link_acq_delay import (
     link_acq_delay_ipn,
     link_acq_delay_leo,
 )
+from laser_link_scheduler.models.pointing_delay import pointing_delay
 from laser_link_scheduler.reporting.report_generator import Reporter
-from laser_link_scheduler.graph.time_expanded_graph import (
-    convert_contact_plan_to_time_expanded_graph,
-    TimeExpandedGraph,
-    write_time_expanded_graph,
-    convert_time_expanded_graph_to_contact_plan,
+from laser_link_scheduler.topology.contact_plan import (
+    IONContactPlanParser,
+    IPNDContactPlanParser,
 )
 from laser_link_scheduler.utils import FileType
+
 
 MAX_TIME = 2.5 * 60 * 60  # seconds
 # MAX_TIME = 120  # seconds
@@ -63,11 +68,17 @@ class LLSModel:
                     if self.teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
                         contact_topology.append((k, tx_oi_idx, rx_oi_idx))
 
-        print(f"Creating binary variables for {len(contact_topology)} number of edges")
+        print(
+            f"Creating binary variables for {len(contact_topology)} number of edges"
+        )
         # This represents the constraint that a selected edge must be a part of the initial contact plan
         if self.is_mip:
             self.edges = pulp.LpVariable.dicts(
-                "edges", contact_topology, lowBound=0, upBound=1, cat=pulp.LpInteger
+                "edges",
+                contact_topology,
+                lowBound=0,
+                upBound=1,
+                cat=pulp.LpInteger,
             )
         else:
             self.edges = pulp.LpVariable.dicts(
@@ -81,7 +92,7 @@ class LLSModel:
                 cat=pulp.LpContinuous,
             )
 
-        print(f"Creating variables for retargeting time")
+        print("Creating variables for retargeting time")
         self.eff_contact_time = pulp.LpVariable.dicts(
             "effective_contact_time",
             contact_topology,
@@ -93,7 +104,7 @@ class LLSModel:
         # isolate the edges by state k by node
         # the dict will have the key be the node name, which contains a list of length k, where each element is a list
         # of edges
-        print(f"Pre-computing edge dictionary")
+        print("Pre-computing edge dictionary")
         self.edges_by_state = {
             node: [[] for _ in range(self.teg.K)] for node in self.teg.nodes
         }
@@ -108,8 +119,12 @@ class LLSModel:
             self.edges_by_state_oi[tx_oi_idx][k].append(edge)
             self.edges_by_state_oi[rx_oi_idx][k].append(edge)
 
-            tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
-            rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
+            tx_node = self.teg.nodes[
+                self.teg.optical_interfaces_to_node[tx_oi_idx]
+            ]
+            rx_node = self.teg.nodes[
+                self.teg.optical_interfaces_to_node[rx_oi_idx]
+            ]
 
             self.edges_by_state[tx_node][k].append(edge)
             self.edges_by_state[rx_node][k].append(edge)
@@ -117,7 +132,7 @@ class LLSModel:
             self.edges_by_node[tx_node].append(edge)
             self.edges_by_node[rx_node].append(edge)
 
-        print(f"Initializing the capacity variables")
+        print("Initializing the capacity variables")
         capacities = {
             relay_node: pulp.LpVariable(f"Capacity_{relay_node}", lowBound=0)
             for relay_node in self.teg.nodes
@@ -125,7 +140,7 @@ class LLSModel:
         }
 
         # Create new single hop capacity variables
-        print(f"Initializing single hop capacity variables")
+        print("Initializing single hop capacity variables")
         single_hop_capacities = {
             gs_node: pulp.LpVariable(f"Capacity_{gs_node}", lowBound=0)
             for gs_node in self.teg.nodes
@@ -133,11 +148,14 @@ class LLSModel:
         }
 
         self.edge_caps = pulp.LpVariable.dicts(
-            "edge_capacities", contact_topology, lowBound=0, cat=pulp.LpContinuous
+            "edge_capacities",
+            contact_topology,
+            lowBound=0,
+            cat=pulp.LpContinuous,
         )
 
         if self.use_convex_penalty:
-            print(f"Initializing convex penalty high and low variables...")
+            print("Initializing convex penalty high and low variables...")
             self.edge_deviation_high = pulp.LpVariable.dicts(
                 "edge_deviation_high",
                 contact_topology,
@@ -157,7 +175,7 @@ class LLSModel:
         # stations
         self.flow_model = pulp.LpProblem("Network_flow_model", pulp.LpMaximize)
 
-        print(f"Initializing the objective function")
+        print("Initializing the objective function")
         if self.use_convex_penalty:
             scaler = 0.01
 
@@ -173,17 +191,23 @@ class LLSModel:
             )
 
         relay_inflow = {
-            relay_node: [] for relay_node in self.teg.nodes if relay_node in RELAY_NODES
+            relay_node: []
+            for relay_node in self.teg.nodes
+            if relay_node in RELAY_NODES
         }
         relay_outflow = {
-            relay_node: [] for relay_node in self.teg.nodes if relay_node in RELAY_NODES
+            relay_node: []
+            for relay_node in self.teg.nodes
+            if relay_node in RELAY_NODES
         }
         ogs_inflow = {
-            ogs_node: [] for ogs_node in self.teg.nodes if ogs_node in DESTINATION_NODES
+            ogs_node: []
+            for ogs_node in self.teg.nodes
+            if ogs_node in DESTINATION_NODES
         }
 
         if self.use_convex_penalty:
-            print(f"Initializing convex penalty high and low constraints...")
+            print("Initializing convex penalty high and low constraints...")
             for edge in self.edges:
                 self.flow_model += (
                     self.edge_deviation_high[edge] <= self.edges[edge] - 1.0
@@ -192,13 +216,20 @@ class LLSModel:
                     self.edge_deviation_low[edge] <= 1.0 - self.edges[edge]
                 )
 
-        print(f"Setting up per edge capacity constraints")
+        print("Setting up per edge capacity constraints")
         for edge, capacity in self.edge_caps.items():
             k, tx_oi_idx, rx_oi_idx = edge
-            tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
-            rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
+            tx_node = self.teg.nodes[
+                self.teg.optical_interfaces_to_node[tx_oi_idx]
+            ]
+            rx_node = self.teg.nodes[
+                self.teg.optical_interfaces_to_node[rx_oi_idx]
+            ]
 
-            if rx_node in constants.RELAY_NODES and tx_node in constants.SOURCE_NODES:
+            if (
+                rx_node in constants.RELAY_NODES
+                and tx_node in constants.SOURCE_NODES
+            ):
                 relay_inflow[rx_node].append(capacity)
             elif (
                 tx_node in constants.RELAY_NODES
@@ -214,7 +245,9 @@ class LLSModel:
                 # Due to the graph transformation there should never be any edges not in the previous three categories.
                 raise Exception(f"Bad edge {edge}")
 
-            bit_rate = min(constants.BIT_RATES[tx_node], constants.BIT_RATES[rx_node])
+            bit_rate = min(
+                constants.BIT_RATES[tx_node], constants.BIT_RATES[rx_node]
+            )
 
             self.flow_model += (
                 capacity <= self.edges[edge] * self.T[edge[0]] * bit_rate
@@ -228,7 +261,9 @@ class LLSModel:
                 f"Setting up inflow and outflow capacity constraints for node {relay_node}"
             )
             self.flow_model += capacity <= pulp.lpSum(relay_inflow[relay_node])
-            self.flow_model += capacity <= pulp.lpSum(relay_outflow[relay_node])
+            self.flow_model += capacity <= pulp.lpSum(
+                relay_outflow[relay_node]
+            )
 
         # Create new inflow and outflow capacity constraints for single hop
         for gs_node, capacity in single_hop_capacities.items():
@@ -238,7 +273,7 @@ class LLSModel:
             self.flow_model += capacity <= pulp.lpSum(ogs_inflow[gs_node])
 
         # Constraint for fairness of source nodes
-        print(f"Setting up fairness constraints based on ECT for source nodes")
+        print("Setting up fairness constraints based on ECT for source nodes")
         source_node_ect_dict = {
             source_node: self.ect(source_node)
             for source_node in self.teg.nodes
@@ -246,15 +281,20 @@ class LLSModel:
         }
         sum_ect = pulp.lpSum([source_node_ect_dict.values()])
         for ect in source_node_ect_dict.values():
-            self.flow_model += ect >= (sum_ect / len(source_node_ect_dict)) * 0.70
+            self.flow_model += (
+                ect >= (sum_ect / len(source_node_ect_dict)) * 0.70
+            )
 
         # Constraint that each optical interface can only be a part of a single selected edge per state
-        print(f"Setting up 1 to 1 relationship between nodes per state k")
+        print("Setting up 1 to 1 relationship between nodes per state k")
         for oi in self.teg.optical_interfaces_to_node:
             for k in range(self.teg.K):
                 self.flow_model += (
                     pulp.lpSum(
-                        [self.edges[edge] for edge in self.edges_by_state_oi[oi][k]]
+                        [
+                            self.edges[edge]
+                            for edge in self.edges_by_state_oi[oi][k]
+                        ]
                     )
                     <= MAX_EDGES_PER_LASER
                 )
@@ -273,7 +313,9 @@ class LLSModel:
             print("Create effective contact time constraints for tx and rx...")
             eff_ct_constraint_debug = {}
             for edge in self.eff_contact_time:
-                tx_eff_ct, rx_eff_ct = self.compute_effective_contact_time(edge)
+                tx_eff_ct, rx_eff_ct = self.compute_effective_contact_time(
+                    edge
+                )
                 self.flow_model += self.eff_contact_time[edge] <= tx_eff_ct
                 self.flow_model += self.eff_contact_time[edge] <= rx_eff_ct
 
@@ -284,12 +326,16 @@ class LLSModel:
 
         print("Starting solve...")
         if self.use_gurobi:
-            self.flow_model.solve(pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01))
+            self.flow_model.solve(
+                pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01)
+            )
         else:
             self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
 
-        print(f"Generating adjacency matrix from the scheduled contact plan")
-        contact_plan = np.zeros((self.teg.K, self.teg.N, self.teg.N), dtype="int64")
+        print("Generating adjacency matrix from the scheduled contact plan")
+        contact_plan = np.zeros(
+            (self.teg.K, self.teg.N, self.teg.N), dtype="int64"
+        )
         scheduled_contacts = []
         matched_edges_by_k = [[] for _ in range(self.teg.K)]
         matched_edges_by_k_oi = [[] for _ in range(self.teg.K)]
@@ -297,7 +343,9 @@ class LLSModel:
         # for k, v in y.items():
         #     print(k, v.value())
         for edge in dict(
-            sorted(self.edges.items(), key=lambda x: x[1].value(), reverse=True)
+            sorted(
+                self.edges.items(), key=lambda x: x[1].value(), reverse=True
+            )
         ):
             # if self.edges[edge].value() != 0.0 and self.edges[edge].value() != 1.0:
             #     print(self.edges[edge].value())
@@ -308,8 +356,12 @@ class LLSModel:
                 contact_plan[k][tx_oi_idx][rx_oi_idx] = 1
                 contact_plan[k][rx_oi_idx][tx_oi_idx] = 1
 
-                tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
-                rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
+                tx_node = self.teg.nodes[
+                    self.teg.optical_interfaces_to_node[tx_oi_idx]
+                ]
+                rx_node = self.teg.nodes[
+                    self.teg.optical_interfaces_to_node[rx_oi_idx]
+                ]
                 matched_edges_by_k[k].append((tx_node, rx_node))
                 matched_edges_by_k_oi[k].append((tx_oi_idx, rx_oi_idx))
 
@@ -383,7 +435,9 @@ class LLSModel:
         if k == 0:
             return 0, 0
 
-        def get_delay(node, new_node, oi_idx):  # retargeting_delay for prev edge
+        def get_delay(
+            node, new_node, oi_idx
+        ):  # retargeting_delay for prev edge
             # Create a dict for each previous edge get retargeting delay
             prev_edge_delays = {}
             for prev_edge in self.edges_by_state_oi[oi_idx][k - 1]:
@@ -405,18 +459,25 @@ class LLSModel:
                             np.array(self.teg.pos[k][new_node_idx]),
                         ]
                     )
-                    node_pointing_delay = pointing_delay(pointing_nodes, pointing_nodes)
+                    node_pointing_delay = pointing_delay(
+                        pointing_nodes, pointing_nodes
+                    )
 
                     # is the current edge an IPN or LEO link
                     is_ipn_edge = (
                         node in SOURCE_NODES
-                        and (new_node in RELAY_NODES or new_node in DESTINATION_NODES)
+                        and (
+                            new_node in RELAY_NODES
+                            or new_node in DESTINATION_NODES
+                        )
                     ) or (
                         new_node in SOURCE_NODES
                         and (node in RELAY_NODES or node in DESTINATION_NODES)
                     )
                     link_acq_delay = (
-                        link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+                        link_acq_delay_ipn()
+                        if is_ipn_edge
+                        else link_acq_delay_leo()
                     )
 
                     prev_edge_delays[prev_edge] = min(
@@ -431,8 +492,12 @@ class LLSModel:
                 ]
             )
 
-        tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
-        rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
+        tx_node = self.teg.nodes[
+            self.teg.optical_interfaces_to_node[tx_oi_idx]
+        ]
+        rx_node = self.teg.nodes[
+            self.teg.optical_interfaces_to_node[rx_oi_idx]
+        ]
         return get_delay(tx_node, rx_node, tx_oi_idx), get_delay(
             rx_node, tx_node, rx_oi_idx
         )
@@ -447,8 +512,12 @@ class LLSModel:
         if k == 0:
             return self.T[edge[0]]
 
-        tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
-        rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
+        tx_node = self.teg.nodes[
+            self.teg.optical_interfaces_to_node[tx_oi_idx]
+        ]
+        rx_node = self.teg.nodes[
+            self.teg.optical_interfaces_to_node[rx_oi_idx]
+        ]
 
         is_ipn_edge = (
             tx_node in SOURCE_NODES
@@ -457,7 +526,9 @@ class LLSModel:
             rx_node in SOURCE_NODES
             and (tx_node in RELAY_NODES or tx_node in DESTINATION_NODES)
         )
-        link_acq_delay = link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+        link_acq_delay = (
+            link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+        )
         if self.T[edge[0]] < link_acq_delay:
             link_acq_delay = self.T[edge[0]]
 
@@ -528,11 +599,15 @@ if __name__ == "__main__":
             row_count = sum(scheduled_teg.graphs[k][:, rx_idx])
             assert row_count <= 1, f"{scheduled_teg.graphs[k]}"
 
-    write_time_expanded_graph(EXPERIMENT_NAME, scheduled_teg, FileType.TEG_SCHEDULED)
+    write_time_expanded_graph(
+        EXPERIMENT_NAME, scheduled_teg, FileType.TEG_SCHEDULED
+    )
     print("Finished contact scheduling")
 
     # Convert the TEG back to a contact plan
-    scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_teg)
+    scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(
+        scheduled_teg
+    )
     contact_plan_parser.write(
         EXPERIMENT_NAME, scheduled_contact_plan, FileType.SCHEDULED
     )

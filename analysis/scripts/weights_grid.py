@@ -1,21 +1,23 @@
 import os
 import pickle
-import pprint
 import sys
 
+import matplotlib as mpl
+from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 
-import matplotlib as mpl
-from matplotlib.colors import ListedColormap
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 SRC_ROOT = os.path.join(REPO_ROOT, "src")
 if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
 from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
+
 
 # weights[k] = W_delta_cap + W_dct
 # if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:
@@ -56,12 +58,16 @@ ax.set_yticks(dim)
 
 original_labels = [str(label) for label in ax.get_xticks()]
 labels_of_interest = [str(i) for i in [0, 4, 20, 24]]
-new_labels = [label if label in labels_of_interest else "" for label in original_labels]
+new_labels = [
+    label if label in labels_of_interest else "" for label in original_labels
+]
 ax.set_xticklabels(new_labels)
 
 original_labels = [str(label) for label in ax.get_yticks()]
 labels_of_interest = [str(i) for i in [0, 4, 20, 24]]
-new_labels = [label if label in labels_of_interest else "" for label in original_labels]
+new_labels = [
+    label if label in labels_of_interest else "" for label in original_labels
+]
 ax.set_yticklabels(new_labels)
 
 ax.yaxis.set_label_text("Transmitting Satellite ID")
@@ -95,7 +101,9 @@ cbar = fig.colorbar(psm, ax=ax)
 cbar.set_label("Average edge weight")
 
 plt.savefig(
-    os.path.join("analysis", "weights_grid.pdf"), format="pdf", bbox_inches="tight"
+    os.path.join("analysis", "weights_grid.pdf"),
+    format="pdf",
+    bbox_inches="tight",
 )
 plt.savefig(
     os.path.join("analysis", "weights_grid.png"),

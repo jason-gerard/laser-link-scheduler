@@ -1,10 +1,10 @@
-import os
 import csv
 import math
-import pprint
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
@@ -24,14 +24,28 @@ for run in report:
     scenarios.append(num_nodes)
 
     run["Capacity by node"] = (
-        float(run["Capacity"]) * 267_000 * 4 / 1000 / 1000 / 1000 / 1000 / num_nodes
+        float(run["Capacity"])
+        * 267_000
+        * 4
+        / 1000
+        / 1000
+        / 1000
+        / 1000
+        / num_nodes
     )  # this has to come before capacity calculation
-    run["Capacity"] = float(run["Capacity"]) * 267_000 * 4 / 1000 / 1000 / 1000 / 1000
+    run["Capacity"] = (
+        float(run["Capacity"]) * 267_000 * 4 / 1000 / 1000 / 1000 / 1000
+    )
     run["Wasted capacity"] = (
         float(run["Wasted capacity"]) * 267_000 * 4 / 1000 / 1000 / 1000 / 1000
     )
     run["Wasted buffer capacity"] = (
-        float(run["Wasted buffer capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+        float(run["Wasted buffer capacity"])
+        * 267_000
+        / 1000
+        / 1000
+        / 1000
+        / 1000
     )
     run["Scheduled delay"] = float(run["Scheduled delay"]) / 60 / 60
     run["Jain's fairness index"] = float(run["Jain's fairness index"])
@@ -70,11 +84,19 @@ for metric, unit, y_min, y_max, y_step in metrics:
 
         if algorithm == "lls_lp":
             plt.plot(
-                x[: len(y)], y, linestyle="dashed", label=display_name, linewidth=3.5
+                x[: len(y)],
+                y,
+                linestyle="dashed",
+                label=display_name,
+                linewidth=3.5,
             )
         elif algorithm == "lls_mip":
             plt.plot(
-                x[: len(y)], y, linestyle="dotted", label=display_name, linewidth=3.5
+                x[: len(y)],
+                y,
+                linestyle="dotted",
+                label=display_name,
+                linewidth=3.5,
             )
         else:
             plt.plot(x[: len(y)], y, label=display_name, linewidth=2.5)
@@ -91,17 +113,31 @@ for metric, unit, y_min, y_max, y_step in metrics:
 
         # num_gs * duration * deep space data rate
         y = [
-            3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 for _ in range(len(x))
+            3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000
+            for _ in range(len(x))
         ]
         plt.plot(
-            x, y, label="DTE Capacity", linewidth=2.5, color="gold", linestyle="dashed"
+            x,
+            y,
+            label="DTE Capacity",
+            linewidth=2.5,
+            color="gold",
+            linestyle="dashed",
         )
 
     if metric == "Capacity by node":
         # num_gs * duration * deep space data rate
-        y = [3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 / x for x in x]
+        y = [
+            3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 / x
+            for x in x
+        ]
         plt.plot(
-            x, y, label="DTE Capacity", linewidth=2.5, color="gold", linestyle="dashed"
+            x,
+            y,
+            label="DTE Capacity",
+            linewidth=2.5,
+            color="gold",
+            linestyle="dashed",
         )
 
     label = f"{metric} [{unit}]" if unit else metric
@@ -121,14 +157,18 @@ for metric, unit, y_min, y_max, y_step in metrics:
         plt.ylim(y_min, y_max)
     else:
         plt.ylim(max(y_min - y_step, 0), y_max)
-        ax.set_yticks([y_min] + np.arange(y_step, y_max + 0.01, y_step).tolist())
+        ax.set_yticks(
+            [y_min] + np.arange(y_step, y_max + 0.01, y_step).tolist()
+        )
 
     ax.set_xticks([i for i in x if i % 8 == 0])
     ax.set_xticklabels([f"{i}/{math.ceil(i / 16)}" for i in x if i % 8 == 0])
 
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(
-        os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
+        os.path.join("analysis", f"{file_name}.pdf"),
+        format="pdf",
+        bbox_inches="tight",
     )
     plt.savefig(
         os.path.join("analysis", f"{file_name}.png"),

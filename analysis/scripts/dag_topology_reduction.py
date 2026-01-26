@@ -1,24 +1,28 @@
+import math
+import os
+import sys
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import networkx as nx
 import numpy as np
-import math
 
-import os
-import sys
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 SRC_ROOT = os.path.join(REPO_ROOT, "src")
 if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
-from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
 from laser_link_scheduler.graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
+    count_edges,
     dag_reduction,
     fractionate_graph,
-    count_edges,
 )
+from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
+
 
 SHOW_FIGS = False
 
@@ -123,7 +127,9 @@ if __name__ == "__main__":
     reduced_teg_counts = []
     for name in EXPERIMENT_NAMES:
         print(name)
-        teg_count, frac_teg_count, reduced_teg_count = count_reduced_edges(name)
+        teg_count, frac_teg_count, reduced_teg_count = count_reduced_edges(
+            name
+        )
         teg_counts.append(teg_count)
         frac_teg_counts.append(frac_teg_count)
         reduced_teg_counts.append(reduced_teg_count)
@@ -153,7 +159,12 @@ if __name__ == "__main__":
         for i in range(len(teg_counts))
     ]
     ax2.plot(
-        x, y2, "tab:cyan", linestyle="dashed", label="% Edges Removed", linewidth=2.5
+        x,
+        y2,
+        "tab:cyan",
+        linestyle="dashed",
+        label="% Edges Removed",
+        linewidth=2.5,
     )
     ax2.set_ylabel("Percent reduction")
     ax2.set_ylim(0, 100)
@@ -172,7 +183,9 @@ if __name__ == "__main__":
 
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(
-        os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
+        os.path.join("analysis", f"{file_name}.pdf"),
+        format="pdf",
+        bbox_inches="tight",
     )
     plt.savefig(
         os.path.join("analysis", f"{file_name}.png"),

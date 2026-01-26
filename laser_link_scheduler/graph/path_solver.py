@@ -1,25 +1,12 @@
-import pulp
-import numpy as np
-
-from laser_link_scheduler import constants
-from laser_link_scheduler.constants import RELAY_NODES, SOURCE_NODES, DESTINATION_NODES
-from laser_link_scheduler.topology.contact_plan import (
-    IONContactPlanParser,
-    IPNDContactPlanParser,
+from laser_link_scheduler.constants import (
+    DESTINATION_NODES,
+    RELAY_NODES,
+    SOURCE_NODES,
 )
-from laser_link_scheduler.models.pointing_delay import pointing_delay
-from laser_link_scheduler.models.link_acq_delay import (
-    link_acq_delay_ipn,
-    link_acq_delay_leo,
-)
-from laser_link_scheduler.reporting.report_generator import Reporter
 from laser_link_scheduler.graph.time_expanded_graph import (
-    convert_contact_plan_to_time_expanded_graph,
     TimeExpandedGraph,
-    write_time_expanded_graph,
-    convert_time_expanded_graph_to_contact_plan,
 )
-from laser_link_scheduler.utils import FileType
+
 
 MAX_TIME = 2.5 * 60 * 60  # seconds
 # MAX_TIME = 120  # seconds
@@ -76,7 +63,9 @@ class PathSchedulerModel:
         relay = [
             relay_oi_idx
             for relay_oi_idx in range(self.teg.N)
-            if self.teg.nodes[self.teg.optical_interfaces_to_node[relay_oi_idx]]
+            if self.teg.nodes[
+                self.teg.optical_interfaces_to_node[relay_oi_idx]
+            ]
             in RELAY_NODES
         ]
         rx_dest = [
@@ -91,7 +80,8 @@ class PathSchedulerModel:
                     for rx_oi_idx in rx_dest:
                         if (
                             self.teg.graphs[k][tx_oi_idx][relay_oi_idx] >= 1
-                            and self.teg.graphs[k][relay_oi_idx][rx_oi_idx] >= 1
+                            and self.teg.graphs[k][relay_oi_idx][rx_oi_idx]
+                            >= 1
                         ):
                             two_hop_paths.append(
                                 (k, tx_oi_idx, relay_oi_idx, rx_oi_idx)
@@ -109,7 +99,9 @@ class PathSchedulerModel:
         relay = [
             relay_oi_idx
             for relay_oi_idx in range(self.teg.N)
-            if self.teg.nodes[self.teg.optical_interfaces_to_node[relay_oi_idx]]
+            if self.teg.nodes[
+                self.teg.optical_interfaces_to_node[relay_oi_idx]
+            ]
             in RELAY_NODES
         ]
         for k in range(self.teg.K):
@@ -118,10 +110,14 @@ class PathSchedulerModel:
                     for relay_oi_idx in relay:
                         if (
                             tx_oi_idx1 != tx_oi_idx2
-                            and self.teg.graphs[k][tx_oi_idx1][relay_oi_idx] >= 1
-                            and self.teg.graphs[k][tx_oi_idx2][relay_oi_idx] >= 1
+                            and self.teg.graphs[k][tx_oi_idx1][relay_oi_idx]
+                            >= 1
+                            and self.teg.graphs[k][tx_oi_idx2][relay_oi_idx]
+                            >= 1
                         ):
-                            v_paths.append((k, tx_oi_idx1, tx_oi_idx2, relay_oi_idx))
+                            v_paths.append(
+                                (k, tx_oi_idx1, tx_oi_idx2, relay_oi_idx)
+                            )
 
         print(len(single_hop_paths))
         print(len(two_hop_paths))

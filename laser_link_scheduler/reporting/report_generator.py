@@ -1,20 +1,20 @@
 import csv
 import os
-import time
 import pickle
+import time
 
 from laser_link_scheduler import constants
 from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
-from laser_link_scheduler.utils import FileType
 from laser_link_scheduler.topology import weights
 from laser_link_scheduler.topology.weights import (
-    compute_node_capacities,
     compute_capacity,
-    compute_wasted_capacity,
     compute_jains_fairness_index,
+    compute_node_capacities,
     compute_scheduled_delay,
     compute_wasted_buffer,
+    compute_wasted_capacity,
 )
+from laser_link_scheduler.utils import FileType
 
 
 class Reporter:
@@ -94,7 +94,9 @@ class Reporter:
         self.reports.append(row)
 
         print(f"Scheduled network capacity: {network_capacity:,}")
-        print(f"Scheduled network wasted capacity: {network_wasted_capacity:,}")
+        print(
+            f"Scheduled network wasted capacity: {network_wasted_capacity:,}"
+        )
 
         print(f"Wasted buffer capacity: {wasted_buffer_capacity:,}")
 
@@ -121,7 +123,9 @@ class Reporter:
         os.mkdir(report_dir)
 
         report_path = str(
-            os.path.join(report_dir, f"{report_id}_{FileType.REPORT.value}.csv")
+            os.path.join(
+                report_dir, f"{report_id}_{FileType.REPORT.value}.csv"
+            )
         )
         with open(report_path, "w") as f:
             writer = csv.writer(f, delimiter=",", lineterminator="\n")
@@ -133,6 +137,8 @@ class Reporter:
 
         # Save each teg as a pkl file to the reports directory so that it can be used for analysis later
         for teg_data_dict in self.time_expanded_graph_data:
-            pkl_path = str(os.path.join(report_dir, f"{teg_data_dict['name']}.pkl"))
+            pkl_path = str(
+                os.path.join(report_dir, f"{teg_data_dict['name']}.pkl")
+            )
             with open(pkl_path, "wb") as f:
                 pickle.dump(teg_data_dict["teg"], f)

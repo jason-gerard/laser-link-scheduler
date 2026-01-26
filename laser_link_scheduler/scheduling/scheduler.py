@@ -3,17 +3,86 @@ import numpy as np
 from tqdm import tqdm
 
 from laser_link_scheduler import constants
-from laser_link_scheduler.topology.contact_plan import Contact
 from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
+from laser_link_scheduler.topology.contact_plan import Contact
 from laser_link_scheduler.topology.weights import (
-    disabled_contact_time,
     compute_node_capacity_by_graph,
     delta_capacity,
+    disabled_contact_time,
     merge_many_node_capacities,
 )
 
 
-class LaserLinkScheduler:
+class BaseScheduler:
+    def _blossom(self, P_k: np.ndarray, W_k: np.ndarray) -> set:
+        """
+        The blossom algorithm assumes undirected edges meaning that we cannot have A -> B without B -> A. Logically this
+        makes sense for laser communications because both laser transceivers must be physically pointing towards each other.
+        This algorithm does support individually defining the properties of the laser in each direction i.e. A -> B with
+        laser ID 1 but B -> A with laser ID 3.
+        """
+        num_nodes = len(P_k)
+
+        # Create list of edges, represented by three-tuple of (tx_idx, rx_idx, weight) based on the contact topology P_k
+        # and computed weights based on delta_capacity + alpha * delta_time
+        edges = []
+        for tx_idx in range(num_nodes):
+            for rx_idx in range(num_nodes):
+                if P_k[tx_idx][rx_idx] >= 1:
+                    # When we compute the weight matrix it is not symmetric because we compute the capacity on an edge basis
+                    # but since the networkx lib uses a symmetric matrix it will select both edges. To account for this we
+                    # sum the weights of the edges in either direction to become the total weight for that undirected edge.
+                    total_weight = W_k[tx_idx][rx_idx] + W_k[rx_idx][tx_idx]
+                    edges.append((tx_idx, rx_idx, total_weight))
+
+        # Create graph containing edges from P_k
+        G = nx.Graph()
+        G.add_weighted_edges_from(edges)
+
+        # Perform max weight matching using the blossom algorithm. We leverage the networkx library to do this
+        return nx.max_weight_matching(G)
+
+    def _build_graph(
+        self,
+        matched_edges: set,
+        contact_topology_k: np.ndarray,
+        contacts_k: list[Contact],
+        node_map: dict[str, int],
+    ) -> tuple[np.ndarray, list[Contact]]:
+        num_nodes = len(contact_topology_k)
+        # Build adj_matrix from matched edges list. nx.max_weight_matching works on an undirected graph so when we see
+        # an edge add it in both directions i.e. (i,j) and (j,i)
+        contact_plan_k = np.zeros((num_nodes, num_nodes), dtype="int64")
+        for tx_idx, rx_idx in matched_edges:
+            # Make sure to map the value of the graph i.e. the communication interface id back to the correct edge. This
+            # allows us to support different lasers in each direction while using an undirected graph algorithm (blossom)
+            contact_plan_k[tx_idx][rx_idx] = contact_topology_k[tx_idx][rx_idx]
+            contact_plan_k[rx_idx][tx_idx] = contact_topology_k[rx_idx][tx_idx]
+
+        contacts = [
+            contact
+            for contact in contacts_k
+            if self._should_keep_contact(matched_edges, node_map, contact)
+        ]
+
+        return contact_plan_k, contacts
+
+    def _should_keep_contact(
+        self, matched_edges: set, node_map: dict[str, int], contact: Contact
+    ) -> bool:
+        node1_idx = node_map[contact.tx_node]
+        node2_idx = node_map[contact.rx_node]
+
+        return (node1_idx, node2_idx) in matched_edges or (
+            node2_idx,
+            node1_idx,
+        ) in matched_edges
+
+    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
+        raise NotImplementedError
+
+
+class LaserLinkScheduler(BaseScheduler):
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         """
         This algorithm is a max-weight maximal matching, where it will iterate through each of the k graphs and
@@ -66,10 +135,10 @@ class LaserLinkScheduler:
             )
 
             # Compute max weight maximal matching using the blossom algorithm
-            matched_edges = blossom(teg.graphs[k], weights[k])
+            matched_edges = self._blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
-            L_k, contacts = build_graph(
+            L_k, contacts = self._build_graph(
                 matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map
             )
             scheduled_graphs[k] = L_k
@@ -90,7 +159,9 @@ class LaserLinkScheduler:
             )
 
             # Update the matrix containing the disabled contact time for state k
-            W_dct += disabled_contact_time(teg.graphs[k], L_k, teg.state_durations[k])
+            W_dct += disabled_contact_time(
+                teg.graphs[k], L_k, teg.state_durations[k]
+            )
 
         return TimeExpandedGraph(
             graphs=scheduled_graphs,
@@ -109,7 +180,7 @@ class LaserLinkScheduler:
         )
 
 
-class BruteForceScheduler:
+class BruteForceScheduler(BaseScheduler):
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         scheduled_graphs = np.empty((teg.K, teg.N, teg.N), dtype="int64")
         scheduled_contacts = []
@@ -134,7 +205,7 @@ class BruteForceScheduler:
         )
 
 
-class FairContactPlan:
+class FairContactPlan(BaseScheduler):
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         """
         Max-weight maximal matching
@@ -160,10 +231,10 @@ class FairContactPlan:
             weights[k] = W_disabled_contact_time
 
             # Compute max weight maximal matching using the blossom algorithm
-            matched_edges = blossom(teg.graphs[k], weights[k])
+            matched_edges = self._blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
-            L_k, contacts = build_graph(
+            L_k, contacts = self._build_graph(
                 matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map
             )
             scheduled_graphs[k] = L_k
@@ -191,7 +262,7 @@ class FairContactPlan:
         )
 
 
-class RandomScheduler:
+class RandomScheduler(BaseScheduler):
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         """
         Apply blossom algorithm with random weights
@@ -207,7 +278,9 @@ class RandomScheduler:
             (teg.K * num_iters, teg.N, teg.N), dtype="int64"
         )
         scheduled_contacts = [[] for _ in range(teg.K)]
-        all_weights = np.empty((teg.K * num_iters, teg.N, teg.N), dtype="int64")
+        all_weights = np.empty(
+            (teg.K * num_iters, teg.N, teg.N), dtype="int64"
+        )
 
         for i in range(num_iters):
             for k in tqdm(range(teg.K)):
@@ -219,10 +292,12 @@ class RandomScheduler:
 
                 # Compute max weight maximal matching using the blossom algorithm but with the weights as a random
                 # matrix. This gives the matching as if no real network information is known.
-                matched_edges = blossom(teg.graphs[k], all_weights[k * i])
+                matched_edges = self._blossom(
+                    teg.graphs[k], all_weights[k * i]
+                )
 
                 # Compute L_k from the matched edges
-                L_k, contacts = build_graph(
+                L_k, contacts = self._build_graph(
                     matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map
                 )
                 all_scheduled_graphs[k * i] = L_k
@@ -252,7 +327,7 @@ class RandomScheduler:
         )
 
 
-class AlternatingScheduler:
+class AlternatingScheduler(BaseScheduler):
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         """
         The AlternatingScheduler is a naive algorithm that takes alternating turns between intra-constellation and
@@ -295,10 +370,10 @@ class AlternatingScheduler:
                         else 0
                     )
 
-            matched_edges = blossom(teg.graphs[k], weights[k])
+            matched_edges = self._blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
-            L_k, contacts = build_graph(
+            L_k, contacts = self._build_graph(
                 matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map
             )
             scheduled_graphs[k] = L_k
@@ -319,69 +394,3 @@ class AlternatingScheduler:
             node_to_optical_interfaces=teg.node_to_optical_interfaces,
             effective_contact_durations=teg.effective_contact_durations,
         )
-
-
-def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
-    """
-    The blossom algorithm assumes undirected edges meaning that we cannot have A -> B without B -> A. Logically this
-    makes sense for laser communications because both laser transceivers must be physically pointing towards each other.
-    This algorithm does support individually defining the properties of the laser in each direction i.e. A -> B with
-    laser ID 1 but B -> A with laser ID 3.
-    """
-    num_nodes = len(P_k)
-
-    # Create list of edges, represented by three-tuple of (tx_idx, rx_idx, weight) based on the contact topology P_k
-    # and computed weights based on delta_capacity + alpha * delta_time
-    edges = []
-    for tx_idx in range(num_nodes):
-        for rx_idx in range(num_nodes):
-            if P_k[tx_idx][rx_idx] >= 1:
-                # When we compute the weight matrix it is not symmetric because we compute the capacity on an edge basis
-                # but since the networkx lib uses a symmetric matrix it will select both edges. To account for this we
-                # sum the weights of the edges in either direction to become the total weight for that undirected edge.
-                total_weight = W_k[tx_idx][rx_idx] + W_k[rx_idx][tx_idx]
-                edges.append((tx_idx, rx_idx, total_weight))
-
-    # Create graph containing edges from P_k
-    G = nx.Graph()
-    G.add_weighted_edges_from(edges)
-
-    # Perform max weight matching using the blossom algorithm. We leverage the networkx library to do this
-    return nx.max_weight_matching(G)
-
-
-def build_graph(
-    matched_edges: set,
-    contact_topology_k: np.ndarray,
-    contacts_k: list[Contact],
-    node_map: dict[str, int],
-) -> tuple[np.ndarray, list[Contact]]:
-    num_nodes = len(contact_topology_k)
-    # Build adj_matrix from matched edges list. nx.max_weight_matching works on an undirected graph so when we see
-    # an edge add it in both directions i.e. (i,j) and (j,i)
-    contact_plan_k = np.zeros((num_nodes, num_nodes), dtype="int64")
-    for tx_idx, rx_idx in matched_edges:
-        # Make sure to map the value of the graph i.e. the communication interface id back to the correct edge. This
-        # allows us to support different lasers in each direction while using an undirected graph algorithm (blossom)
-        contact_plan_k[tx_idx][rx_idx] = contact_topology_k[tx_idx][rx_idx]
-        contact_plan_k[rx_idx][tx_idx] = contact_topology_k[rx_idx][tx_idx]
-
-    contacts = [
-        contact
-        for contact in contacts_k
-        if should_keep_contact(matched_edges, node_map, contact)
-    ]
-
-    return contact_plan_k, contacts
-
-
-def should_keep_contact(
-    matched_edges: set, node_map: dict[str, int], contact: Contact
-) -> bool:
-    node1_idx = node_map[contact.tx_node]
-    node2_idx = node_map[contact.rx_node]
-
-    return (node1_idx, node2_idx) in matched_edges or (
-        node2_idx,
-        node1_idx,
-    ) in matched_edges

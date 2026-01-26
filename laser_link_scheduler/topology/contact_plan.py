@@ -1,10 +1,10 @@
 import csv
+from dataclasses import dataclass
 import json
 import os
-from dataclasses import dataclass
 
 from laser_link_scheduler.constants import SOURCES_ROOT
-from laser_link_scheduler.utils import get_experiment_file, FileType
+from laser_link_scheduler.utils import FileType, get_experiment_file
 
 
 @dataclass(frozen=True)
@@ -42,14 +42,16 @@ class IONContactPlanParser:
             # We assume here that the contact plan file has a section of contact commands followed by a blank line then
             # a section of range commands, followed by another blank line then the azimuth, elevation, range section
             # sections which contains the positioning data for each sat at the start of each contact
-            contact_commands_str, range_commands_str, aer_commands_str, _ = lines.split(
-                "\n\n"
+            contact_commands_str, range_commands_str, aer_commands_str, _ = (
+                lines.split("\n\n")
             )
             contact_commands = [
-                command.split(" ") for command in contact_commands_str.split("\n")
+                command.split(" ")
+                for command in contact_commands_str.split("\n")
             ]
             range_commands = [
-                command.split(" ") for command in range_commands_str.split("\n")
+                command.split(" ")
+                for command in range_commands_str.split("\n")
             ]
             aer_commands = [
                 command.split(" ") for command in aer_commands_str.split("\n")
@@ -87,7 +89,10 @@ class IONContactPlanParser:
         return ContactPlan(contacts)
 
     def write(
-        self, experiment_name: str, contact_plan: ContactPlan, file_type: FileType
+        self,
+        experiment_name: str,
+        contact_plan: ContactPlan,
+        file_type: FileType,
     ):
         contact_rows = []
         range_rows = []
@@ -96,7 +101,9 @@ class IONContactPlanParser:
             ion_start_time = (
                 f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.start_time}"
             )
-            ion_end_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.end_time}"
+            ion_end_time = (
+                f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.end_time}"
+            )
 
             contact_rows.append(
                 [

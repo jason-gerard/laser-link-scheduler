@@ -1,8 +1,8 @@
 import os
 
-import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrow
+import matplotlib.pyplot as plt
+
 
 # Starting and target az/el (degrees)
 start_az, start_el = 0, 0
@@ -53,7 +53,12 @@ ax.add_patch(target_circle)
 
 # Draw destination boresight
 ax.scatter(
-    target_az, target_el, c="red", s=80, marker="o", label="Pointing terminal boresight"
+    target_az,
+    target_el,
+    c="red",
+    s=80,
+    marker="o",
+    label="Pointing terminal boresight",
 )
 
 # Main slew path (dashed line)
@@ -73,7 +78,9 @@ ax.annotate(
     xycoords="data",
     xytext=(current_boresight_az, current_boresight_el),
     textcoords="data",
-    arrowprops=dict(arrowstyle="->", color="black", linestyle=(0, (8, 6)), lw=1),
+    arrowprops=dict(
+        arrowstyle="->", color="black", linestyle=(0, (8, 6)), lw=1
+    ),
 )
 
 # Azimuth component (green horizontal arrow)
@@ -132,7 +139,11 @@ ax.set_title("Coarse Pointing / Slew Phase of FSO Terminal Alignment")
 
 # Legend below the plot with multiple columns
 ax.legend(
-    loc="upper center", bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=False, ncol=3
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.15),
+    fancybox=True,
+    shadow=False,
+    ncol=3,
 )
 
 ax.grid(True, linestyle="--", alpha=0.6)

@@ -1,34 +1,36 @@
 import argparse
-import traceback
 from timeit import default_timer as timer
+import traceback
 
 import numpy as np
 
-from laser_link_scheduler.scheduling.milp_lls import LLSModel
+from laser_link_scheduler import constants
 from laser_link_scheduler.graph.path_solver import PathSchedulerModel
+from laser_link_scheduler.graph.time_expanded_graph import (
+    convert_contact_plan_to_time_expanded_graph,
+    convert_time_expanded_graph_to_contact_plan,
+    write_time_expanded_graph,
+)
+from laser_link_scheduler.models import pointing_delay as pointing_delay_model
+from laser_link_scheduler.reporting.report_generator import Reporter
+from laser_link_scheduler.scheduling.milp_lls import LLSModel
+from laser_link_scheduler.scheduling.scheduler import (
+    AlternatingScheduler,
+    FairContactPlan,
+    LaserLinkScheduler,
+    RandomScheduler,
+)
+from laser_link_scheduler.topology import weights
 from laser_link_scheduler.topology.contact_plan import (
     IONContactPlanParser,
     IPNDContactPlanParser,
 )
-from laser_link_scheduler.reporting.report_generator import Reporter
-from laser_link_scheduler.scheduling.scheduler import (
-    LaserLinkScheduler,
-    FairContactPlan,
-    RandomScheduler,
-    AlternatingScheduler,
-)
-from laser_link_scheduler.graph.time_expanded_graph import (
-    convert_contact_plan_to_time_expanded_graph,
-    write_time_expanded_graph,
-    convert_time_expanded_graph_to_contact_plan,
-)
 from laser_link_scheduler.utils import FileType
-from laser_link_scheduler import constants
-from laser_link_scheduler.topology import weights
-from laser_link_scheduler.models import pointing_delay as pointing_delay_model
 
 
-def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Reporter):
+def experiment_driver(
+    experiment_name: str, scheduler_name: str, reporter: Reporter
+):
     # Clear all caches
     weights.effective_contact_time_cache = {}
     weights.coordinate_cache = {}
@@ -47,7 +49,9 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
     time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
         contact_plan, should_fractionate=True, should_reduce=should_reduce
     )
-    write_time_expanded_graph(experiment_name, time_expanded_graph, FileType.TEG)
+    write_time_expanded_graph(
+        experiment_name, time_expanded_graph, FileType.TEG
+    )
     print("Finished converting contact plan to time expanded graph")
 
     try:
@@ -93,7 +97,9 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             raise Exception("No scheduler selected")
 
         write_time_expanded_graph(
-            experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED
+            experiment_name,
+            scheduled_time_expanded_graph,
+            FileType.TEG_SCHEDULED,
         )
         print("Finished contact scheduling")
 
@@ -125,7 +131,9 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             raise e
 
 
-def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[str]):
+def multi_experiment_driver(
+    experiment_names: list[str], scheduler_names: list[str]
+):
     reporter = Reporter(write_pkl=True)
 
     for experiment_name in experiment_names:
@@ -136,7 +144,7 @@ def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[s
                 )
                 experiment_driver(experiment_name, scheduler_name, reporter)
                 print("\n\n")
-        except Exception as e:
+        except Exception:
             break
 
     reporter.write_report()
@@ -148,7 +156,10 @@ def get_args():
         "-e", "--experiment_names", help="Name of experiment folder", nargs="+"
     )
     parser.add_argument(
-        "-s", "--scheduler_names", help="Name of scheduler algorithm to use", nargs="+"
+        "-s",
+        "--scheduler_names",
+        help="Name of scheduler algorithm to use",
+        nargs="+",
     )
     return parser.parse_args()
 

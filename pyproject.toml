@@ -9,6 +9,7 @@ dependencies = [
     "cycler==0.12.1",
     "exceptiongroup==1.2.2",
     "fonttools==4.53.1",
+    "gurobipy>=13.0.1",
     "iniconfig==2.0.0",
     "ipdb>=0.13.13",
     "kiwisolver==1.4.5",
@@ -33,4 +34,33 @@ dependencies = [
     "tomli==2.0.1",
     "tqdm==4.66.4",
     "tzdata==2024.1",
+    "pre-commit>=4.3.0",
+    "ruff>=0.14.0",
+    "ty>=0.0.1a22",
 ]
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+]
+
+# W291: trailing whitespace
+# W293: blank line contains whitespace
+extend-select = ["W291", "W293"]
+
+[tool.ruff.lint.isort]
+force-single-line = false
+lines-after-imports = 2
+force-sort-within-sections = true
+order-by-type = false
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+known-first-party = ["src"]
+
+[tool.ruff.format]
+line-ending = "auto"

@@ -1,17 +1,19 @@
-import numpy as np
-from typing import Tuple
-from laser_link_scheduler import constants
-from laser_link_scheduler.models.pointing_delay import (
-    pointing_delay,
-    all_pointing_delay,
-)
-from laser_link_scheduler.models.link_acq_delay import (
-    link_acq_delay_ipn_rand,
-    link_acq_delay_leo_rand,
-    link_acq_delay_ipn,
-    link_acq_delay_leo,
-)
 from dataclasses import dataclass
+from typing import Tuple
+
+import numpy as np
+
+from laser_link_scheduler import constants
+from laser_link_scheduler.models.link_acq_delay import (
+    link_acq_delay_ipn,
+    link_acq_delay_ipn_rand,
+    link_acq_delay_leo,
+    link_acq_delay_leo_rand,
+)
+from laser_link_scheduler.models.pointing_delay import (
+    all_pointing_delay,
+    pointing_delay,
+)
 
 
 @dataclass
@@ -53,15 +55,17 @@ def delta_capacity(
             # is active and compute the capacity if that edge was selected
             if contact_topology_k[tx_idx][rx_idx] >= 1:
                 # Compute the node capacity from the single edge graph
-                single_edge_node_capacity = compute_node_capacity_by_single_edge_graph(
-                    tx_idx,
-                    rx_idx,
-                    state_duration,
-                    nodes,
-                    scheduled_contact_topology,
-                    positions,
-                    optical_interfaces_to_node,
-                    node_to_optical_interfaces,
+                single_edge_node_capacity = (
+                    compute_node_capacity_by_single_edge_graph(
+                        tx_idx,
+                        rx_idx,
+                        state_duration,
+                        nodes,
+                        scheduled_contact_topology,
+                        positions,
+                        optical_interfaces_to_node,
+                        node_to_optical_interfaces,
+                    )
                 )
 
                 # Since the delta caps matrix is already filled with zeros, if the single edge node capacity returns
@@ -75,13 +79,17 @@ def delta_capacity(
                     new_capacity = compute_capacity(new_node_capacities)
 
                     # Take the difference and that is the new weight
-                    delta_capacities[tx_idx][rx_idx] = new_capacity - current_capacity
+                    delta_capacities[tx_idx][rx_idx] = (
+                        new_capacity - current_capacity
+                    )
 
     return delta_capacities
 
 
 def disabled_contact_time(
-    contact_topology_k: np.ndarray, contact_plan_k: np.ndarray, state_duration: int
+    contact_topology_k: np.ndarray,
+    contact_plan_k: np.ndarray,
+    state_duration: int,
 ) -> np.ndarray:
     """
     Compute the disabled contact time for each node. This is calculated by taking the state duration and adding it to
@@ -117,7 +125,9 @@ def disabled_contact_time(
     return disabled_contact_times
 
 
-def merge_many_node_capacities(capacities: list[NodeCapacity]) -> list[NodeCapacity]:
+def merge_many_node_capacities(
+    capacities: list[NodeCapacity],
+) -> list[NodeCapacity]:
     """
     Merges capacities for many different node ids
     """
@@ -143,7 +153,9 @@ def merge_node_capacities(
     """
     # Sum the capacity in and capacity out for the IPN node
     total_capacity_in = sum([capacity.capacity_in for capacity in capacities])
-    total_capacity_out = sum([capacity.capacity_out for capacity in capacities])
+    total_capacity_out = sum(
+        [capacity.capacity_out for capacity in capacities]
+    )
 
     # We will assume all the capacities in the list are for the same node
     return NodeCapacity(
@@ -209,24 +221,32 @@ def compute_node_capacity_by_single_edge_graph(
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
     # the tx and rx
     # Inflow for single hop and two hop
-    if nodes[optical_interfaces_to_node[tx_oi_idx]] in constants.SOURCE_NODES and (
+    if nodes[
+        optical_interfaces_to_node[tx_oi_idx]
+    ] in constants.SOURCE_NODES and (
         nodes[optical_interfaces_to_node[rx_oi_idx]] in constants.RELAY_NODES
-        or nodes[optical_interfaces_to_node[rx_oi_idx]] in constants.DESTINATION_NODES
+        or nodes[optical_interfaces_to_node[rx_oi_idx]]
+        in constants.DESTINATION_NODES
     ):
         rx_idx = optical_interfaces_to_node[rx_oi_idx]
         return NodeCapacity(
             id=rx_idx,
             capacity_in=effective_contact_duration * bit_rate,
-            capacity_out=0 if nodes[rx_idx] in constants.RELAY_NODES else float("inf"),
+            capacity_out=0
+            if nodes[rx_idx] in constants.RELAY_NODES
+            else float("inf"),
         )
     # Outflow for two hop
     elif (
         nodes[optical_interfaces_to_node[tx_oi_idx]] in constants.RELAY_NODES
-        and nodes[optical_interfaces_to_node[rx_oi_idx]] in constants.DESTINATION_NODES
+        and nodes[optical_interfaces_to_node[rx_oi_idx]]
+        in constants.DESTINATION_NODES
     ):
         tx_idx = optical_interfaces_to_node[tx_oi_idx]
         return NodeCapacity(
-            id=tx_idx, capacity_in=0, capacity_out=effective_contact_duration * bit_rate
+            id=tx_idx,
+            capacity_in=0,
+            capacity_out=effective_contact_duration * bit_rate,
         )
     else:
         return None
@@ -277,7 +297,9 @@ def compute_node_capacity_by_graph(
                     nodes,
                 )
 
-                curr_k = min(len(scheduled_contact_topology), len(positions) - 1)
+                curr_k = min(
+                    len(scheduled_contact_topology), len(positions) - 1
+                )
                 if 40 <= curr_k < 45:
                     # print("K:", curr_k)
                     tx_node = nodes[optical_interfaces_to_node[tx_oi_idx]]
@@ -289,8 +311,12 @@ def compute_node_capacity_by_graph(
                     # print("Edge", tx_node, rx_node, effective_contact_duration, duration)
 
                 bit_rate = min(
-                    constants.BIT_RATES[nodes[optical_interfaces_to_node[tx_oi_idx]]],
-                    constants.BIT_RATES[nodes[optical_interfaces_to_node[rx_oi_idx]]],
+                    constants.BIT_RATES[
+                        nodes[optical_interfaces_to_node[tx_oi_idx]]
+                    ],
+                    constants.BIT_RATES[
+                        nodes[optical_interfaces_to_node[rx_oi_idx]]
+                    ],
                 )
 
                 # Only one of these two conditions can ever be true since we don't count contacts with the same node as
@@ -302,7 +328,9 @@ def compute_node_capacity_by_graph(
                 ):
                     # Compute the amount of data transmitted to the IPN node from a non-IPN node.
                     # ipn node == rx_node
-                    node_capacity.capacity_in += effective_contact_duration * bit_rate
+                    node_capacity.capacity_in += (
+                        effective_contact_duration * bit_rate
+                    )
                 elif (
                     tx_oi_idx in node_to_optical_interfaces[node_idx]
                     and nodes[optical_interfaces_to_node[rx_oi_idx]]
@@ -311,7 +339,9 @@ def compute_node_capacity_by_graph(
                     # Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
                     # destination planet.
                     # ipn node == tx_node
-                    node_capacity.capacity_out += effective_contact_duration * bit_rate
+                    node_capacity.capacity_out += (
+                        effective_contact_duration * bit_rate
+                    )
 
         capacities.append(node_capacity)
 
@@ -322,7 +352,8 @@ def compute_node_capacity_by_graph(
 def compute_capacity(capacities: list[NodeCapacity]) -> float:
     # Take the min between the capacity in and capacity out for each IPN node
     max_capacities = [
-        min(capacity.capacity_in, capacity.capacity_out) for capacity in capacities
+        min(capacity.capacity_in, capacity.capacity_out)
+        for capacity in capacities
     ]
 
     # This metric should be maximized
@@ -349,7 +380,8 @@ def compute_wasted_buffer(capacities: list[NodeCapacity]) -> float:
     # and wasted network capacity is that wasted network capacity includes excess inflow and outflow in the computation
     # where buffer only includes excess inflow.
     wasted_capacities = [
-        max(capacity.capacity_in - capacity.capacity_out, 0) for capacity in capacities
+        max(capacity.capacity_in - capacity.capacity_out, 0)
+        for capacity in capacities
     ]
 
     return sum(wasted_capacities)
@@ -373,7 +405,8 @@ def compute_jains_fairness_index(
     source_nodes = [
         node_idx
         for node_idx in range(N)
-        if nodes[optical_interfaces_to_node[node_idx]] in constants.SOURCE_NODES
+        if nodes[optical_interfaces_to_node[node_idx]]
+        in constants.SOURCE_NODES
     ]  # Mars orbiter nodes
     # Create a single graph the sums the enabled contact times of all k states
     enabled_contact_times = np.zeros((K, N, N), dtype="int64")
@@ -391,8 +424,12 @@ def compute_jains_fairness_index(
                     )
                 ):
                     bit_rate = min(
-                        constants.BIT_RATES[nodes[optical_interfaces_to_node[tx_idx]]],
-                        constants.BIT_RATES[nodes[optical_interfaces_to_node[rx_idx]]],
+                        constants.BIT_RATES[
+                            nodes[optical_interfaces_to_node[tx_idx]]
+                        ],
+                        constants.BIT_RATES[
+                            nodes[optical_interfaces_to_node[rx_idx]]
+                        ],
                     )
 
                     enabled_contact_times[k][tx_idx][rx_idx] = (
@@ -402,7 +439,10 @@ def compute_jains_fairness_index(
     enabled_contact_time_graph = np.sum(enabled_contact_times, axis=0)
     # Compute a list of the amount of data each Mars orbiter transmitted to a Mars relay
     enabled_contact_time_by_node = np.array(
-        [np.sum(enabled_contact_time_graph[node_idx]) for node_idx in source_nodes]
+        [
+            np.sum(enabled_contact_time_graph[node_idx])
+            for node_idx in source_nodes
+        ]
     )
 
     # Solve for the network level Jain's fairness index with x as the throughput of the Mars orbiter nodes
@@ -426,16 +466,19 @@ def compute_scheduled_delay(
     orbiter_nodes = [
         node_idx
         for node_idx in range(N)
-        if nodes[optical_interfaces_to_node[node_idx]] in constants.SOURCE_NODES
+        if nodes[optical_interfaces_to_node[node_idx]]
+        in constants.SOURCE_NODES
     ]
     non_source_nodes = [
         node_idx
         for node_idx in range(N)
         if nodes[optical_interfaces_to_node[node_idx]] in constants.RELAY_NODES
-        or nodes[optical_interfaces_to_node[node_idx]] in constants.DESTINATION_NODES
+        or nodes[optical_interfaces_to_node[node_idx]]
+        in constants.DESTINATION_NODES
     ]
     node_delays = {
-        node_idx: {"total_delay": 0, "num_contacts": 0} for node_idx in orbiter_nodes
+        node_idx: {"total_delay": 0, "num_contacts": 0}
+        for node_idx in orbiter_nodes
     }
 
     # This list keeps track of the delays each orbiter node has between contact opportunities with the relay satellites.
@@ -454,7 +497,9 @@ def compute_scheduled_delay(
                 > 0
             )
             if is_in_contact and (node_contact_delays[tx_idx] > 0 or k == 0):
-                node_delays[tx_idx]["total_delay"] += node_contact_delays[tx_idx]
+                node_delays[tx_idx]["total_delay"] += node_contact_delays[
+                    tx_idx
+                ]
                 node_delays[tx_idx]["num_contacts"] += 1
                 node_contact_delays[tx_idx] = 0
             elif not is_in_contact:
@@ -574,12 +619,20 @@ def compute_effective_contact_time(
         node2 = nodes[optical_interfaces_to_node[oi_idx2]]
         is_ipn_edge = (
             node1 in constants.SOURCE_NODES
-            and (node2 in constants.RELAY_NODES or node2 in constants.DESTINATION_NODES)
+            and (
+                node2 in constants.RELAY_NODES
+                or node2 in constants.DESTINATION_NODES
+            )
         ) or (
             node2 in constants.SOURCE_NODES
-            and (node1 in constants.RELAY_NODES or node1 in constants.DESTINATION_NODES)
+            and (
+                node1 in constants.RELAY_NODES
+                or node1 in constants.DESTINATION_NODES
+            )
         )
-        link_acq_delay = link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+        link_acq_delay = (
+            link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+        )
     else:
         return state_duration
 
@@ -589,8 +642,12 @@ def compute_effective_contact_time(
     # effective contact duration = contact duration - retargeting_delay
     effective_contact_time = max(state_duration - retargeting_delay, 0)
 
-    effective_contact_time_cache[(oi_idx1, oi_idx2, curr_k)] = effective_contact_time
-    effective_contact_time_cache[(oi_idx2, oi_idx1, curr_k)] = effective_contact_time
+    effective_contact_time_cache[(oi_idx1, oi_idx2, curr_k)] = (
+        effective_contact_time
+    )
+    effective_contact_time_cache[(oi_idx2, oi_idx1, curr_k)] = (
+        effective_contact_time
+    )
 
     return effective_contact_time
 
@@ -671,13 +728,21 @@ def compute_delays(
         node2 = nodes[optical_interfaces_to_node[oi_idx2]]
         is_ipn_edge = (
             node1 in constants.SOURCE_NODES
-            and (node2 in constants.RELAY_NODES or node2 in constants.DESTINATION_NODES)
+            and (
+                node2 in constants.RELAY_NODES
+                or node2 in constants.DESTINATION_NODES
+            )
         ) or (
             node2 in constants.SOURCE_NODES
-            and (node1 in constants.RELAY_NODES or node1 in constants.DESTINATION_NODES)
+            and (
+                node1 in constants.RELAY_NODES
+                or node1 in constants.DESTINATION_NODES
+            )
         )
         link_acq_delay = (
-            link_acq_delay_ipn_rand() if is_ipn_edge else link_acq_delay_leo_rand()
+            link_acq_delay_ipn_rand()
+            if is_ipn_edge
+            else link_acq_delay_leo_rand()
         )
     else:
         return 0, 0
@@ -765,13 +830,21 @@ def compute_all_delays(
         node2 = nodes[optical_interfaces_to_node[oi_idx2]]
         is_ipn_edge = (
             node1 in constants.SOURCE_NODES
-            and (node2 in constants.RELAY_NODES or node2 in constants.DESTINATION_NODES)
+            and (
+                node2 in constants.RELAY_NODES
+                or node2 in constants.DESTINATION_NODES
+            )
         ) or (
             node2 in constants.SOURCE_NODES
-            and (node1 in constants.RELAY_NODES or node1 in constants.DESTINATION_NODES)
+            and (
+                node1 in constants.RELAY_NODES
+                or node1 in constants.DESTINATION_NODES
+            )
         )
         link_acq_delay = (
-            link_acq_delay_ipn_rand() if is_ipn_edge else link_acq_delay_leo_rand()
+            link_acq_delay_ipn_rand()
+            if is_ipn_edge
+            else link_acq_delay_leo_rand()
         )
     else:
         return None

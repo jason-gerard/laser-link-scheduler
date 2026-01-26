@@ -1,7 +1,10 @@
 import os
 
+
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-SOURCES_ROOT = os.path.join(REPO_ROOT, "scenarios", "experiments", "experiments")
+SOURCES_ROOT = os.path.join(
+    REPO_ROOT, "scenarios", "experiments", "experiments"
+)
 REPORTS_ROOT = os.path.join(REPO_ROOT, "output", "reports")
 
 # Minimum duration an edge i,j in state k can have
@@ -237,7 +240,9 @@ SOURCE_NODE_BIT_RATE = 187  # DSOC Psyche @ 100 million km 50 mbps
 RELAY_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
 GS_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
 BIT_RATES = {
-    node_id: SOURCE_NODE_BIT_RATE if node_id in SOURCE_NODES else RELAY_NODE_BIT_RATE
+    node_id: SOURCE_NODE_BIT_RATE
+    if node_id in SOURCE_NODES
+    else RELAY_NODE_BIT_RATE
     for node_id in NODE_TO_PLANET_MAP
 }
 

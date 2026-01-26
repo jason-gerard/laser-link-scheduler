@@ -49,8 +49,12 @@ def pointing_delay(node_set1, node_set2) -> float:
 
 def all_pointing_delay(node_set1, node_set2, slew_rate=SLEW_RATE) -> float:
     # Compute the PAT delay for node sets 1 and 2
-    pointing_delay_1 = pointing_delay_single_node(*node_set1, slew_rate=slew_rate)
-    pointing_delay_2 = pointing_delay_single_node(*node_set2, slew_rate=slew_rate)
+    pointing_delay_1 = pointing_delay_single_node(
+        *node_set1, slew_rate=slew_rate
+    )
+    pointing_delay_2 = pointing_delay_single_node(
+        *node_set2, slew_rate=slew_rate
+    )
 
     # The max between them is the actual delay since both must be finished pointing
     # before starting acquisition

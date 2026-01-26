@@ -4,15 +4,15 @@ import numpy as np
 from tqdm import tqdm
 
 from laser_link_scheduler import constants
-from laser_link_scheduler.topology.contact_plan import ContactPlan, Contact
-from laser_link_scheduler.utils import get_experiment_file, FileType
 from laser_link_scheduler.constants import (
-    SOURCE_NODES,
-    RELAY_NODES,
     DESTINATION_NODES,
-    NODE_TO_PLANET_MAP,
     EARTH,
+    NODE_TO_PLANET_MAP,
+    RELAY_NODES,
+    SOURCE_NODES,
 )
+from laser_link_scheduler.topology.contact_plan import Contact, ContactPlan
+from laser_link_scheduler.utils import FileType, get_experiment_file
 
 
 @dataclass
@@ -85,8 +85,12 @@ def convert_contact_plan_to_time_expanded_graph(
     #                         if node in interplanetary_tx_nodes and node in interplanetary_rx_nodes]
 
     # Create a sets of all start times and end times, the combined length will equal numK
-    start_times = list(set([contact.start_time for contact in contact_plan.contacts]))
-    end_times = list(set([contact.end_time for contact in contact_plan.contacts]))
+    start_times = list(
+        set([contact.start_time for contact in contact_plan.contacts])
+    )
+    end_times = list(
+        set([contact.end_time for contact in contact_plan.contacts])
+    )
     # After combining the discrete start and end times, convert to a set to only keep unique values. If there is a
     # contact start and contact end time that are at the same time, without doing this, it will create a state of
     # duration 0. This won't affect the results at all because no capacity can come from a state of duration = 0, but
@@ -110,8 +114,12 @@ def convert_contact_plan_to_time_expanded_graph(
         num_interfaces = constants.get_num_lasers(node)
         node_to_optical_interfaces[node_map[node]] = []
         for i in range(num_interfaces):
-            optical_interfaces_to_node[optical_interface_idx + i] = node_map[node]
-            node_to_optical_interfaces[node_map[node]].append(optical_interface_idx + i)
+            optical_interfaces_to_node[optical_interface_idx + i] = node_map[
+                node
+            ]
+            node_to_optical_interfaces[node_map[node]].append(
+                optical_interface_idx + i
+            )
 
         optical_interface_idx += num_interfaces
 
@@ -211,7 +219,11 @@ def convert_contact_plan_to_time_expanded_graph(
         else time_expanded_graph
     )
 
-    return dag_reduction(time_expanded_graph) if should_reduce else time_expanded_graph
+    return (
+        dag_reduction(time_expanded_graph)
+        if should_reduce
+        else time_expanded_graph
+    )
 
 
 def include_contact(
@@ -220,10 +232,15 @@ def include_contact(
     state_end_time = state_start_time + state_duration
     # The current state should include contacts that start before the state start time, inclusive, and end after the
     # start end time, inclusive
-    return contact.start_time <= state_start_time and contact.end_time >= state_end_time
+    return (
+        contact.start_time <= state_start_time
+        and contact.end_time >= state_end_time
+    )
 
 
-def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGraph:
+def fractionate_graph(
+    time_expanded_graph: TimeExpandedGraph,
+) -> TimeExpandedGraph:
     new_k = time_expanded_graph.K
     for k in range(time_expanded_graph.K):
         if time_expanded_graph.state_durations[k] > constants.d_max:
@@ -268,7 +285,9 @@ def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGra
             k_offset -= 1
         else:
             new_teg_graph[k + k_offset] = time_expanded_graph.graphs[k]
-            new_teg_durations[k + k_offset] = time_expanded_graph.state_durations[k]
+            new_teg_durations[k + k_offset] = (
+                time_expanded_graph.state_durations[k]
+            )
             new_contacts[k + k_offset] = time_expanded_graph.contacts[k]
 
     print(
@@ -283,7 +302,9 @@ def fractionate_graph(time_expanded_graph: TimeExpandedGraph) -> TimeExpandedGra
     return time_expanded_graph
 
 
-def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> ContactPlan:
+def convert_time_expanded_graph_to_contact_plan(
+    teg: TimeExpandedGraph,
+) -> ContactPlan:
     contacts: list[Contact] = []
     # This matrix keeps track of active contacts where the value of the matrix = -1 if there is no active contact for
     # that edge, or a value >= 0 when there is an active contact for that edge. The value of the edge is equal to the
@@ -360,7 +381,9 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                             replace(
                                 possible_contact[0],
                                 start_time=active_contacts[tx_idx][rx_idx],
-                                end_time=np.sum(teg.state_durations[0 : k + 1]),
+                                end_time=np.sum(
+                                    teg.state_durations[0 : k + 1]
+                                ),
                                 bit_rate=bit_rate,
                             )
                         )
@@ -369,7 +392,9 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
 
 
 def write_time_expanded_graph(
-    experiment_name: str, time_expanded_graph: TimeExpandedGraph, file_type: FileType
+    experiment_name: str,
+    time_expanded_graph: TimeExpandedGraph,
+    file_type: FileType,
 ):
     path = get_experiment_file(experiment_name, file_type)
     with open(path, "w") as f:
@@ -392,19 +417,29 @@ def dag_reduction(teg: TimeExpandedGraph):
         for tx_oi_idx in range(teg.N):
             for rx_oi_idx in range(teg.N):
                 if teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
-                    tx_node = teg.nodes[teg.optical_interfaces_to_node[tx_oi_idx]]
-                    rx_node = teg.nodes[teg.optical_interfaces_to_node[rx_oi_idx]]
+                    tx_node = teg.nodes[
+                        teg.optical_interfaces_to_node[tx_oi_idx]
+                    ]
+                    rx_node = teg.nodes[
+                        teg.optical_interfaces_to_node[rx_oi_idx]
+                    ]
 
                     # Req. 1
                     is_src_dst = (
-                        tx_node in SOURCE_NODES and rx_node in DESTINATION_NODES
+                        tx_node in SOURCE_NODES
+                        and rx_node in DESTINATION_NODES
                     )
-                    is_src_rly = tx_node in SOURCE_NODES and rx_node in RELAY_NODES
-                    is_rly_dst = tx_node in RELAY_NODES and rx_node in DESTINATION_NODES
+                    is_src_rly = (
+                        tx_node in SOURCE_NODES and rx_node in RELAY_NODES
+                    )
+                    is_rly_dst = (
+                        tx_node in RELAY_NODES and rx_node in DESTINATION_NODES
+                    )
 
                     # Req. 2
                     are_nodes_same_planet = (
-                        NODE_TO_PLANET_MAP[tx_node] == NODE_TO_PLANET_MAP[rx_node]
+                        NODE_TO_PLANET_MAP[tx_node]
+                        == NODE_TO_PLANET_MAP[rx_node]
                     )
                     is_rly_on_dst_planet = NODE_TO_PLANET_MAP[rx_node] == EARTH
 

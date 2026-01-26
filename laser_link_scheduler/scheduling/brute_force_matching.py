@@ -1,12 +1,12 @@
+from itertools import chain, product
 import math
-import networkx as nx
-import numpy as np
-from itertools import combinations, chain, product
 
-from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
+import networkx as nx
+
 from laser_link_scheduler.graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
 )
+from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
 
 
 def all_maximal_matchings(T):
@@ -59,7 +59,10 @@ for k in range(time_expanded_graph.K):
 
 print("Valid maximal matchings per state", [len(g) for g in possible_graphs])
 print(sum([len(g) for g in possible_graphs]))
-print("Number of possible solutions:", math.prod([len(g) for g in possible_graphs]))
+print(
+    "Number of possible solutions:",
+    math.prod([len(g) for g in possible_graphs]),
+)
 solutions = product(*possible_graphs)
 
 # Next we would need to go and compute the capacity of each possible solution and take the best one.

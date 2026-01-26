@@ -1,7 +1,9 @@
 import math
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import os
+
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
+
 
 # Parameters
 R = 1.0 / 2
@@ -75,7 +77,9 @@ def animate(i):
     # Add text label above the current point
     if i < len(cartesian_coords):
         x, y = cartesian_coords[i]
-        text = ax.text(x, y + 0.05, str(i + 1), fontsize=8, ha="center", va="bottom")
+        text = ax.text(
+            x, y + 0.05, str(i + 1), fontsize=8, ha="center", va="bottom"
+        )
         texts.append(text)
     # Draw beam segment
     if i > 0:
@@ -110,7 +114,9 @@ ani = animation.FuncAnimation(
 output_dir = "analysis"
 os.makedirs(output_dir, exist_ok=True)
 ani.save(
-    os.path.join(output_dir, "arch_hex_spiral_animation.gif"), writer="pillow", dpi=100
+    os.path.join(output_dir, "arch_hex_spiral_animation.gif"),
+    writer="pillow",
+    dpi=100,
 )
 
 # Save the final frame as PNG and PDF
@@ -121,7 +127,9 @@ fig.savefig(
     dpi=300,
 )
 fig.savefig(
-    os.path.join(output_dir, "arch_hex_spiral.pdf"), format="pdf", bbox_inches="tight"
+    os.path.join(output_dir, "arch_hex_spiral.pdf"),
+    format="pdf",
+    bbox_inches="tight",
 )
 
 plt.show()

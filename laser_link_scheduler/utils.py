@@ -1,5 +1,5 @@
-import os
 from enum import Enum
+import os
 
 from laser_link_scheduler.constants import SOURCES_ROOT
 
@@ -15,5 +15,7 @@ class FileType(Enum):
 def get_experiment_file(experiment_name, file_type: FileType) -> str:
     file_suffix = file_type.value
     return str(
-        os.path.join(SOURCES_ROOT, experiment_name, f"{experiment_name}_{file_suffix}")
+        os.path.join(
+            SOURCES_ROOT, experiment_name, f"{experiment_name}_{file_suffix}"
+        )
     )

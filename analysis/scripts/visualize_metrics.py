@@ -1,9 +1,9 @@
-import os
 import csv
-import pprint
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
@@ -18,12 +18,19 @@ with open(path, "r") as f:
     ]
 
 for run in report:
-    run["Capacity"] = float(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+    run["Capacity"] = (
+        float(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+    )
     run["Wasted capacity"] = (
         float(run["Wasted capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
     )
     run["Wasted buffer capacity"] = (
-        float(run["Wasted buffer capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+        float(run["Wasted buffer capacity"])
+        * 267_000
+        / 1000
+        / 1000
+        / 1000
+        / 1000
     )
     run["Scheduled delay"] = float(run["Scheduled delay"]) / 60
     run["Jain's fairness index"] = float(run["Jain's fairness index"])
@@ -79,11 +86,15 @@ for metric, unit, y_min, y_max, y_step in metrics:
         plt.ylim(y_min, y_max)
     else:
         plt.ylim(max(y_min - y_step, 0), y_max)
-        ax.set_yticks([y_min] + np.arange(y_step, y_max + 0.01, y_step).tolist())
+        ax.set_yticks(
+            [y_min] + np.arange(y_step, y_max + 0.01, y_step).tolist()
+        )
 
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(
-        os.path.join("analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight"
+        os.path.join("analysis", f"{file_name}.pdf"),
+        format="pdf",
+        bbox_inches="tight",
     )
     plt.savefig(
         os.path.join("analysis", f"{file_name}.png"),

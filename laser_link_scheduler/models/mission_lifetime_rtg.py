@@ -1,7 +1,9 @@
 import numpy as np
 
 
-def mission_lifetime_rtg(P0: float, decay_constant: float, P_min: float) -> float:
+def mission_lifetime_rtg(
+    P0: float, decay_constant: float, P_min: float
+) -> float:
     """
     Compute mission lifetime under an RTG power model with exponential decay.
 
@@ -43,9 +45,13 @@ def mission_lifetime_rtg(P0: float, decay_constant: float, P_min: float) -> floa
     if P0 <= 0:
         raise ValueError("Initial power P0 must be greater than 0.")
     if P_min <= 0:
-        raise ValueError("Minimum operational power P_min must be greater than 0.")
+        raise ValueError(
+            "Minimum operational power P_min must be greater than 0."
+        )
     if decay_constant <= 0:
-        raise ValueError("Decay constant must be greater than 0 for finite decay.")
+        raise ValueError(
+            "Decay constant must be greater than 0 for finite decay."
+        )
     if P0 < P_min:
         return 0.0
 

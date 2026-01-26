@@ -1,5 +1,7 @@
 import math
+
 import numpy as np
+
 
 IPN_CPA_SLEW_AZ = 0.0
 IPN_CPA_SLEW_EL = 0.0
@@ -35,7 +37,9 @@ def link_acq_delay(
         N_diag = N_revolutions * 4
         N_az = N_revolutions * 2
 
-        T_slew = (N_diag * (d / min(tip_rate, tilt_rate))) + (N_az * (d / tip_rate))
+        T_slew = (N_diag * (d / min(tip_rate, tilt_rate))) + (
+            N_az * (d / tip_rate)
+        )
 
         return T_slew + (N * dwell_time)
 
@@ -122,7 +126,11 @@ def link_acq_delay_leo_fou(fou_r) -> float:
 
 if __name__ == "__main__":
     D_acq_ipn = link_acq_delay_ipn()  # seconds
-    print(f"IPN link acq takes {D_acq_ipn} seconds or {D_acq_ipn / 60} minutes")
+    print(
+        f"IPN link acq takes {D_acq_ipn} seconds or {D_acq_ipn / 60} minutes"
+    )
 
     D_acq_LEO = link_acq_delay_leo()  # seconds
-    print(f"LEO optical link acq takes {D_acq_LEO} seconds or {D_acq_LEO / 60} minutes")
+    print(
+        f"LEO optical link acq takes {D_acq_LEO} seconds or {D_acq_LEO / 60} minutes"
+    )

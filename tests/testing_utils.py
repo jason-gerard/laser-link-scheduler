@@ -1,9 +1,9 @@
-from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
-from laser_link_scheduler.scheduling.scheduler import LaserLinkScheduler
 from laser_link_scheduler.graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
     fractionate_graph,
 )
+from laser_link_scheduler.scheduling.scheduler import LaserLinkScheduler
+from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
 
 
 def scheduler_test_driver(experiment_name):
@@ -16,4 +16,6 @@ def scheduler_test_driver(experiment_name):
 
     split_time_expanded_graph = fractionate_graph(time_expanded_graph)
 
-    return time_expanded_graph, LaserLinkScheduler().schedule(split_time_expanded_graph)
+    return time_expanded_graph, LaserLinkScheduler().schedule(
+        split_time_expanded_graph
+    )
