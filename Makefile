@@ -71,8 +71,8 @@ run: # Run predefined scenarios; use RUN=<name> (see run-help)
 run-help: # Show available RUN options for the run target
 	@echo "Available RUN options:"
 	@printf "  RUN=%-11s %s\n" "help" "Show this message"
-	@printf "  RUN=%-11s %s\n" "all" "Run all base Mars/Earth scenarios (scheduler_names used = fcp/random/alternating/lls)"
-	@printf "  RUN=%-11s %s\n" "gs" "Run all GS scenarios (scheduler_names used = fcp/random/alternating/lls/lls_pat_unaware/lls_mip/lls_lp)"
-	@printf "  RUN=%-11s %s\n" "gs-inc" "Run all GS incremental reduced scenarios (scheduler_names used = fcp/random/alternating/lls/lls_pat_unaware/lls_mip)"
+	@printf "  RUN=%-11s %s\n" "all" "Run all base Mars/Earth scenarios (schedulers => fcp/random/alternating/lls)"
+	@printf "  RUN=%-11s %s\n" "gs" "Run all GS scenarios (schedulers => fcp/random/alternating/lls/lls_pat_unaware/lls_mip/lls_lp)"
+	@printf "  RUN=%-11s %s\n" "gs-inc" "Run all GS incremental reduced scenarios (schedulers => fcp/random/alternating/lls/lls_pat_unaware/lls_mip)"
 	@printf "  RUN=%-11s %s\n" "gs-inc-fast" "Run a smaller GS incremental set for quick experiments"
 	@printf "  RUN=%-11s %s\n" "lls" "Run all base Mars/Earth scenarios with LLS only"
