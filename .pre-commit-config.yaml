@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-format
+        name: Check formatting
+        entry: make check-format
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: check-typing
+        name: Check typing
+        entry: make check-typing
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: check-lock
+        name: Check lock
+        entry: make check-lock
+        language: system
+        pass_filenames: false
+        always_run: true

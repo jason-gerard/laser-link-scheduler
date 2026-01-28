@@ -17,12 +17,8 @@ def transmission_energy(power: float, duration: float) -> float:
     return power * duration
 
 
-# TODO: implement this function
-def optical_trasnmit_power() -> float: ...
-
-
 def transmission_duration(
-    N_bits: int,
+    N_bits: float,
     M: int,
     L: int,
     T_chip: float,

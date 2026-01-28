@@ -24,12 +24,9 @@ help: # Prints this message
 # =================================================================================
 setup: # Install dependencies and prepare the repo (uv sync)
 	@command -v uv >/dev/null 2>&1 || { echo "uv not found. Install it first (https://github.com/astral-sh/uv)."; exit 1; }
-	uv sync
-	
-pre-commit-install: # Installs pre-commit and configure hooks
 	@uv run pre-commit install
 	@echo "Pre-commit hooks installed successfully"
-
+	uv sync
 
 # =================================================================================
 # Checks and formatting
@@ -39,11 +36,20 @@ format: # Formats code
 	uv format --preview-features format
 	@echo "Code formatted."
 
-check-format: # Checks code formatting
-	@echo "Checking Python code formatting with uv..."
-	uv format --check --preview-features format
-	@echo "All files are formatted correctly."
+check-format: # Checks code format
+	@uv run ruff format --check .
 
+check-typing: # Checks code types
+	@uv run ty check
+
+check-lock: # Checks uv.lock file
+	@uv lock --check
+
+check: # Executes all available checks
+	@make check-format
+	@make check-typing
+	@make check-lock
+	
 # =================================================================================
 # Gurobi
 # =================================================================================

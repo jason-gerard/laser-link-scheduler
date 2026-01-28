@@ -6,19 +6,24 @@ Scheduling algorithm for free-space laser communication in delay/disruption tole
 ## Usage
 There are a couple scenarios the project comes with by default. These are the ones used for analysis. They model interplanetary Mars to Earth space exploration missions where there are a set of orbiters around Mars that either produce data with onboard equipment or receive data from other nodes such as landers, rovers, or drones. The orbiters transmit data to relay satellites around Mars which then try to transmit data across interplanetary distances to Earth.
 
+For the setup of your environment please follow this instructions:
+```
+make setup
+```
+
 You can run any of the scenarios by passing in the name of the experiment and algorithm.
 ```
-python3 main.py -e <experiment_name> -s <scheduler_name>
+uv run main.py -e <experiment_name> -s <scheduler_name>
 ```
 
 For example running the following command will run the `mars_earth_simple_scenario` with the `Laser Link Scheduler` algorithm
 ```
-python3 main.py -e mars_earth_simple_scenario -s lls
+uv run main.py -e mars_earth_simple_scenario -s lls
 ```
 
 Get the list of all input parameters
 ```
-python3 main.py --help
+uv run main.py --help
 ```
 
 ## Related Tools

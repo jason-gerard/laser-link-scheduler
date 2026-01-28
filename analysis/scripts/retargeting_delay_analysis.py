@@ -36,6 +36,8 @@ for file_name in os.listdir(report_dir):
         file_path = os.path.join(report_dir, file_name)
 
         match = pattern.match(file_name)
+        if match is None:
+            continue
         algorithm = match.group(1)
         number = int(match.group(2))
 

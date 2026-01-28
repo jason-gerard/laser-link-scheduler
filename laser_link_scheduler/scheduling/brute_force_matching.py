@@ -39,7 +39,7 @@ contact_plan_parser = IONContactPlanParser()
 contact_plan = contact_plan_parser.read(EXPERIMENT_NAME)
 
 time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
-    contact_plan, should_fractionate=True
+    contact_plan, should_fractionate=True, should_reduce=True
 )
 
 possible_graphs = []

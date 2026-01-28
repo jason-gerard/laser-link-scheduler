@@ -15,6 +15,7 @@ if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
 from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
+from laser_link_scheduler.models.pointing_delay import SLEW_RATE
 from laser_link_scheduler.topology.weights import compute_all_delays
 
 
@@ -58,6 +59,7 @@ for teg in tegs:
                         teg.pos,
                         teg.optical_interfaces_to_node,
                         teg.nodes,
+                        SLEW_RATE,
                     )
                     if res is None:
                         continue

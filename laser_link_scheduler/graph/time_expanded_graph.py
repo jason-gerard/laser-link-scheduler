@@ -69,7 +69,9 @@ class TimeExpandedGraph:
 
 
 def convert_contact_plan_to_time_expanded_graph(
-    contact_plan: ContactPlan, should_fractionate: bool, should_reduce: bool
+    contact_plan: ContactPlan,
+    should_fractionate: bool,
+    should_reduce: bool = True,
 ) -> TimeExpandedGraph:
     # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
     # We are defining this as any contact with a range greater than 100,000 km.

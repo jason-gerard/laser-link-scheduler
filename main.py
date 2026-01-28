@@ -1,6 +1,6 @@
-import argparse
 from timeit import default_timer as timer
 import traceback
+import typer
 
 import numpy as np
 
@@ -150,21 +150,27 @@ def multi_experiment_driver(
     reporter.write_report()
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-e", "--experiment_names", help="Name of experiment folder", nargs="+"
-    )
-    parser.add_argument(
+app = typer.Typer()
+
+
+@app.command()
+def main(
+    experiment_names: list[str] = typer.Option(
+        ...,
+        "--experiment-names",
+        "-e",
+        help="Name of experiment folder",
+    ),
+    scheduler_names: list[str] = typer.Option(
+        ...,
+        "--scheduler-names",
         "-s",
-        "--scheduler_names",
         help="Name of scheduler algorithm to use",
-        nargs="+",
-    )
-    return parser.parse_args()
+    ),
+):
+    np.random.seed(42)
+    multi_experiment_driver(experiment_names, scheduler_names)
 
 
 if __name__ == "__main__":
-    np.random.seed(42)
-    args = get_args()
-    multi_experiment_driver(args.experiment_names, args.scheduler_names)
+    app()

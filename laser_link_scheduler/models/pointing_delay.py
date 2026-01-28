@@ -47,13 +47,15 @@ def pointing_delay(node_set1, node_set2) -> float:
     return max(pointing_delay_1, pointing_delay_2)
 
 
-def all_pointing_delay(node_set1, node_set2, slew_rate=SLEW_RATE) -> float:
+def all_pointing_delay(node_set1, node_set2, slew_rate) -> tuple[float, float]:
     # Compute the PAT delay for node sets 1 and 2
+    src1, curr_dst1, new_dst1 = node_set1
+    src2, curr_dst2, new_dst2 = node_set2
     pointing_delay_1 = pointing_delay_single_node(
-        *node_set1, slew_rate=slew_rate
+        src1, curr_dst1, new_dst1, slew_rate=slew_rate
     )
     pointing_delay_2 = pointing_delay_single_node(
-        *node_set2, slew_rate=slew_rate
+        src2, curr_dst2, new_dst2, slew_rate=slew_rate
     )
 
     # The max between them is the actual delay since both must be finished pointing

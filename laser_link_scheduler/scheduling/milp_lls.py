@@ -41,12 +41,12 @@ class LLSModel:
         use_convex_penalty: bool = False,
     ):
         self.teg = teg
-        self.edges = None
-        self.edge_deviation_high = None
-        self.edge_deviation_low = None
-        self.edges_by_node = None
-        self.edges_by_state = None
-        self.edges_by_state_oi = None
+        self.edges = {}
+        self.edge_deviation_high = {}
+        self.edge_deviation_low = {}
+        self.edges_by_node = {}
+        self.edges_by_state = {}
+        self.edges_by_state_oi = {}
         self.eff_contact_time = None
         self.edge_caps = None
         self.schedule_duration = sum(self.teg.state_durations)
@@ -618,10 +618,17 @@ if __name__ == "__main__":
     ipnd_contact_plan_parser.write(EXPERIMENT_NAME, scheduled_contact_plan)
 
     reporter = Reporter(write_pkl=False)
+    if solver.flow_model is None:
+        raise RuntimeError("Flow model not initialized; call solve() first.")
+    solution_time = getattr(solver.flow_model, "solutionTime", None)
+    if solution_time is None:
+        solution_time = float("nan")
+    else:
+        solution_time = float(solution_time)
     reporter.generate_report(
         EXPERIMENT_NAME,
         "LLS_MIP" if solver.is_mip else "LLS_LP",
-        solver.flow_model.solutionTime,
+        solution_time,
         scheduled_teg,
     )
     reporter.write_report()

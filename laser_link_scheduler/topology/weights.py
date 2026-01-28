@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Tuple, Optional
 
 import numpy as np
 
@@ -758,8 +758,10 @@ def compute_all_delays(
     positions: np.ndarray,
     optical_interfaces_to_node: dict[int, int],
     nodes: list[str],
-    slew_rate=0.0349066,
-) -> Tuple[float, float]:  # pointing delay, acq delay
+    slew_rate: float,
+) -> Optional[
+    tuple[float, list[float], list[float]]
+]:  # pointing delay, acq delay
     curr_k = min(len(scheduled_contact_topology), len(positions) - 1)
 
     # For the first state we can always assume the lasers are pre-targeted

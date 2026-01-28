@@ -38,6 +38,7 @@ dependencies = [
     "pre-commit>=4.3.0",
     "ruff>=0.14.0",
     "ty>=0.0.1a22",
+    "typer>=0.21.1",
 ]
 
 [tool.ruff]
