@@ -2,8 +2,11 @@
 
 uv run main.py \
     -e  mars_earth_xs_scenario  \
-        mars_earth_s_scenario   \
-        mars_earth_m_scenario   \
-        mars_earth_l_scenario   \
-        mars_earth_xl_scenario  \
-    -s  fcp random alternating lls
+    -e  mars_earth_s_scenario   \
+    -e  mars_earth_m_scenario   \
+    -e  mars_earth_l_scenario   \
+    -e  mars_earth_xl_scenario  \
+    -s  fcp \
+    -s  random \
+    -s  alternating \
+    -s  lls
