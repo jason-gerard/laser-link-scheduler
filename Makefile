@@ -1,4 +1,6 @@
 MAKEFLAGS += --no-print-directory
+RUN_SCRIPTS := $(sort $(wildcard scripts/run_*.sh))
+RUN_NAMES   := $(patsubst scripts/run_%.sh,%,$(RUN_SCRIPTS))
 
 .PHONY: help \
 		setup \
@@ -55,24 +57,15 @@ gurobi-key: # To set up Gurobi license key (requires GUROBI_KEY env var)
 # =================================================================================
 # Run scenarios
 # =================================================================================
-run ?= help
 
-run: # Run predefined scenarios; use RUN=<name> (see run-help)
-	@case "$(RUN)" in \
-		help) $(MAKE) run-help ;; \
-		all) bash scripts/run_all.sh ;; \
-		gs) bash scripts/run_all_gs.sh ;; \
-		gs-inc) bash scripts/run_all_gs_inc.sh ;; \
-		gs-inc-fast) bash scripts/run_all_gs_inc_fast.sh ;; \
-		lls) bash scripts/run_all_lls.sh ;; \
-		*) echo "Unknown RUN=$(RUN)"; $(MAKE) run-help; exit 1 ;; \
-	esac
+RUN ?= help
+run: # Run predefined scenarios; use RUN=<name> or run-<name> (see run-help)
+	@$(MAKE) run-$(RUN)
+
+$(addprefix run-,$(RUN_NAMES)):
+	@bash scripts/run_$(patsubst run-%,%,$@).sh
 
 run-help: # Show available RUN options for the run target
 	@echo "Available RUN options:"
-	@printf "  RUN=%-11s %s\n" "help" "Show this message"
-	@printf "  RUN=%-11s %s\n" "all" "Run all base Mars/Earth scenarios (schedulers => fcp/random/alternating/lls)"
-	@printf "  RUN=%-11s %s\n" "gs" "Run all GS scenarios (schedulers => fcp/random/alternating/lls/lls_pat_unaware/lls_mip/lls_lp)"
-	@printf "  RUN=%-11s %s\n" "gs-inc" "Run all GS incremental reduced scenarios (schedulers => fcp/random/alternating/lls/lls_pat_unaware/lls_mip)"
-	@printf "  RUN=%-11s %s\n" "gs-inc-fast" "Run a smaller GS incremental set for quick experiments"
-	@printf "  RUN=%-11s %s\n" "lls" "Run all base Mars/Earth scenarios with LLS only"
+	@printf "  RUN=%s\n" "help"
+	@for n in $(RUN_NAMES); do printf "  RUN=%s\n" "$$n"; done
