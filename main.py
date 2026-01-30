@@ -108,7 +108,9 @@ def experiment_driver(
             scheduled_time_expanded_graph
         )
         contact_plan_parser.write(
-            experiment_name, scheduled_contact_plan, FileType.SCHEDULED
+            experiment_name,
+            scheduled_contact_plan,
+            FileType.CONTACT_PLAN_SCHEDULED,
         )
         print("Finished converting time expanded graph to contact plan")
 

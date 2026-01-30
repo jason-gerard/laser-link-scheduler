@@ -609,7 +609,9 @@ if __name__ == "__main__":
         scheduled_teg
     )
     contact_plan_parser.write(
-        EXPERIMENT_NAME, scheduled_contact_plan, FileType.SCHEDULED
+        EXPERIMENT_NAME,
+        scheduled_contact_plan,
+        FileType.CONTACT_PLAN_SCHEDULED,
     )
     print("Finished converting time expanded graph to contact plan")
 
