@@ -17,9 +17,13 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
 from time_expanded_graph import TimeExpandedGraph
 from weights import compute_delays
 
-plt.rcParams.update({'font.size': 18})
-plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.size': 22})
+plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
+
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+plt.rcParams.update({'pdf.fonttype': 42})
 
 algorithms = ['lls', 'lls_pat_unaware', 'lls_mip', 'fcp']
 
@@ -96,7 +100,7 @@ for algorithm, node_count, teg in tegs:
 
     # pprint.pprint(retargeting_duty_cycle)
 
-    network_retargeting_duty_cycle = network_total_eff_time / network_total_time
+    network_retargeting_duty_cycle = 100 * (network_total_eff_time / network_total_time)
     print("network retargeting duty cycle", network_retargeting_duty_cycle)
     retargeting_duty_cycles.append((algorithm, node_count, network_retargeting_duty_cycle))
 
@@ -135,10 +139,10 @@ for algorithm, display_name in algorithms:
         plt.plot(x_sorted, y_sorted, label=display_name, linewidth=2.5)
 
 # Labels and formatting
-plt.ylabel("Retargeting Duty Cycle [%]")
+plt.ylabel("Network Duty Cycle [%]")
 plt.xlabel("Source/Relay Node Count")
-plt.ylim(0.6, 1.0)
-plt.yticks(np.arange(0.6, 1.01, 0.05))
+plt.ylim(60, 100)
+plt.yticks(np.arange(60, 101, 5))
 plt.grid(linestyle='-', color='0.95')
 plt.legend(loc="lower right")
 

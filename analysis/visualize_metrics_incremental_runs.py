@@ -5,10 +5,15 @@ import pprint
 
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib as mpl
 
-plt.rcParams.update({'font.size': 18})
-plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.size': 22})
+plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
+
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+plt.rcParams.update({'pdf.fonttype': 42})
 
 report_id = 1748949730
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")

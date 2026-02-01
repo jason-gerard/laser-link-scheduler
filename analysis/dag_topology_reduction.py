@@ -3,6 +3,7 @@ import matplotlib.ticker as mtick
 import networkx as nx
 import numpy as np
 import math
+import matplotlib as mpl
 
 import os
 import sys
@@ -15,9 +16,13 @@ SHOW_FIGS = False
 
 EXPERIMENT_NAME = "mars_earth_xs_scenario"
 
-plt.rcParams.update({'font.size': 18})
-plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.size': 22})
+plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
+
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+plt.rcParams.update({'pdf.fonttype': 42})
 
 def count_reduced_edges(experiment_name):
     contact_plan_parser = IONContactPlanParser()
@@ -127,7 +132,7 @@ if __name__ == "__main__":
     ax1.plot(x, frac_teg_counts, label="Fractionated TEG", linewidth=2.5)
     ax1.plot(x, reduced_teg_counts, label="Reduced TEG", linewidth=2.5)
 
-    label = "Number of decision variables"
+    label = "Decision variables"
     ax1.set_ylabel(label)
     ax1.set_xlabel("Source/relay node counts")
 
@@ -155,7 +160,7 @@ if __name__ == "__main__":
     # Create a single legend
     plt.legend(all_handles, all_labels, loc='lower right')
 
-    file_name = label.replace(" ", "_").replace("/", "_")
+    file_name = "dag_reducation_decision_variables".replace(" ", "_").replace("/", "_")
     plt.savefig(
         os.path.join("analysis", f"{file_name}.pdf"),
         format="pdf",
