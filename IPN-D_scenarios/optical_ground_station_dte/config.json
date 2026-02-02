@@ -1,0 +1,496 @@
+{
+    "Time": {
+        "SimulationStartTime": 725803264.184,
+        "SimulationEndTime": 725824864.184,
+        "Step": 600.0
+    },
+    "Star": {
+        "Name": "Sun",
+        "Radius": 696340.0
+    },
+    "Planets": [
+        {
+            "Name": "Mercury",
+            "Radius": 2439.7,
+            "OrbitPeriod": 7600525.218770206,
+            "SemiMajorAxis": 57909050.0,
+            "Eccentricity": 0.20563,
+            "Inclination": 7.005,
+            "Raan": 48.331,
+            "ArgOfPeriapsis": 29.124,
+            "MeanAnomaly": 174.795,
+            "Obliquity": 0.01,
+            "RotationPeriod": 58.65,
+            "Nodes": []
+        },
+        {
+            "Name": "Venus",
+            "Radius": 6051.8,
+            "OrbitPeriod": 19414161.92269385,
+            "SemiMajorAxis": 108208930.0,
+            "Eccentricity": 0.006772,
+            "Inclination": 3.394,
+            "Raan": 76.68,
+            "ArgOfPeriapsis": 54.884,
+            "MeanAnomaly": 50.416,
+            "Obliquity": 177.36,
+            "RotationPeriod": -243.02,
+            "Nodes": []
+        },
+        {
+            "Name": "Earth",
+            "Radius": 6371.0,
+            "OrbitPeriod": 31558863.596656324,
+            "SemiMajorAxis": 149600000.0,
+            "Eccentricity": 0.0167,
+            "Inclination": 0.0,
+            "Raan": 0.0,
+            "ArgOfPeriapsis": 102.9,
+            "MeanAnomaly": 100.46435,
+            "Obliquity": 23.44,
+            "RotationPeriod": 0.99,
+            "Nodes": [
+                {
+                    "ID": 1001,
+                    "Name": "c1o1",
+                    "OrbitPeriod": 23519.26953125
+                },
+                {
+                    "ID": 1002,
+                    "Name": "c1o2",
+                    "OrbitPeriod": 23519.26953125
+                },
+                {
+                    "ID": 1003,
+                    "Name": "c1o3",
+                    "OrbitPeriod": 23519.26953125
+                },
+                {
+                    "ID": 1004,
+                    "Name": "c1o4",
+                    "OrbitPeriod": 23519.26953125
+                },
+                {
+                    "ID": 9001,
+                    "Name": "gs1",
+                    "OrbitPeriod": 0.0
+                },
+                {
+                    "ID": 9002,
+                    "Name": "gs2",
+                    "OrbitPeriod": 0.0
+                },
+                {
+                    "ID": 9003,
+                    "Name": "gs3",
+                    "OrbitPeriod": 0.0
+                }
+            ]
+        },
+        {
+            "Name": "Mars",
+            "Radius": 3389.5,
+            "OrbitPeriod": 59353338.82413626,
+            "SemiMajorAxis": 227936640.0,
+            "Eccentricity": 0.093405,
+            "Inclination": 1.849,
+            "Raan": 49.558,
+            "ArgOfPeriapsis": 286.502,
+            "MeanAnomaly": 19.356,
+            "Obliquity": 25.19,
+            "RotationPeriod": 1.03,
+            "Nodes": [
+                {
+                    "ID": 2001,
+                    "Name": "c2o1",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2002,
+                    "Name": "c2o2",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2003,
+                    "Name": "c2o3",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2004,
+                    "Name": "c2o4",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2005,
+                    "Name": "c2o5",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2006,
+                    "Name": "c2o6",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2007,
+                    "Name": "c2o7",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2008,
+                    "Name": "c2o8",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2009,
+                    "Name": "c2o9",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2010,
+                    "Name": "c2o10",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2011,
+                    "Name": "c2o11",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2012,
+                    "Name": "c2o12",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2013,
+                    "Name": "c2o13",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2014,
+                    "Name": "c2o14",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2015,
+                    "Name": "c2o15",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2016,
+                    "Name": "c2o16",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2017,
+                    "Name": "c2o17",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2018,
+                    "Name": "c2o18",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2019,
+                    "Name": "c2o19",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2020,
+                    "Name": "c2o20",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2021,
+                    "Name": "c2o21",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2022,
+                    "Name": "c2o22",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2023,
+                    "Name": "c2o23",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2024,
+                    "Name": "c2o24",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2025,
+                    "Name": "c2o25",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2026,
+                    "Name": "c2o26",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2027,
+                    "Name": "c2o27",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2028,
+                    "Name": "c2o28",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2029,
+                    "Name": "c2o29",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2030,
+                    "Name": "c2o30",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2031,
+                    "Name": "c2o31",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2032,
+                    "Name": "c2o32",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2033,
+                    "Name": "c2o33",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2034,
+                    "Name": "c2o34",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2035,
+                    "Name": "c2o35",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2036,
+                    "Name": "c2o36",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2037,
+                    "Name": "c2o37",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2038,
+                    "Name": "c2o38",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2039,
+                    "Name": "c2o39",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2040,
+                    "Name": "c2o40",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2041,
+                    "Name": "c2o41",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2042,
+                    "Name": "c2o42",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2043,
+                    "Name": "c2o43",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2044,
+                    "Name": "c2o44",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2045,
+                    "Name": "c2o45",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2046,
+                    "Name": "c2o46",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2047,
+                    "Name": "c2o47",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2048,
+                    "Name": "c2o48",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2049,
+                    "Name": "c2o49",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2050,
+                    "Name": "c2o50",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2051,
+                    "Name": "c2o51",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2052,
+                    "Name": "c2o52",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2053,
+                    "Name": "c2o53",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2054,
+                    "Name": "c2o54",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2055,
+                    "Name": "c2o55",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2056,
+                    "Name": "c2o56",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2057,
+                    "Name": "c2o57",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2058,
+                    "Name": "c2o58",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2059,
+                    "Name": "c2o59",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2060,
+                    "Name": "c2o60",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2061,
+                    "Name": "c2o61",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2062,
+                    "Name": "c2o62",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2063,
+                    "Name": "c2o63",
+                    "OrbitPeriod": 18854.931640625
+                },
+                {
+                    "ID": 2064,
+                    "Name": "c2o64",
+                    "OrbitPeriod": 18854.931640625
+                }
+            ]
+        },
+        {
+            "Name": "Jupiter",
+            "Radius": 69911.0,
+            "OrbitPeriod": 374574590.65238,
+            "SemiMajorAxis": 778412020.0,
+            "Eccentricity": 0.048392,
+            "Inclination": 1.304,
+            "Raan": 100.464,
+            "ArgOfPeriapsis": 273.867,
+            "MeanAnomaly": 20.2,
+            "Obliquity": 3.13,
+            "RotationPeriod": 0.41,
+            "Nodes": []
+        },
+        {
+            "Name": "Saturn",
+            "Radius": 58232.0,
+            "OrbitPeriod": 929468310.8340454,
+            "SemiMajorAxis": 1426725400.0,
+            "Eccentricity": 0.05415,
+            "Inclination": 2.485,
+            "Raan": 113.665,
+            "ArgOfPeriapsis": 339.392,
+            "MeanAnomaly": 317.02,
+            "Obliquity": 26.73,
+            "RotationPeriod": 0.44,
+            "Nodes": []
+        },
+        {
+            "Name": "Uranus",
+            "Radius": 25362.0,
+            "OrbitPeriod": 2653184548.008957,
+            "SemiMajorAxis": 2870972200.0,
+            "Eccentricity": 0.047167,
+            "Inclination": 0.772,
+            "Raan": 74.006,
+            "ArgOfPeriapsis": 96.998,
+            "MeanAnomaly": 141.049,
+            "Obliquity": 97.77,
+            "RotationPeriod": -0.72,
+            "Nodes": []
+        },
+        {
+            "Name": "Neptune",
+            "Radius": 24622.0,
+            "OrbitPeriod": 5203430210.566864,
+            "SemiMajorAxis": 4498252900.0,
+            "Eccentricity": 0.008585,
+            "Inclination": 1.769,
+            "Raan": 131.784,
+            "ArgOfPeriapsis": 276.336,
+            "MeanAnomaly": 256.228,
+            "Obliquity": 28.32,
+            "RotationPeriod": 0.67,
+            "Nodes": []
+        },
+        {
+            "Name": "Pluto",
+            "Radius": 1188.3,
+            "OrbitPeriod": 7828994679.44458,
+            "SemiMajorAxis": 5906380000.0,
+            "Eccentricity": 0.24880766,
+            "Inclination": 7.005,
+            "Raan": 110.299,
+            "ArgOfPeriapsis": 113.834,
+            "MeanAnomaly": 14.53,
+            "Obliquity": 122.53,
+            "RotationPeriod": -6.39,
+            "Nodes": []
+        }
+    ]
+}

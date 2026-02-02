@@ -1,0 +1,337 @@
+{
+    "Positions": [
+        {
+            "Time": 725803264.184,
+            "PositionX": 4447007210.2706589,
+            "PositionY": 134848655.8970875,
+            "PositionZ": -486108798.96483328,
+            "RotationX": 0.0,
+            "RotationY": 21.891691542230548,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725803864.184,
+            "PositionX": 4447007542.939936,
+            "PositionY": 134848677.21524949,
+            "PositionZ": -486105540.385864,
+            "RotationX": 0.0,
+            "RotationY": 25.62303482554853,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725804464.184,
+            "PositionX": 4447007875.606842,
+            "PositionY": 134848698.53333954,
+            "PositionZ": -486102281.80664017,
+            "RotationX": 0.0,
+            "RotationY": 29.354378108866514,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725805064.184,
+            "PositionX": 4447008208.271379,
+            "PositionY": 134848719.85135777,
+            "PositionZ": -486099023.22715809,
+            "RotationX": 0.0,
+            "RotationY": 33.08572139311582,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725805664.184,
+            "PositionX": 4447008540.933545,
+            "PositionY": 134848741.16930408,
+            "PositionZ": -486095764.64741399,
+            "RotationX": 0.0,
+            "RotationY": 36.8170646764338,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725806264.184,
+            "PositionX": 4447008873.593343,
+            "PositionY": 134848762.48717857,
+            "PositionZ": -486092506.06740859,
+            "RotationX": 0.0,
+            "RotationY": 40.548407959751788,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725806864.184,
+            "PositionX": 4447009206.250769,
+            "PositionY": 134848783.80498118,
+            "PositionZ": -486089247.4871433,
+            "RotationX": 0.0,
+            "RotationY": 44.27975124306977,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725807464.184,
+            "PositionX": 4447009538.905825,
+            "PositionY": 134848805.1227119,
+            "PositionZ": -486085988.9066243,
+            "RotationX": 0.0,
+            "RotationY": 48.011094527319077,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725808064.184,
+            "PositionX": 4447009871.558511,
+            "PositionY": 134848826.44037078,
+            "PositionZ": -486082730.32584097,
+            "RotationX": 0.0,
+            "RotationY": 51.74243781063706,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725808664.184,
+            "PositionX": 4447010204.208827,
+            "PositionY": 134848847.75795774,
+            "PositionZ": -486079471.7448051,
+            "RotationX": 0.0,
+            "RotationY": 55.47378109395504,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725809264.184,
+            "PositionX": 4447010536.856772,
+            "PositionY": 134848869.0754728,
+            "PositionZ": -486076213.16350916,
+            "RotationX": 0.0,
+            "RotationY": 59.205124378204349,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725809864.184,
+            "PositionX": 4447010869.502349,
+            "PositionY": 134848890.39291609,
+            "PositionZ": -486072954.58195188,
+            "RotationX": 0.0,
+            "RotationY": 62.93646766152233,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725810464.184,
+            "PositionX": 4447011202.145554,
+            "PositionY": 134848911.71028749,
+            "PositionZ": -486069696.0001316,
+            "RotationX": 0.0,
+            "RotationY": 66.66781094484031,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725811064.184,
+            "PositionX": 4447011534.78639,
+            "PositionY": 134848933.027587,
+            "PositionZ": -486066437.4180572,
+            "RotationX": 0.0,
+            "RotationY": 70.3991542281583,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725811664.184,
+            "PositionX": 4447011867.424856,
+            "PositionY": 134848954.34481464,
+            "PositionZ": -486063178.8357203,
+            "RotationX": 0.0,
+            "RotationY": 74.1304975124076,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725812264.184,
+            "PositionX": 4447012200.060951,
+            "PositionY": 134848975.6619704,
+            "PositionZ": -486059920.25312498,
+            "RotationX": 0.0,
+            "RotationY": 77.86184079572559,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725812864.184,
+            "PositionX": 4447012532.694676,
+            "PositionY": 134848996.97905434,
+            "PositionZ": -486056661.6702719,
+            "RotationX": 0.0,
+            "RotationY": 81.59318407904357,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725813464.184,
+            "PositionX": 4447012865.326032,
+            "PositionY": 134849018.2960663,
+            "PositionZ": -486053403.0871639,
+            "RotationX": 0.0,
+            "RotationY": 85.32452736329287,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725814064.184,
+            "PositionX": 4447013197.955017,
+            "PositionY": 134849039.61300648,
+            "PositionZ": -486050144.503793,
+            "RotationX": 0.0,
+            "RotationY": 89.05587064661086,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725814664.184,
+            "PositionX": 4447013530.581632,
+            "PositionY": 134849060.92987476,
+            "PositionZ": -486046885.92016389,
+            "RotationX": 0.0,
+            "RotationY": 92.78721392992884,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725815264.184,
+            "PositionX": 4447013863.205877,
+            "PositionY": 134849082.24667118,
+            "PositionZ": -486043627.33627298,
+            "RotationX": 0.0,
+            "RotationY": 96.51855721324682,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725815864.184,
+            "PositionX": 4447014195.827751,
+            "PositionY": 134849103.56339575,
+            "PositionZ": -486040368.7521231,
+            "RotationX": 0.0,
+            "RotationY": 100.24990049749613,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725816464.184,
+            "PositionX": 4447014528.447256,
+            "PositionY": 134849124.88004846,
+            "PositionZ": -486037110.16771557,
+            "RotationX": 0.0,
+            "RotationY": 103.98124378081411,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725817064.184,
+            "PositionX": 4447014861.06439,
+            "PositionY": 134849146.19662924,
+            "PositionZ": -486033851.5830498,
+            "RotationX": 0.0,
+            "RotationY": 107.7125870641321,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725817664.184,
+            "PositionX": 4447015193.679153,
+            "PositionY": 134849167.51313813,
+            "PositionZ": -486030592.9981289,
+            "RotationX": 0.0,
+            "RotationY": 111.4439303483814,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725818264.184,
+            "PositionX": 4447015526.29155,
+            "PositionY": 134849188.8295752,
+            "PositionZ": -486027334.41294196,
+            "RotationX": 0.0,
+            "RotationY": 115.17527363169939,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725818864.184,
+            "PositionX": 4447015858.901573,
+            "PositionY": 134849210.1459404,
+            "PositionZ": -486024075.82749989,
+            "RotationX": 0.0,
+            "RotationY": 118.90661691501737,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725819464.184,
+            "PositionX": 4447016191.509228,
+            "PositionY": 134849231.46223373,
+            "PositionZ": -486020817.2417958,
+            "RotationX": 0.0,
+            "RotationY": 122.63796019833535,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725820064.184,
+            "PositionX": 4447016524.114511,
+            "PositionY": 134849252.7784552,
+            "PositionZ": -486017558.65583446,
+            "RotationX": 0.0,
+            "RotationY": 126.36930348258466,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725820664.184,
+            "PositionX": 4447016856.717425,
+            "PositionY": 134849274.0946048,
+            "PositionZ": -486014300.0696137,
+            "RotationX": 0.0,
+            "RotationY": 130.10064676590265,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725821264.184,
+            "PositionX": 4447017189.317968,
+            "PositionY": 134849295.4106825,
+            "PositionZ": -486011041.4831338,
+            "RotationX": 0.0,
+            "RotationY": 133.83199004922063,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725821864.184,
+            "PositionX": 4447017521.9161419,
+            "PositionY": 134849316.72668834,
+            "PositionZ": -486007782.89639618,
+            "RotationX": 0.0,
+            "RotationY": 137.56333333346994,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725822464.184,
+            "PositionX": 4447017854.511945,
+            "PositionY": 134849338.04262228,
+            "PositionZ": -486004524.3094015,
+            "RotationX": 0.0,
+            "RotationY": 141.2946766167879,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725823064.184,
+            "PositionX": 4447018187.105379,
+            "PositionY": 134849359.35848443,
+            "PositionZ": -486001265.7221434,
+            "RotationX": 0.0,
+            "RotationY": 145.0260199001059,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725823664.184,
+            "PositionX": 4447018519.696442,
+            "PositionY": 134849380.67427463,
+            "PositionZ": -485998007.1346266,
+            "RotationX": 0.0,
+            "RotationY": 148.75736318342389,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725824264.184,
+            "PositionX": 4447018852.285135,
+            "PositionY": 134849401.989993,
+            "PositionZ": -485994748.5468526,
+            "RotationX": 0.0,
+            "RotationY": 152.48870646767319,
+            "RotationZ": 0.0
+        },
+        {
+            "Time": 725824864.184,
+            "PositionX": 4447019184.871458,
+            "PositionY": 134849423.30563949,
+            "PositionZ": -485991489.9588196,
+            "RotationX": 0.0,
+            "RotationY": 156.22004975099117,
+            "RotationZ": 0.0
+        }
+    ]
+}

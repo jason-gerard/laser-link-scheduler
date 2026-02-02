@@ -8,7 +8,7 @@ from LLS_milp import LLSModel
 from path_solver import PathSchedulerModel
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
 from report_generator import Reporter
-from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler, AlternatingScheduler
+from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler, AlternatingScheduler, OpticalTrunkLinkScheduler
 from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, write_time_expanded_graph, \
     convert_time_expanded_graph_to_contact_plan
 from utils import FileType
@@ -32,7 +32,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
 
     # Convert contact plan into a time expanded graph (TEG). From our testing on the Fair Contact Plan algorithm
     # benefits from graph fractionation.
-    should_reduce = scheduler_name == "lls_mip" or scheduler_name == "lls_lp"
+    should_reduce = scheduler_name == "lls_mip" or scheduler_name == "lls_lp" or scheduler_name == "otls" or scheduler_name == "lls"
     time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
         contact_plan,
         should_fractionate=True,
@@ -61,6 +61,8 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             scheduled_time_expanded_graph = RandomScheduler().schedule(time_expanded_graph)
         elif scheduler_name == "alternating":
             scheduled_time_expanded_graph = AlternatingScheduler().schedule(time_expanded_graph)
+        elif scheduler_name == "otls":
+            scheduled_time_expanded_graph = OpticalTrunkLinkScheduler().schedule(time_expanded_graph)
         else:
             print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
             raise Exception("No scheduler selected")
@@ -99,6 +101,7 @@ def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[s
                 experiment_driver(experiment_name, scheduler_name, reporter)
                 print("\n\n")
         except Exception as e:
+            print(f"Error executing scenario {experiment_name}, with scheduler: {scheduler_name}, {e}, \n\n{e.with_traceback()}")
             break
 
     reporter.write_report()
