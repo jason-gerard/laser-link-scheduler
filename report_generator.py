@@ -2,6 +2,7 @@ import csv
 import os
 import time
 import pickle
+import math
 
 import constants
 from time_expanded_graph import TimeExpandedGraph
@@ -29,10 +30,15 @@ class Reporter:
         weights.eval_eff_ct = {}
         
         node_capacities = compute_node_capacities(teg.graphs, teg.state_durations, teg.K, teg.nodes, teg.graphs, teg.pos, teg.optical_interfaces_to_node, teg.node_to_optical_interfaces)
+
+        for index, cap in enumerate(node_capacities):
+            # print(cap.id, cap.capacity_in, cap.capacity_out)
+
+            if math.isnan(node_capacities[index].capacity_in):
+                node_capacities[index].capacity_in = 0
+            if math.isnan(node_capacities[index].capacity_out):
+                node_capacities[index].capacity_out = float("inf")
         
-        # for cap in node_capacities:
-        #     print(cap.id, min(cap.capacity_in, cap.capacity_out))
-        # 
         # for (k, tx, rx, d), t in weights.eval_eff_ct.items():
         #     print(k, tx, rx, t, d)
 

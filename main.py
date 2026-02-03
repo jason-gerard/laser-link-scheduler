@@ -32,7 +32,14 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
 
     # Convert contact plan into a time expanded graph (TEG). From our testing on the Fair Contact Plan algorithm
     # benefits from graph fractionation.
-    should_reduce = scheduler_name == "lls_mip" or scheduler_name == "lls_lp" or scheduler_name == "otls" or scheduler_name == "lls"
+    should_reduce = (
+        scheduler_name == "lls_mip"
+        or scheduler_name == "lls_lp"
+        or scheduler_name == "lls"
+        or scheduler_name == "lls_pat_unaware"
+        or scheduler_name == "otls"
+        or scheduler_name == "otls_pat_unaware"
+    )
     time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
         contact_plan,
         should_fractionate=True,
@@ -63,6 +70,10 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             scheduled_time_expanded_graph = AlternatingScheduler().schedule(time_expanded_graph)
         elif scheduler_name == "otls":
             scheduled_time_expanded_graph = OpticalTrunkLinkScheduler().schedule(time_expanded_graph)
+        elif scheduler_name == "otls_pat_unaware":
+            constants.should_bypass_retargeting_time = True
+            scheduled_time_expanded_graph = OpticalTrunkLinkScheduler().schedule(time_expanded_graph)
+            constants.should_bypass_retargeting_time = False
         else:
             print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
             raise Exception("No scheduler selected")

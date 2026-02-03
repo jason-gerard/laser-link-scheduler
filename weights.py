@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Tuple
 import constants
-from pointing_delay_model import pointing_delay, all_pointing_delay
+from pointing_delay_model import pointing_delay, all_pointing_delay, SLEW_RATE
 from link_acq_delay_model import link_acq_delay_ipn_rand, link_acq_delay_leo_rand, link_acq_delay_ipn, link_acq_delay_leo
 from dataclasses import dataclass
 
@@ -581,7 +581,7 @@ def compute_all_delays(
         positions: np.ndarray,
         optical_interfaces_to_node: dict[int, int],
         nodes: list[str],
-        slew_rate=0.0349066,
+        slew_rate=SLEW_RATE,
 ) -> Tuple[float, float]:  # pointing delay, acq delay
     curr_k = min(len(scheduled_contact_topology), len(positions) - 1)
 

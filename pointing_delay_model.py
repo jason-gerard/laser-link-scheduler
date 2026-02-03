@@ -13,13 +13,26 @@ def pointing_delay_single_node(src_node, curr_dst_node, new_dst_node, slew_rate=
     rel_new = new_dst_node - src_node
 
     # Compute the angle, theta, between the two vectors
-    v1_u = rel_curr / np.linalg.norm(rel_curr)
-    v2_u = rel_new / np.linalg.norm(rel_new)
-    theta = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))  # radians
+    n1 = np.linalg.norm(rel_curr)
+    n2 = np.linalg.norm(rel_new)
+
+    # If either vector is (near) zero, the pointing direction is undefined.
+    # Define a deterministic behavior. Common choice: treat as zero additional slew.
+    EPS=1e-12
+    if n1 < EPS or n2 < EPS:
+        return 0.0
+
+    v1_u = rel_curr / n1
+    v2_u = rel_new  / n2
+
+    # Numerical safety for acos argument
+    cos_theta = float(np.dot(v1_u, v2_u))
+    cos_theta = np.clip(cos_theta, -1.0, 1.0)
+    theta = np.arccos(cos_theta)  # radians
 
     # Based on the slew rate, angular velocity, of the CPA compute the time it
     # takes to make that rotation
-    return theta / slew_rate
+    return float(theta / slew_rate)
 
 
 # L2 cache delay value for same nodes idx1, idx1_rx, k

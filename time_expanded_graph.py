@@ -271,8 +271,10 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                                         if contact.tx_node == teg.nodes[teg.optical_interfaces_to_node[tx_idx]] and contact.rx_node == teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
                     
                     if possible_contact:
-                        interface_id = teg.graphs[k - 1][tx_idx][rx_idx]
-                        bit_rate = constants.R[interface_id]
+                        bit_rate = min(
+                            constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[tx_idx]]],
+                            constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
+                        )
 
                         contacts.append(replace(
                             possible_contact[0],
@@ -292,8 +294,10 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                                         if contact.tx_node == teg.nodes[teg.optical_interfaces_to_node[tx_idx]] and contact.rx_node == teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
 
                     if possible_contact:
-                        interface_id = teg.graphs[k][tx_idx][rx_idx]
-                        bit_rate = constants.R[interface_id]
+                        bit_rate = min(
+                            constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[tx_idx]]],
+                            constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
+                        )
 
                         contacts.append(replace(
                             possible_contact[0],

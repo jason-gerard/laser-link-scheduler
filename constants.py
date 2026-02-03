@@ -29,7 +29,7 @@ default_a = 1
 # alpha must be set greater than or equal to 0 and less than or equal to 1, i.e. [0, 1]
 # if alpha = 1 then only consider fairness
 # if alpha = 0 then only consider capacity
-alpha = 0.9
+alpha = 0.32
 
 # The matrix A, contains the integer IDs of the communication interfaces for each node. Each laser
 # communication interface is associated in an integer ID, a, where a >= 1.
@@ -39,16 +39,6 @@ alpha = 0.9
 # The list I, contains the number of communication interfaces each node has.
 # For nodes 0, 1, 2, 3
 # I = [1, 2, 4, 2]
-
-# For now, we are assuming a constant and symmetric bitrate across all links, units are bits per second (bps). This
-# value is taken from the NASA DSOC Mars communication demonstration where they achieved a 267 megabit per second
-# bit rate, https://www.jpl.nasa.gov/news/nasas-tech-demo-streams-first-video-from-deep-space-via-laser.
-# TODO update the code to us megabit as the base unit, switching now will cause integer overflow errors
-# default_BIT_RATE = 267_000_000
-default_BIT_RATE = 1000  # 1 kilobit per second
-# This list R, contains the bit rates for each communication interface.
-# Since a = 0 doesn't apply to any interface the bit_rate is just set to 0.
-R = [0, default_BIT_RATE]
 
 # The matrix P, represents the contact topology of the network. This contains for each state k, all possible contacts.
 # This is the input to the algorithm.
@@ -81,7 +71,7 @@ MARS = "MARS"
 
 # GS
 DESTINATION_NODES = [
-    "9001", "9002", "9003"
+    "9001", "9002", "9003", "9004", "9005", "9006", "9007", "9008", "9009", "9010", "9011", "9012",
 ]
 
 # Mars Science sats
@@ -112,14 +102,40 @@ NODE_TO_PLANET_MAP = {
     "2049": MARS, "2050": MARS, "2051": MARS, "2052": MARS, "2053": MARS, "2054": MARS, "2055": MARS, "2056": MARS,
     "2057": MARS, "2058": MARS, "2059": MARS, "2060": MARS, "2061": MARS, "2062": MARS, "2063": MARS, "2064": MARS,
 
-    "9001": EARTH, "9002": EARTH, "9003": EARTH
+    "9001": EARTH, "9002": EARTH, "9003": EARTH,
+    "9004": EARTH, "9005": EARTH, "9006": EARTH,
+    "9007": EARTH, "9008": EARTH, "9009": EARTH,
+    "9010": EARTH, "9011": EARTH, "9012": EARTH,
 }
 
-SOURCE_NODE_BIT_RATE = 187  # DSOC Psyche @ 100 million km 50 mbps
-# SOURCE_NODE_BIT_RATE = 1000  # DSOC Psyche @ 33 million km 267 mbps
-RELAY_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
-GS_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
-BIT_RATES = {node_id: SOURCE_NODE_BIT_RATE if node_id in SOURCE_NODES else RELAY_NODE_BIT_RATE for node_id in NODE_TO_PLANET_MAP}
+# For now, we are assuming a constant and symmetric bitrate across all links, units are bits per second (bps). This
+# value is taken from the NASA DSOC Mars communication demonstration where they achieved a 267 megabit per second
+# bit rate, https://www.jpl.nasa.gov/news/nasas-tech-demo-streams-first-video-from-deep-space-via-laser.
+# SOURCE_NODE_BIT_RATE = 267  # DSOC Psyche @ 33 million km 267 mbps
+ORBITER_NODE_BIT_RATE = 50  # DSOC Psyche @ 100 million km 50 mbps
+LANDER_NODE_BIT_RATE = 25  # 25 mbps
+RELAY_NODE_BIT_RATE = 1200  # LCRD @ 1.2 gbps
+OGS_NODE_BIT_RATE = 1200  # LCRD @ 1.2 gbps
+
+BIT_RATES = {
+    "1001": OGS_NODE_BIT_RATE, "1002": OGS_NODE_BIT_RATE, "1003": OGS_NODE_BIT_RATE, "1004": OGS_NODE_BIT_RATE, "1005": OGS_NODE_BIT_RATE, "1006": OGS_NODE_BIT_RATE,
+
+    "2001": LANDER_NODE_BIT_RATE, "2002": LANDER_NODE_BIT_RATE, "2003": LANDER_NODE_BIT_RATE,
+    # "2001": ORBITER_NODE_BIT_RATE, "2002": ORBITER_NODE_BIT_RATE, "2003": ORBITER_NODE_BIT_RATE,
+    "2004": ORBITER_NODE_BIT_RATE, "2005": ORBITER_NODE_BIT_RATE, "2006": ORBITER_NODE_BIT_RATE, "2007": ORBITER_NODE_BIT_RATE, "2008": ORBITER_NODE_BIT_RATE,
+    "2009": ORBITER_NODE_BIT_RATE, "2010": ORBITER_NODE_BIT_RATE, "2011": ORBITER_NODE_BIT_RATE, "2012": ORBITER_NODE_BIT_RATE, "2013": ORBITER_NODE_BIT_RATE, "2014": ORBITER_NODE_BIT_RATE, "2015": ORBITER_NODE_BIT_RATE, "2016": ORBITER_NODE_BIT_RATE,
+    "2017": ORBITER_NODE_BIT_RATE, "2018": ORBITER_NODE_BIT_RATE, "2019": ORBITER_NODE_BIT_RATE, "2020": ORBITER_NODE_BIT_RATE, "2021": ORBITER_NODE_BIT_RATE, "2022": ORBITER_NODE_BIT_RATE, "2023": ORBITER_NODE_BIT_RATE, "2024": ORBITER_NODE_BIT_RATE,
+    "2025": ORBITER_NODE_BIT_RATE, "2026": ORBITER_NODE_BIT_RATE, "2027": ORBITER_NODE_BIT_RATE, "2028": ORBITER_NODE_BIT_RATE, "2029": ORBITER_NODE_BIT_RATE, "2030": ORBITER_NODE_BIT_RATE, "2031": ORBITER_NODE_BIT_RATE, "2032": ORBITER_NODE_BIT_RATE,
+    "2033": ORBITER_NODE_BIT_RATE, "2034": ORBITER_NODE_BIT_RATE, "2035": ORBITER_NODE_BIT_RATE, "2036": ORBITER_NODE_BIT_RATE, "2037": ORBITER_NODE_BIT_RATE, "2038": ORBITER_NODE_BIT_RATE, "2039": ORBITER_NODE_BIT_RATE, "2040": ORBITER_NODE_BIT_RATE,
+    "2041": ORBITER_NODE_BIT_RATE, "2042": ORBITER_NODE_BIT_RATE, "2043": ORBITER_NODE_BIT_RATE, "2044": ORBITER_NODE_BIT_RATE, "2045": ORBITER_NODE_BIT_RATE, "2046": ORBITER_NODE_BIT_RATE, "2047": ORBITER_NODE_BIT_RATE, "2048": ORBITER_NODE_BIT_RATE,
+    "2049": ORBITER_NODE_BIT_RATE, "2050": ORBITER_NODE_BIT_RATE, "2051": ORBITER_NODE_BIT_RATE, "2052": ORBITER_NODE_BIT_RATE, "2053": ORBITER_NODE_BIT_RATE, "2054": ORBITER_NODE_BIT_RATE, "2055": ORBITER_NODE_BIT_RATE, "2056": ORBITER_NODE_BIT_RATE,
+    "2057": ORBITER_NODE_BIT_RATE, "2058": ORBITER_NODE_BIT_RATE, "2059": ORBITER_NODE_BIT_RATE, "2060": ORBITER_NODE_BIT_RATE, "2061": ORBITER_NODE_BIT_RATE, "2062": ORBITER_NODE_BIT_RATE, "2063": ORBITER_NODE_BIT_RATE, "2064": ORBITER_NODE_BIT_RATE,
+
+    "9001": OGS_NODE_BIT_RATE, "9002": OGS_NODE_BIT_RATE, "9003": OGS_NODE_BIT_RATE,
+    "9004": OGS_NODE_BIT_RATE, "9005": OGS_NODE_BIT_RATE, "9006": OGS_NODE_BIT_RATE,
+    "9007": OGS_NODE_BIT_RATE, "9008": OGS_NODE_BIT_RATE, "9009": OGS_NODE_BIT_RATE,
+    "9010": OGS_NODE_BIT_RATE, "9011": OGS_NODE_BIT_RATE, "9012": OGS_NODE_BIT_RATE,
+}
 
 
 def get_num_lasers(node_id: str):

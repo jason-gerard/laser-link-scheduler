@@ -58,6 +58,7 @@ class LaserLinkScheduler:
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
             weights[k] = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
+            # weights[k] = normalized_weighted_combination(W_delta_cap, W_dct, constants.alpha)
 
             # Compute max weight maximal matching using the blossom algorithm
             matched_edges = blossom(teg.graphs[k], weights[k])
@@ -318,7 +319,8 @@ class OpticalTrunkLinkScheduler:
             )
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
-            weights[k] = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
+            #weights[k] = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
+            weights[k] = normalized_weighted_combination(W_delta_cap, W_dct, constants.alpha)
 
             # Compute max weight maximal matching using the Hungarian algorithm
             matched_edges = max_weight_hungarian(teg.graphs[k], weights[k])
@@ -358,6 +360,45 @@ class OpticalTrunkLinkScheduler:
             node_to_optical_interfaces=teg.node_to_optical_interfaces,
             effective_contact_durations=teg.effective_contact_durations,
         )
+
+
+def normalized_weighted_combination(W_delta_cap, W_dct, alpha):
+    """
+    Normalized weighted combination of two numpy arrays.
+
+    Parameters
+    ----------
+    W_delta_cap : np.ndarray
+        First input array.
+    W_dct : np.ndarray
+        Second input array.
+    constants.alpha : float
+        Mixing parameter in [0, 1]. Higher values give more weight to W_dct.
+
+    Returns
+    -------
+    np.ndarray
+        Combined array with values in [0, 1].
+    """
+
+    # Convert to float arrays
+    W_delta_cap = np.asarray(W_delta_cap, dtype=float)
+    W_dct = np.asarray(W_dct, dtype=float)
+
+    # Min-max normalization to [0, 1]
+    eps = 1e-12  # prevents division by zero for constant arrays
+
+    x_min, x_max = W_delta_cap.min(), W_delta_cap.max()
+    y_min, y_max = W_dct.min(), W_dct.max()
+
+    W_delta_cap_norm = (W_delta_cap - x_min) / (x_max - x_min + eps)
+    W_dct_norm = (W_dct - y_min) / (y_max - y_min + eps)
+
+    # Weighted combination
+    alpha = float(alpha)
+    W_combined = (1.0 - alpha) * W_delta_cap_norm + alpha * W_dct_norm
+
+    return W_combined
 
 
 def blossom(P_k: np.ndarray, W_k: np.ndarray) -> set:
