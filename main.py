@@ -5,6 +5,7 @@ from timeit import default_timer as timer
 import numpy as np
 
 from LLS_milp import LLSModel
+from OTLS_milp import OtlsModel
 from path_solver import PathSchedulerModel
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
 from report_generator import Reporter
@@ -39,6 +40,7 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
         or scheduler_name == "lls_pat_unaware"
         or scheduler_name == "otls"
         or scheduler_name == "otls_pat_unaware"
+        or scheduler_name == "otls_mip"
     )
     time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
         contact_plan,
@@ -74,6 +76,8 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             constants.should_bypass_retargeting_time = True
             scheduled_time_expanded_graph = OpticalTrunkLinkScheduler().schedule(time_expanded_graph)
             constants.should_bypass_retargeting_time = False
+        elif scheduler_name == "otls_mip":
+            scheduled_time_expanded_graph = OtlsModel(time_expanded_graph).solve()
         else:
             print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
             raise Exception("No scheduler selected")
