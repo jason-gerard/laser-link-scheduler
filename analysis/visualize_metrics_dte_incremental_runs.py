@@ -15,7 +15,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
 plt.rcParams.update({'pdf.fonttype': 42})
 
-report_id = 1770068605
+report_id = 1770509392
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [{k: v for k, v in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
@@ -25,8 +25,8 @@ for run in report:
     num_nodes = int(run["Scenario"].split("_")[-1])
     scenarios.append(num_nodes)
 
-    run["Capacity by node"] = float(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000 / num_nodes  # this has to come before capacity calculation
-    run["Capacity"] = float(run["Capacity"]) * 267_000 / 1000 / 1000 / 1000 / 1000
+    run["Capacity by node"] = float(run["Capacity"]) / 1000 / 1000 / num_nodes  # this has to come before capacity calculation
+    run["Capacity"] = float(run["Capacity"]) / 1000 / 1000
     run["Scheduled delay"] = float(run["Scheduled delay"]) / 60 / 60
     run["Jain's fairness index"] = float(run["Jain's fairness index"])
     run["Execution duration"] = float(run["Execution duration"])
@@ -38,17 +38,23 @@ x = sorted(list(set(scenarios)))
 algorithms = [
     ("otls", "OTLS_Greedy"),
     ("otls_pat_unaware", "OTLS_Greedy (ZRK)"),
+    ("otls_mip", "OTLS_MIP"),
+    ("lls", "LLS_Greedy"),
+    ("lls_pat_unaware", "LLS_Greedy (ZRK)"),
+    ("lls_mip", "LLS_MIP"),
     ("fcp", "FCP"),
     ("random", "Random"),
 ]
 
 metrics = [
-    ("Capacity", "terabits/day", 5, 80, 5),
+    ("Capacity", "terabits/day", 5, 60, 5),
     ("Capacity by node", "terabits/day", 0.5, 4, 0.5),
     ("Scheduled delay", "hours", 0, 6, 1),
     ("Jain's fairness index", "", 0.5, 1.0, 0.2),
     ("Execution duration", "seconds", 0.01, 100000, 30),
 ]
+
+ogs_bit_rate_tb = 50 / 1000 / 1000
 
 for metric, unit, y_min, y_max, y_step in metrics:
     fig = plt.figure()
@@ -57,12 +63,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     for algorithm, display_name in algorithms:
         y = [run[metric] for run in report if run["Algorithm"] == algorithm]
 
-        if algorithm == "lls_lp":
-            plt.plot(x[:len(y)], y, linestyle="dashed", label=display_name, linewidth=3.5)
-        elif algorithm == "lls_mip":
-            plt.plot(x[:len(y)], y, linestyle="dotted", label=display_name, linewidth=3.5)
-        else:
-            plt.plot(x[:len(y)], y, label=display_name, linewidth=2.5)
+        plt.plot(x[:len(y)], y, label=display_name, linewidth=2.5)
     
     if metric == "Capacity":
         # bbox = dict(boxstyle="round", fc="0.9")
@@ -75,12 +76,12 @@ for metric, unit, y_min, y_max, y_step in metrics:
         #             bbox=bbox, arrowprops=arrowprops)
 
         # num_gs * duration * deep space data rate
-        y = [math.ceil(x[i]/16) * 3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 for i in range(len(x))]
+        y = [math.ceil(x[i]/16) * 3 * 86400 * ogs_bit_rate_tb for i in range(len(x))]
         plt.plot(x, y, label="DTE Capacity", linewidth=2.5, color="gold", linestyle="dashed")
 
     if metric == "Capacity by node":
         # num_gs * duration * deep space data rate
-        y = [math.ceil(x/16) * 3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 / x for x in x]
+        y = [math.ceil(x/16) * 3 * 86400 * ogs_bit_rate_tb / x for x in x]
         plt.plot(x, y, label="DTE Capacity", linewidth=2.5, color="gold", linestyle="dashed")
 
     label = f"{metric} [{unit}]" if unit else metric

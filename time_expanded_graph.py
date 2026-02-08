@@ -18,7 +18,7 @@ class TimeExpandedGraph:
     N: int  # number of nodes
     nodes: list[str]
     node_map: dict[str, int]
-    ipn_node_to_planet_map: dict[int, str]
+    ipn_node_to_planet_map: dict[int, str]  # unused
     
     optical_interfaces_to_node: dict[int, int]
     node_to_optical_interfaces: dict[int, list[int]]

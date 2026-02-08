@@ -11,8 +11,8 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, Tim
     write_time_expanded_graph, convert_time_expanded_graph_to_contact_plan
 from utils import FileType
 
-MAX_TIME = 2.5 * 60 * 60  # seconds
-# MAX_TIME = 120  # seconds
+# MAX_TIME = 2.5 * 60 * 60  # seconds
+MAX_TIME = 180  # seconds
 MAX_EDGES_PER_LASER = 1
 
 

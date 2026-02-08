@@ -5,4 +5,4 @@ python3 main.py \
 dte_mars_earth_scenario_inc_20 dte_mars_earth_scenario_inc_24 dte_mars_earth_scenario_inc_28 dte_mars_earth_scenario_inc_32 \
 dte_mars_earth_scenario_inc_36 dte_mars_earth_scenario_inc_40 dte_mars_earth_scenario_inc_44 dte_mars_earth_scenario_inc_48 \
 dte_mars_earth_scenario_inc_52 dte_mars_earth_scenario_inc_56 dte_mars_earth_scenario_inc_60 dte_mars_earth_scenario_inc_64 \
--s fcp random alternating otls otls_pat_unaware
+-s fcp random otls otls_pat_unaware otls_mip lls lls_pat_unaware lls_mip
