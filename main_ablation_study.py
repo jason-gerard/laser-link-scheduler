@@ -5,7 +5,6 @@ from timeit import default_timer as timer
 import numpy as np
 
 from LLS_milp import LLSModel
-from path_solver import PathSchedulerModel
 from contact_plan import IONContactPlanParser, IPNDContactPlanParser
 from report_generator import Reporter
 from scheduler import LaserLinkScheduler, FairContactPlan, RandomScheduler, AlternatingScheduler, OpticalTrunkLinkScheduler
@@ -64,8 +63,6 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             scheduled_time_expanded_graph = LLSModel(time_expanded_graph, is_mip=True).solve()
         elif scheduler_name == "lls_lp":
             scheduled_time_expanded_graph = LLSModel(time_expanded_graph, is_mip=False).solve()
-        elif scheduler_name == "lls_path":
-            scheduled_time_expanded_graph = PathSchedulerModel(time_expanded_graph).solve()
         elif scheduler_name == "fcp":
             scheduled_time_expanded_graph = FairContactPlan().schedule(time_expanded_graph)
         elif scheduler_name == "random":

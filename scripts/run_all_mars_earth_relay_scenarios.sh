@@ -1,0 +1,8 @@
+#!/bin/bash
+
+python3 main.py \
+-e gs_mars_earth_scenario_inc__4 gs_mars_earth_scenario_inc__8 gs_mars_earth_scenario_inc__12 gs_mars_earth_scenario_inc__16 \
+gs_mars_earth_scenario_inc__20 gs_mars_earth_scenario_inc__24 gs_mars_earth_scenario_inc__28 gs_mars_earth_scenario_inc__32 \
+gs_mars_earth_scenario_inc__36 gs_mars_earth_scenario_inc__40 gs_mars_earth_scenario_inc__44 gs_mars_earth_scenario_inc__48 \
+gs_mars_earth_scenario_inc__52 gs_mars_earth_scenario_inc__56 gs_mars_earth_scenario_inc__60 gs_mars_earth_scenario_inc__64 \
+-s fcp random otls otls_pat_unaware otls_mip lls lls_pat_unaware lls_mip
