@@ -57,8 +57,8 @@ class LaserLinkScheduler:
             )
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
-            weights[k] = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
-            # weights[k] = normalized_weighted_combination(W_delta_cap, W_dct, constants.alpha)
+            # weights[k] = ((1 - constants.lls_alpha) * W_delta_cap) + (constants.lls_alpha * W_dct)
+            weights[k] = normalized_weighted_combination(W_delta_cap, W_dct, constants.lls_alpha)
 
             # Compute max weight maximal matching using the blossom algorithm
             matched_edges = blossom(teg.graphs[k], weights[k])
@@ -319,8 +319,8 @@ class OpticalTrunkLinkScheduler:
             )
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
-            #weights[k] = ((1 - constants.alpha) * W_delta_cap) + (constants.alpha * W_dct)
-            weights[k] = normalized_weighted_combination(W_delta_cap, W_dct, constants.alpha)
+            #weights[k] = ((1 - constants.otls_alpha) * W_delta_cap) + (constants.otls_alpha * W_dct)
+            weights[k] = normalized_weighted_combination(W_delta_cap, W_dct, constants.otls_alpha)
 
             # Compute max weight maximal matching using the Hungarian algorithm
             matched_edges = max_weight_hungarian(teg.graphs[k], weights[k])

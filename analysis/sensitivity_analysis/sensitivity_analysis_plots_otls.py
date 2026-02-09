@@ -22,7 +22,7 @@ plt.rcParams.update({'pdf.fonttype': 42})
 # Load CSV (your starting point)
 # ----------------------------
 report_id = 1770421690
-file_name = "otls_ablation_study_alpha"
+file_name = "otls_sensitivity_analysis_alpha"
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 
 with open(path, "r", newline="") as f:
@@ -131,12 +131,12 @@ plt.tight_layout()
 # plt.show()
 
 plt.savefig(
-    os.path.join("analysis", "ablation_study", f"{file_name}.pdf"),
+    os.path.join("analysis", "sensitivity_analysis", f"{file_name}.pdf"),
     format="pdf",
     bbox_inches="tight"
 )
 plt.savefig(
-    os.path.join("analysis", "ablation_study", f"{file_name}.png"),
+    os.path.join("analysis", "sensitivity_analysis", f"{file_name}.png"),
     format="png",
     bbox_inches="tight",
     dpi=300,

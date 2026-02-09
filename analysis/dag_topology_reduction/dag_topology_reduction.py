@@ -162,12 +162,12 @@ if __name__ == "__main__":
 
     file_name = "dag_reducation_decision_variables".replace(" ", "_").replace("/", "_")
     plt.savefig(
-        os.path.join("analysis", f"{file_name}.pdf"),
+        os.path.join("analysis", "dag_topology_reduction", f"{file_name}.pdf"),
         format="pdf",
         bbox_inches="tight"
     )
     plt.savefig(
-        os.path.join("analysis", f"{file_name}.png"),
+        os.path.join("analysis", "dag_topology_reduction", f"{file_name}.png"),
         format="png",
         bbox_inches="tight",
         dpi=300,

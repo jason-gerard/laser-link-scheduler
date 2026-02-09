@@ -89,12 +89,12 @@ cbar = fig.colorbar(psm, ax=ax)
 cbar.set_label('Average edge weight')
 
 plt.savefig(
-    os.path.join("analysis", "weights_grid.pdf"),
+    os.path.join("analysis", "capacity_model_weights", "weights_grid.pdf"),
     format="pdf",
     bbox_inches='tight'
 )
 plt.savefig(
-    os.path.join("analysis", "weights_grid.png"),
+    os.path.join("analysis", "capacity_model_weights", "weights_grid.png"),
     format="png",
     bbox_inches='tight',
     dpi=300,

@@ -32,19 +32,20 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
 
     # Convert contact plan into a time expanded graph (TEG). From our testing on the Fair Contact Plan algorithm
     # benefits from graph fractionation.
-    should_reduce = (
-        scheduler_name == "lls_mip"
-        or scheduler_name == "lls_lp"
-        or scheduler_name == "lls"
-        or scheduler_name == "lls_pat_unaware"
-        or scheduler_name == "otls"
-        or scheduler_name == "otls_pat_unaware"
-        or scheduler_name == "otls_mip"
-    )
+    # should_reduce = (
+    #     scheduler_name == "lls_mip"
+    #     or scheduler_name == "lls_lp"
+    #     or scheduler_name == "lls"
+    #     or scheduler_name == "lls_pat_unaware"
+    #     or scheduler_name == "otls"
+    #     or scheduler_name == "otls_pat_unaware"
+    #     or scheduler_name == "otls_mip"
+    # )
     time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
         contact_plan,
         should_fractionate=True,
-        should_reduce=should_reduce
+        should_reduce=True,
+        is_bipartite="otls" in scheduler_name,
     )
     write_time_expanded_graph(experiment_name, time_expanded_graph, FileType.TEG)
     print("Finished converting contact plan to time expanded graph")

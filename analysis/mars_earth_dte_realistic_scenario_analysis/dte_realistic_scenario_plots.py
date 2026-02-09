@@ -129,5 +129,5 @@ ax.legend(
 
 # Save the figure
 file_name = "dte_capacity_timeline"
-plt.savefig(os.path.join("analysis", "dte_timeline_figures", f"{file_name}.pdf"), format="pdf", bbox_inches="tight")
-plt.savefig(os.path.join("analysis", "dte_timeline_figures", f"{file_name}.png"), format="png", bbox_inches="tight", dpi=300)
+plt.savefig(os.path.join("analysis", "mars_earth_dte_realistic_scenario_analysis", f"{file_name}.pdf"), format="pdf", bbox_inches="tight")
+plt.savefig(os.path.join("analysis", "mars_earth_dte_realistic_scenario_analysis", f"{file_name}.png"), format="png", bbox_inches="tight", dpi=300)

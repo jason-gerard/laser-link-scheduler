@@ -18,8 +18,10 @@ import pointing_delay_model
 
 def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Reporter, parameter: str, parameter_value: any):
     # Set parameter const for study
-    if parameter == "alpha":
-        constants.alpha = parameter_value
+    if parameter == "alpha" and "lls" in scheduler_name:
+        constants.lls_alpha = parameter_value
+    elif parameter == "alpha" and "otls" in scheduler_name:
+        constants.otls_alpha = parameter_value
 
     # Clear all caches
     weights.effective_contact_time_cache = {}

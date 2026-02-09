@@ -108,12 +108,12 @@ for metric, unit, y_min, y_max, y_step in metrics:
     
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(
-        os.path.join("analysis", "dte_figures", f"{file_name}.pdf"),
+        os.path.join("analysis", "mars_earth_dte_scenario_analysis", f"{file_name}.pdf"),
         format="pdf",
         bbox_inches="tight"
     )
     plt.savefig(
-        os.path.join("analysis", "dte_figures", f"{file_name}.png"),
+        os.path.join("analysis", "mars_earth_dte_scenario_analysis", f"{file_name}.png"),
         format="png",
         bbox_inches="tight",
         dpi=300,

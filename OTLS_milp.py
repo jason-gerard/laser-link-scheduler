@@ -14,6 +14,7 @@ from utils import FileType
 # MAX_TIME = 2.5 * 60 * 60  # seconds
 MAX_TIME = 180  # seconds
 MAX_EDGES_PER_LASER = 1
+EPSILON = 0.9
 
 
 class OtlsModel:
@@ -127,7 +128,7 @@ class OtlsModel:
         source_node_ect_dict = {source_node: self.ect(source_node) for source_node in self.teg.nodes if source_node in SOURCE_NODES}
         sum_ect = pulp.lpSum([source_node_ect_dict.values()])
         for ect in source_node_ect_dict.values():
-            self.flow_model += ect >= (sum_ect / len(source_node_ect_dict)) * 0.90
+            self.flow_model += ect >= (sum_ect / len(source_node_ect_dict)) * EPSILON
 
         # Constraint that each optical interface can only be a part of a single selected edge per state
         print(f"Setting up 1 to 1 relationship between nodes per state k")

@@ -62,7 +62,7 @@ class TimeExpandedGraph:
         return rep
 
 
-def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, should_fractionate: bool, should_reduce: bool) -> TimeExpandedGraph:
+def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, should_fractionate: bool, should_reduce: bool, is_bipartite: bool=False) -> TimeExpandedGraph:
     # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
     # We are defining this as any contact with a range greater than 100,000 km.
     # A non-ipn node can receive across interplanetary distances, but cannot transmit across interplanetary
@@ -181,7 +181,7 @@ def convert_contact_plan_to_time_expanded_graph(contact_plan: ContactPlan, shoul
     # algorithms will have better performance.
     time_expanded_graph = fractionate_graph(time_expanded_graph) if should_fractionate else time_expanded_graph
     
-    return dag_reduction(time_expanded_graph) if should_reduce else time_expanded_graph
+    return dag_reduction(time_expanded_graph, is_bipartite=is_bipartite) if should_reduce else time_expanded_graph
 
 
 def include_contact(contact: Contact, state_start_time: int, state_duration: int) -> bool:
@@ -314,7 +314,7 @@ def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExp
         f.write(str(time_expanded_graph))
 
 
-def dag_reduction(teg: TimeExpandedGraph):
+def dag_reduction(teg: TimeExpandedGraph, is_bipartite=False):
     """
     The directed-acyclic graph (DAG) topology reduction algorithm follows several rules and cases to remove cycles
     and reduce the number of edges in the graph
@@ -342,8 +342,18 @@ def dag_reduction(teg: TimeExpandedGraph):
                     are_nodes_same_planet = NODE_TO_PLANET_MAP[tx_node] == NODE_TO_PLANET_MAP[rx_node]
                     is_rly_on_dst_planet = NODE_TO_PLANET_MAP[rx_node] == EARTH
 
-                    if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
-                        reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+                    # SCENARIO: Mars relay IPN links only
+                    # if is_src_rly or is_rly_dst:
+                    #     reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+
+                    # SCENARIO: Earth delay
+                    if is_bipartite:
+                        if is_src_dst:
+                            reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+                    else:
+                        if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
+                            reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+
 
     reduced_teg = TimeExpandedGraph(
         graphs=reduced_graph,
@@ -361,7 +371,7 @@ def dag_reduction(teg: TimeExpandedGraph):
         effective_contact_durations=teg.effective_contact_durations,
     )
 
-    print(count_edges(teg), count_edges(reduced_teg))
+    # print(count_edges(teg), count_edges(reduced_teg))
     print(f"Percent of edges removed = {100 * (1 - count_edges(reduced_teg) / count_edges(teg)):.3f}%")
 
     return reduced_teg
