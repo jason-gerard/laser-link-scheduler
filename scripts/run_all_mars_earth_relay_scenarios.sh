@@ -5,4 +5,4 @@ python3 main.py \
 gs_mars_earth_scenario_inc_20 gs_mars_earth_scenario_inc_24 gs_mars_earth_scenario_inc_28 gs_mars_earth_scenario_inc_32 \
 gs_mars_earth_scenario_inc_36 gs_mars_earth_scenario_inc_40 gs_mars_earth_scenario_inc_44 gs_mars_earth_scenario_inc_48 \
 gs_mars_earth_scenario_inc_52 gs_mars_earth_scenario_inc_56 gs_mars_earth_scenario_inc_60 gs_mars_earth_scenario_inc_64 \
--s fcp random otls otls_pat_unaware otls_mip lls lls_pat_unaware lls_mip
+-s fcp otls otls_pat_unaware otls_mip lls lls_pat_unaware lls_mip

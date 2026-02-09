@@ -103,10 +103,10 @@ for metric, unit, y_min, y_max, y_step in metrics:
         plt.ylim(max(y_min-y_step, 0), y_max)
         ax.set_yticks([y_min] + np.arange(y_step, y_max+0.01, y_step).tolist())
 
-    ax.set_xticks([i for i in x if i % 8 == 0])
-    ax.set_xticklabels([f"{i}/{math.ceil(i/16) * 3}" for i in x if i % 8 == 0])
+    ax.set_xticks([i for i in x if i % 16 == 0])
+    ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
     
-    file_name = label.replace(" ", "_").replace("/", "_")
+    file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "")
     plt.savefig(
         os.path.join("analysis", "mars_earth_dte_scenario_analysis", f"{file_name}.pdf"),
         format="pdf",

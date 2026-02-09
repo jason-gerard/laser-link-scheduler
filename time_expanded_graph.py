@@ -343,16 +343,16 @@ def dag_reduction(teg: TimeExpandedGraph, is_bipartite=False):
                     is_rly_on_dst_planet = NODE_TO_PLANET_MAP[rx_node] == EARTH
 
                     # SCENARIO: Mars relay IPN links only
-                    if is_src_rly or is_rly_dst:
-                        reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+                    # if is_src_rly or is_rly_dst:
+                    #     reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
 
                     # SCENARIO: Earth delay
-                    # if is_bipartite:
-                    #     if is_src_dst:
-                    #         reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
-                    # else:
-                    #     if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
-                    #         reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+                    if is_bipartite:
+                        if is_src_dst:
+                            reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+                    else:
+                        if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
+                            reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
 
 
     reduced_teg = TimeExpandedGraph(

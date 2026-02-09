@@ -31,16 +31,20 @@ default_a = 1
 # if alpha = 0 then only consider capacity
 
 # SCENARIO: mars_relay_earth_scenario
-lls_alpha = 0.3
-otls_alpha = None
+# lls_alpha = 0.3
+# otls_alpha = None
 
 # SCENARIO: gs_mars_earth_scenario_inc
-# lls_alpha = 0.7
-# otls_alpha = 0.6
+lls_alpha = 0.7
+otls_alpha = 0.6
 
 # SCENARIO: dte_mars_earth_scenario_inc
 # lls_alpha = 0.4
 # otls_alpha = 0.35
+
+# SCENARIO: dte_realistic_scenario
+# lls_alpha = 0.90
+# otls_alpha = 0.90
 
 # The matrix A, contains the integer IDs of the communication interfaces for each node. Each laser
 # communication interface is associated in an integer ID, a, where a >= 1.
@@ -103,11 +107,11 @@ RELAY_NODES = [
 
 NODE_TO_PLANET_MAP = {
     # SCENARIO: Earth Relay
-    # "1001": EARTH, "1002": EARTH, "1003": EARTH, "1004": EARTH, "1005": EARTH, "1006": EARTH,
+    "1001": EARTH, "1002": EARTH, "1003": EARTH, "1004": EARTH, "1005": EARTH, "1006": EARTH,
     # SCENARIO: Mars Relay
-    "1001": MARS, "1002": MARS, "1003": MARS, "1004": MARS, "1005": MARS,
-    "1006": MARS, "1007": MARS, "1008": MARS, "1009": MARS, "1010": MARS,
-    "1011": MARS, "1012": MARS,
+    # "1001": MARS, "1002": MARS, "1003": MARS, "1004": MARS, "1005": MARS,
+    # "1006": MARS, "1007": MARS, "1008": MARS, "1009": MARS, "1010": MARS,
+    # "1011": MARS, "1012": MARS,
 
     "2001": MARS, "2002": MARS, "2003": MARS, "2004": MARS, "2005": MARS, "2006": MARS, "2007": MARS, "2008": MARS,
     "2009": MARS, "2010": MARS, "2011": MARS, "2012": MARS, "2013": MARS, "2014": MARS, "2015": MARS, "2016": MARS,
@@ -129,14 +133,14 @@ NODE_TO_PLANET_MAP = {
 # value is taken from the NASA DSOC Mars communication demonstration where they achieved a 267 megabit per second
 # bit rate, https://www.jpl.nasa.gov/news/nasas-tech-demo-streams-first-video-from-deep-space-via-laser.
 # SOURCE_NODE_BIT_RATE = 267  # DSOC Psyche @ 33 million km 267 mbps
-# ORBITER_NODE_BIT_RATE = 50  # DSOC Psyche @ 100 million km 50 mbps
-# LANDER_NODE_BIT_RATE = 25  # 25 mbps
-# RELAY_NODE_BIT_RATE = 1200  # LCRD @ 1.2 gbps
-# OGS_NODE_BIT_RATE = 1200  # LCRD @ 1.2 gbps
+ORBITER_NODE_BIT_RATE = 50  # DSOC Psyche @ 100 million km 50 mbps
+LANDER_NODE_BIT_RATE = 25  # 25 mbps
+RELAY_NODE_BIT_RATE = 1200  # LCRD @ 1.2 gbps
+OGS_NODE_BIT_RATE = 1200  # LCRD @ 1.2 gbps
 
 # SCENARIO: Mars relay to Earth only link data rates
-ORBITER_NODE_BIT_RATE = 50
-OGS_NODE_BIT_RATE = 50
+# ORBITER_NODE_BIT_RATE = 50
+# OGS_NODE_BIT_RATE = 50
 
 BIT_RATES = {
     # SCENARIO: Earth Relay
@@ -148,9 +152,9 @@ BIT_RATES = {
     "1010": ORBITER_NODE_BIT_RATE, "1011": ORBITER_NODE_BIT_RATE, "1012": ORBITER_NODE_BIT_RATE,
 
     # SCENARIO: Realistic scenario
-    # "2001": LANDER_NODE_BIT_RATE, "2002": LANDER_NODE_BIT_RATE, "2003": LANDER_NODE_BIT_RATE,
+    "2001": LANDER_NODE_BIT_RATE, "2002": LANDER_NODE_BIT_RATE, "2003": LANDER_NODE_BIT_RATE,
     # SCENARIO: Scalability scenarios
-    "2001": ORBITER_NODE_BIT_RATE, "2002": ORBITER_NODE_BIT_RATE, "2003": ORBITER_NODE_BIT_RATE,
+    # "2001": ORBITER_NODE_BIT_RATE, "2002": ORBITER_NODE_BIT_RATE, "2003": ORBITER_NODE_BIT_RATE,
     # SCENARIO: Common
     "2004": ORBITER_NODE_BIT_RATE, "2005": ORBITER_NODE_BIT_RATE, "2006": ORBITER_NODE_BIT_RATE, "2007": ORBITER_NODE_BIT_RATE, "2008": ORBITER_NODE_BIT_RATE,
     "2009": ORBITER_NODE_BIT_RATE, "2010": ORBITER_NODE_BIT_RATE, "2011": ORBITER_NODE_BIT_RATE, "2012": ORBITER_NODE_BIT_RATE, "2013": ORBITER_NODE_BIT_RATE, "2014": ORBITER_NODE_BIT_RATE, "2015": ORBITER_NODE_BIT_RATE, "2016": ORBITER_NODE_BIT_RATE,
