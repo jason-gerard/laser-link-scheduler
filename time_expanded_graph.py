@@ -346,7 +346,7 @@ def dag_reduction(teg: TimeExpandedGraph, is_bipartite=False):
                     # if is_src_rly or is_rly_dst:
                     #     reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
 
-                    # SCENARIO: Earth delay
+                    # SCENARIO: Earth relay
                     if is_bipartite:
                         if is_src_dst:
                             reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]

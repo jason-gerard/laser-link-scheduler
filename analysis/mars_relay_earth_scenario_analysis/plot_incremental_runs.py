@@ -94,7 +94,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     ax.set_xticks([i for i in x if i % 16 == 0])
     ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
     
-    file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "")
+    file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "").replace("'", "")
     plt.savefig(
         os.path.join("analysis", OUTPUT_DIR, f"{file_name}.pdf"),
         format="pdf",

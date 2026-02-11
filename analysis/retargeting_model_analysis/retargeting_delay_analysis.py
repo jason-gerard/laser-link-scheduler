@@ -32,15 +32,15 @@ algorithms = [
     ("fcp", "FCP"),
 ]
 
-report_id = 1748949730
+report_id = 1770805980
 # OUTPUT_DIR = "mars_relay_earth_scenario_analysis"
 OUTPUT_DIR = "mars_earth_relay_scenario_analysis"
 # OUTPUT_DIR = "mars_earth_dte_scenario_analysis"
 
 tegs = []
 
-# pattern = re.compile(r"^([a-zA-Z_]+)_mars_.*?_(\d+)\.pkl$")
-pattern = re.compile(r"^([a-zA-Z_]+)_gs_.*?_(\d+)\.pkl$")
+pattern = re.compile(r"^([a-zA-Z_]+)_mars_.*?_(\d+)\.pkl$")
+# pattern = re.compile(r"^([a-zA-Z_]+)_gs_.*?_(\d+)\.pkl$")
 # pattern = re.compile(r"^([a-zA-Z_]+)_dte_.*?_(\d+)\.pkl$")
 
 report_dir = os.path.join("reports", str(report_id))
@@ -157,8 +157,10 @@ plt.grid(linestyle='-', color='0.95')
 plt.legend(loc="lower right")
 
 # Custom X-axis ticks and labels
-ax.set_xticks([i for i in x if i % 16 == 0])
-ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
+# ax.set_xticks([i for i in x if i % 16 == 0])
+ax.set_xticks([i for i in x if i % 8 == 0])
+# ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
+ax.set_xticklabels([f"{i}/{math.ceil(i/8)}" for i in x if i % 8 == 0])
 # ax.set_xticklabels([f"{i}/{math.ceil(i/16)}" for i in x if i % 16 == 0])
 
 # Save the figure

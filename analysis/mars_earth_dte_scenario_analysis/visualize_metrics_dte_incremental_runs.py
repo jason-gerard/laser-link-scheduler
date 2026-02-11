@@ -15,7 +15,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
 plt.rcParams.update({'pdf.fonttype': 42})
 
-report_id = 1770509392
+report_id = 1770756880
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [{k: v for k, v in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
@@ -43,14 +43,13 @@ algorithms = [
     ("lls_pat_unaware", "LLS_Greedy (ZRK)"),
     ("lls_mip", "LLS_MIP"),
     ("fcp", "FCP"),
-    ("random", "Random"),
 ]
 
 metrics = [
     ("Capacity", "terabits/day", 5, 60, 5),
-    ("Capacity by node", "terabits/day", 0.5, 4, 0.5),
-    ("Scheduled delay", "hours", 0, 6, 1),
-    ("Jain's fairness index", "", 0.5, 1.0, 0.2),
+    ("Capacity by node", "terabits/day", 0.25, 2, 0.25),
+    ("Scheduled delay", "hours", 0, 20, 4),
+    ("Jain's fairness index", "", 0.8, 1.0, 0.1),
     ("Execution duration", "seconds", 0.01, 100000, 30),
 ]
 
@@ -62,6 +61,8 @@ for metric, unit, y_min, y_max, y_step in metrics:
 
     for algorithm, display_name in algorithms:
         y = [run[metric] for run in report if run["Algorithm"] == algorithm]
+        if len(y) == 0:
+            print(f"No data for algo {algorithm}")
 
         plt.plot(x[:len(y)], y, label=display_name, linewidth=2.5)
     
@@ -106,7 +107,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     ax.set_xticks([i for i in x if i % 16 == 0])
     ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
     
-    file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "")
+    file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "").replace("'", "")
     plt.savefig(
         os.path.join("analysis", "mars_earth_dte_scenario_analysis", f"{file_name}.pdf"),
         format="pdf",

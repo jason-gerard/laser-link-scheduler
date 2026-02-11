@@ -287,6 +287,7 @@ def compute_wasted_capacity(capacities: list[NodeCapacity]) -> float:
 
     # This metric should be minimized
     # Sum the wasted capacities for each IPN nodes to get the network wasted capacity
+    # Either overscheduled transmissions or receptions
     return sum(wasted_capacities)
 
 

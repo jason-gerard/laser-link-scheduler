@@ -20,7 +20,7 @@ from time_expanded_graph import TimeExpandedGraph
 from weights import compute_node_capacities, compute_capacity
 
 plt.rcParams.update({'font.size': 22})
-plt.rc('legend', fontsize=14)
+plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
 mpl.rcParams['pdf.fonttype'] = 42
@@ -235,7 +235,7 @@ plt.grid(linestyle='-', color='0.95')
 ax.legend(
     loc="upper center",
     bbox_to_anchor=(0.5, -0.25),
-    ncol=5,
+    ncol=3,
     frameon=False
 )
 

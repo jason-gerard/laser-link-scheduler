@@ -15,7 +15,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
 plt.rcParams.update({'pdf.fonttype': 42})
 
-report_id = 1748949730
+report_id = 1770805980
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [{k: v for k, v in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
@@ -48,12 +48,12 @@ algorithms = [
 ]
 
 metrics = [
-    ("Capacity", "terabits/day", 5, 40, 5),
+    ("Capacity", "terabits/day", 10, 70, 10),
     ("Capacity by node", "terabits/day", 0.5, 4, 0.5),
     ("Wasted capacity", "terabits/day", 10, 70, 10),
     ("Wasted buffer capacity", "terabits/day", 5, 40, 5),
-    ("Scheduled delay", "hours", 0, 6, 1),
-    ("Jain's fairness index", "", 0.5, 1.0, 0.2),
+    ("Scheduled delay", "hours", 0, 25, 5),
+    ("Jain's fairness index", "", 0.7, 1.0, 0.1),
     ("Execution duration", "seconds", 0.01, 100000, 30),
 ]
 
@@ -114,10 +114,10 @@ for metric, unit, y_min, y_max, y_step in metrics:
         plt.ylim(max(y_min-y_step, 0), y_max)
         ax.set_yticks([y_min] + np.arange(y_step, y_max+0.01, y_step).tolist())
 
-    ax.set_xticks([i for i in x if i % 16 == 0])
-    ax.set_xticklabels([f"{i}/{math.ceil(i/16)}" for i in x if i % 16 == 0])
+    ax.set_xticks([i for i in x if i % 8 == 0])
+    ax.set_xticklabels([f"{i}/{math.ceil(i/8)}" for i in x if i % 8 == 0])
     
-    file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "")
+    file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "").replace("'", "")
     plt.savefig(
         os.path.join("analysis", OUTPUT_DIR, f"{file_name}.pdf"),
         format="pdf",
