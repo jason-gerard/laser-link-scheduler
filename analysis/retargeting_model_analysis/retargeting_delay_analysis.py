@@ -23,18 +23,18 @@ mpl.rcParams['ps.fonttype'] = 42
 plt.rcParams.update({'pdf.fonttype': 42})
 
 algorithms = [
-    ("otls", "OTLS_Greedy"),
-    ("otls_pat_unaware", "OTLS_Greedy (ZRK)"),
-    ("otls_mip", "OTLS_MIP"),
+    # ("otls", "OTLS_Greedy"),
+    # ("otls_pat_unaware", "OTLS_Greedy (ZRK)"),
+    # ("otls_mip", "OTLS_MIP"),
     ("lls", "LLS_Greedy"),
     ("lls_pat_unaware", "LLS_Greedy (ZRK)"),
     ("lls_mip", "LLS_MIP"),
     ("fcp", "FCP"),
 ]
 
-report_id = 1770805980
-# OUTPUT_DIR = "mars_relay_earth_scenario_analysis"
-OUTPUT_DIR = "mars_earth_relay_scenario_analysis"
+report_id = 1770632046
+OUTPUT_DIR = "mars_relay_earth_scenario_analysis"
+# OUTPUT_DIR = "mars_earth_relay_scenario_analysis"
 # OUTPUT_DIR = "mars_earth_dte_scenario_analysis"
 
 tegs = []
@@ -157,10 +157,10 @@ plt.grid(linestyle='-', color='0.95')
 plt.legend(loc="lower right")
 
 # Custom X-axis ticks and labels
-# ax.set_xticks([i for i in x if i % 16 == 0])
-ax.set_xticks([i for i in x if i % 8 == 0])
-# ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
-ax.set_xticklabels([f"{i}/{math.ceil(i/8)}" for i in x if i % 8 == 0])
+ax.set_xticks([i for i in x if i % 16 == 0])
+# ax.set_xticks([i for i in x if i % 8 == 0])
+ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
+# ax.set_xticklabels([f"{i}/{math.ceil(i/8)}" for i in x if i % 8 == 0])
 # ax.set_xticklabels([f"{i}/{math.ceil(i/16)}" for i in x if i % 16 == 0])
 
 # Save the figure
