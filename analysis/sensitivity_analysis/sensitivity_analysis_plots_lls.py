@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # Plot style (top-of-file)
 # ----------------------------
 plt.rcParams.update({'font.size': 22})
-plt.rc('legend', fontsize=14)
+plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
 mpl.rcParams['pdf.fonttype'] = 42

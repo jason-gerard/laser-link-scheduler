@@ -28,7 +28,7 @@ for run in report:
     run["Capacity by node"] = float(run["Capacity"]) / 1000 / 1000 / num_nodes  # this has to come before capacity calculation
     run["Capacity"] = float(run["Capacity"]) / 1000 / 1000
     run["Wasted capacity"] = float(run["Wasted capacity"]) / 1000 / 1000
-    run["Wasted buffer capacity"] = float(run["Wasted buffer capacity"]) / 1000 / 1000
+    run["Wasted buffer"] = float(run["Wasted buffer capacity"]) / 1000 / 1000
     run["Scheduled delay"] = float(run["Scheduled delay"]) / 60 / 60
     run["Jain's fairness index"] = float(run["Jain's fairness index"])
     run["Execution duration"] = float(run["Execution duration"])
@@ -51,7 +51,7 @@ metrics = [
     ("Capacity", "terabits/day", 10, 70, 10),
     ("Capacity by node", "terabits/day", 0.5, 4, 0.5),
     ("Wasted capacity", "terabits/day", 10, 70, 10),
-    ("Wasted buffer capacity", "terabits/day", 5, 40, 5),
+    ("Wasted buffer", "terabits/day", 5, 40, 5),
     ("Scheduled delay", "hours", 0, 25, 5),
     ("Jain's fairness index", "", 0.7, 1.0, 0.1),
     ("Execution duration", "seconds", 0.01, 100000, 30),
