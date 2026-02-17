@@ -4,7 +4,9 @@ import pickle
 import time
 
 from laser_link_scheduler import constants
-from laser_link_scheduler.graph.time_expanded_graph import TimeExpandedGraph
+from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
+    TimeExpandedGraph,
+)
 from laser_link_scheduler.topology import weights
 from laser_link_scheduler.topology.weights import (
     compute_capacity,
@@ -50,6 +52,7 @@ class Reporter:
             teg.pos,
             teg.optical_interfaces_to_node,
             teg.node_to_optical_interfaces,
+            False,
         )
 
         # for cap in node_capacities:

@@ -43,7 +43,7 @@ def survivability(E_b: float, P_c: float, P_g: float) -> float:
 if __name__ == "__main__":
     E_b = 5000.0  # Joules
     P_c = 50.0  # Watts
-    P_g = 20.0  # Watts
+    P_g = 0  # Watts (no recharge capability - RTG powered)
 
     L = survivability(E_b, P_c, P_g)
     print("Parameters:")

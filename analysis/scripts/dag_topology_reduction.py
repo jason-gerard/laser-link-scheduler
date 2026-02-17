@@ -15,7 +15,7 @@ SRC_ROOT = os.path.join(REPO_ROOT, "src")
 if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
-from laser_link_scheduler.graph.time_expanded_graph import (
+from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
     count_edges,
     dag_reduction,

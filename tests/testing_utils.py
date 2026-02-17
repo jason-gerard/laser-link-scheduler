@@ -1,8 +1,8 @@
-from laser_link_scheduler.graph.time_expanded_graph import (
+from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
     fractionate_graph,
 )
-from laser_link_scheduler.scheduling.scheduler import LaserLinkScheduler
+from laser_link_scheduler.schedulers import LaserLinkScheduler
 from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
 
 

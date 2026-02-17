@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Tuple, Optional
 
 import numpy as np
-
+from itertools import groupby
 from laser_link_scheduler import constants
 from laser_link_scheduler.models.link_acq_delay import (
     link_acq_delay_ipn,
@@ -34,6 +34,7 @@ def delta_capacity(
     positions: np.ndarray,
     optical_interfaces_to_node: dict[int, int],
     node_to_optical_interfaces: dict[int, list[int]],
+    should_bypass_retargeting_time: bool = False,
 ) -> np.ndarray:
     """
     The delta cap method can be used with two different sub routines. Each of the sub routines will be applied to the
@@ -44,7 +45,7 @@ def delta_capacity(
     num_nodes = len(contact_topology_k)
 
     # Compute network capacity with current node_capacities list
-    current_capacity = compute_capacity(node_capacities)
+    network_current_capacity = compute_capacity(node_capacities)
 
     delta_capacities = np.zeros((num_nodes, num_nodes), dtype="int64")
     for tx_idx in range(num_nodes):
@@ -65,6 +66,7 @@ def delta_capacity(
                         positions,
                         optical_interfaces_to_node,
                         node_to_optical_interfaces,
+                        should_bypass_retargeting_time,
                     )
                 )
 
@@ -80,7 +82,7 @@ def delta_capacity(
 
                     # Take the difference and that is the new weight
                     delta_capacities[tx_idx][rx_idx] = (
-                        new_capacity - current_capacity
+                        new_capacity - network_current_capacity
                     )
 
     return delta_capacities
@@ -132,10 +134,12 @@ def merge_many_node_capacities(
     Merges capacities for many different node ids
     """
     # Convert to dict of node to list of capacities
-    ipn_node_ids = set([capacity.id for capacity in capacities])
-    node_capacities_dict = {node_id: [] for node_id in ipn_node_ids}
-    for node_capacity in capacities:
-        node_capacities_dict[node_capacity.id].append(node_capacity)
+    node_capacities_dict = {
+        node_idx: list(node_capacities)
+        for node_idx, node_capacities in groupby(
+            sorted(capacities, key=lambda x: x.id), key=lambda x: x.id
+        )
+    }
 
     # Merge node capacities calculated over all graphs in the TEG to a single capacity, this gives a list of node
     # capacities where each is the total capacity in and out over all graphs for a single IPN node
@@ -174,6 +178,7 @@ def compute_node_capacities(
     positions: np.ndarray,
     optical_interfaces_to_node: dict[int, int],
     node_to_optical_interfaces: dict[int, list[int]],
+    should_bypass_retargeting_time: bool,
 ) -> list[NodeCapacity]:
     # For each graph in the TEG, compute the capacity
     node_capacities_by_graph = [
@@ -185,6 +190,7 @@ def compute_node_capacities(
             positions,
             optical_interfaces_to_node,
             node_to_optical_interfaces,
+            should_bypass_retargeting_time,
         )
         for k in range(K)
     ]
@@ -202,6 +208,7 @@ def compute_node_capacity_by_single_edge_graph(
     positions: np.ndarray,
     optical_interfaces_to_node,
     node_to_optical_interfaces: dict[int, list[int]],
+    should_bypass_retargeting_time: bool = False,
 ) -> NodeCapacity | None:
     bit_rate = min(
         constants.BIT_RATES[nodes[optical_interfaces_to_node[tx_oi_idx]]],
@@ -216,6 +223,7 @@ def compute_node_capacity_by_single_edge_graph(
         positions,
         optical_interfaces_to_node,
         nodes,
+        should_bypass_retargeting_time,
     )
 
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
@@ -263,6 +271,7 @@ def compute_node_capacity_by_graph(
     positions: np.ndarray,
     optical_interfaces_to_node: dict[int, int],
     node_to_optical_interfaces: dict[int, list[int]],
+    should_bypass_retargeting_time: bool,
 ) -> list[NodeCapacity]:
     num_nodes = len(graph)
 
@@ -295,6 +304,7 @@ def compute_node_capacity_by_graph(
                     positions,
                     optical_interfaces_to_node,
                     nodes,
+                    should_bypass_retargeting_time,
                 )
 
                 curr_k = min(
@@ -534,8 +544,9 @@ def compute_effective_contact_time(
     positions: np.ndarray,
     optical_interfaces_to_node: dict[int, int],
     nodes: list[str],
+    should_bypass_retargeting_time: bool,
 ) -> float:
-    if constants.should_bypass_retargeting_time:
+    if should_bypass_retargeting_time:
         return state_duration
 
     curr_k = min(len(scheduled_contact_topology), len(positions) - 1)

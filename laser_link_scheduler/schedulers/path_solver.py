@@ -3,9 +3,8 @@ from laser_link_scheduler.constants import (
     RELAY_NODES,
     SOURCE_NODES,
 )
-from laser_link_scheduler.graph.time_expanded_graph import (
-    TimeExpandedGraph,
-)
+from laser_link_scheduler.time_expanded_graph import TimeExpandedGraph
+from .base_scheduler import BaseScheduler
 
 
 MAX_TIME = 2.5 * 60 * 60  # seconds
@@ -13,9 +12,9 @@ MAX_TIME = 2.5 * 60 * 60  # seconds
 MAX_EDGES_PER_LASER = 1
 
 
-class PathSchedulerModel:
-    def __init__(self, teg: TimeExpandedGraph):
-        self.teg = teg
+class PathSchedulerModel(BaseScheduler):
+    def __init__(self):
+        self.teg: TimeExpandedGraph = None
         self.edges = None
         self.edge_deviation_high = None
         self.edge_deviation_low = None
@@ -29,7 +28,12 @@ class PathSchedulerModel:
 
         self.flow_model = None
 
-    def solve(self):
+    def schedule(self, teg: TimeExpandedGraph):
+        self.teg = teg
+        self._solve()
+        return self.teg
+
+    def _solve(self):
         # Compute all single hop paths for each k
         # I motif
         single_hop_paths = []

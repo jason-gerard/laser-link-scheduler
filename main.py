@@ -4,21 +4,22 @@ import typer
 
 import numpy as np
 
-from laser_link_scheduler import constants
-from laser_link_scheduler.graph.path_solver import PathSchedulerModel
-from laser_link_scheduler.graph.time_expanded_graph import (
+from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
     convert_time_expanded_graph_to_contact_plan,
     write_time_expanded_graph,
 )
 from laser_link_scheduler.models import pointing_delay as pointing_delay_model
 from laser_link_scheduler.reporting.report_generator import Reporter
-from laser_link_scheduler.scheduling.milp_lls import LLSModel
-from laser_link_scheduler.scheduling.scheduler import (
+from laser_link_scheduler.schedulers import (
+    BaseScheduler,
+    LaserLinkScheduler,
+    LLSModel,
+    PathSchedulerModel,
+    RandomScheduler,
     AlternatingScheduler,
     FairContactPlan,
-    LaserLinkScheduler,
-    RandomScheduler,
+    LifespanAware,
 )
 from laser_link_scheduler.topology import weights
 from laser_link_scheduler.topology.contact_plan import (
@@ -26,6 +27,18 @@ from laser_link_scheduler.topology.contact_plan import (
     IPNDContactPlanParser,
 )
 from laser_link_scheduler.utils import FileType
+
+SCHEDULER_REGISTRY: dict[str, BaseScheduler] = {
+    "lls": LaserLinkScheduler(),
+    "lls_pat_unaware": LaserLinkScheduler(should_bypass_retargeting_time=True),
+    "lls_mip": LLSModel(is_mip=True),
+    "lls_lp": LLSModel(is_mip=False),
+    "lls_path": PathSchedulerModel(),
+    "fcp": FairContactPlan(),
+    "random": RandomScheduler(),
+    "alternating": AlternatingScheduler(),
+    "lifespan_aware": LifespanAware(),
+}
 
 
 def experiment_driver(
@@ -45,7 +58,7 @@ def experiment_driver(
 
     # Convert contact plan into a time expanded graph (TEG). From our testing on the Fair Contact Plan algorithm
     # benefits from graph fractionation.
-    should_reduce = scheduler_name == "lls_mip" or scheduler_name == "lls_lp"
+    should_reduce = scheduler_name in ["lls_mip", "lls_lp"]
     time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
         contact_plan, should_fractionate=True, should_reduce=should_reduce
     )
@@ -56,45 +69,12 @@ def experiment_driver(
 
     try:
         print("Starting contact scheduling")
-        if scheduler_name == "lls":
-            scheduled_time_expanded_graph = LaserLinkScheduler().schedule(
-                time_expanded_graph
-            )
-        elif scheduler_name == "lls_pat_unaware":
-            constants.should_bypass_retargeting_time = True
-            scheduled_time_expanded_graph = LaserLinkScheduler().schedule(
-                time_expanded_graph
-            )
-            constants.should_bypass_retargeting_time = False
-        elif scheduler_name == "lls_mip":
-            scheduled_time_expanded_graph = LLSModel(
-                time_expanded_graph, is_mip=True
-            ).solve()
-        elif scheduler_name == "lls_lp":
-            scheduled_time_expanded_graph = LLSModel(
-                time_expanded_graph, is_mip=False
-            ).solve()
-        elif scheduler_name == "lls_path":
-            scheduled_time_expanded_graph = PathSchedulerModel(
-                time_expanded_graph
-            ).solve()
-        elif scheduler_name == "fcp":
-            scheduled_time_expanded_graph = FairContactPlan().schedule(
-                time_expanded_graph
-            )
-        elif scheduler_name == "random":
-            scheduled_time_expanded_graph = RandomScheduler().schedule(
-                time_expanded_graph
-            )
-        elif scheduler_name == "alternating":
-            scheduled_time_expanded_graph = AlternatingScheduler().schedule(
-                time_expanded_graph
-            )
-        else:
-            print(
-                f"No scheduler selected, scheduler with name {scheduler_name} is unknown"
-            )
-            raise Exception("No scheduler selected")
+        if scheduler_name not in SCHEDULER_REGISTRY:
+            raise ValueError(f"Unknown scheduler name: {scheduler_name}")
+
+        scheduled_time_expanded_graph = SCHEDULER_REGISTRY[
+            scheduler_name
+        ].schedule(time_expanded_graph)
 
         write_time_expanded_graph(
             experiment_name,

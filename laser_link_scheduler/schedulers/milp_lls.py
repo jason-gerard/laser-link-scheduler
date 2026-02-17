@@ -7,7 +7,9 @@ from laser_link_scheduler.constants import (
     RELAY_NODES,
     SOURCE_NODES,
 )
-from laser_link_scheduler.graph.time_expanded_graph import (
+from laser_link_scheduler.schedulers.base_scheduler import BaseScheduler
+
+from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
     convert_contact_plan_to_time_expanded_graph,
     convert_time_expanded_graph_to_contact_plan,
     TimeExpandedGraph,
@@ -31,16 +33,15 @@ MAX_TIME = 2.5 * 60 * 60  # seconds
 MAX_EDGES_PER_LASER = 1
 
 
-class LLSModel:
+class LLSModel(BaseScheduler):
     def __init__(
         self,
-        teg: TimeExpandedGraph,
         is_mip: bool = False,
         approx_eff_ct: bool = True,
         use_gurobi: bool = True,
         use_convex_penalty: bool = False,
     ):
-        self.teg = teg
+        self.teg: TimeExpandedGraph = None
         self.edges = {}
         self.edge_deviation_high = {}
         self.edge_deviation_low = {}
@@ -59,7 +60,161 @@ class LLSModel:
         self.use_gurobi = use_gurobi
         self.use_convex_penalty = use_convex_penalty
 
-    def solve(self):
+    def _compute_effective_contact_time(self, edge):
+        # For each edge, take the previous k, and for both i and j, see if they were selected for an edge in the
+        # previous k state. If not then assume retargeting delay is 0. If it was then use the position data to compute
+        # the retargeting delay.
+        k, tx_oi_idx, rx_oi_idx = edge
+        k = min(k, len(self.teg.pos) - 1)
+
+        if k == 0:
+            return 0, 0
+
+        def get_delay(
+            node, new_node, oi_idx
+        ):  # retargeting_delay for prev edge
+            # Create a dict for each previous edge get retargeting delay
+            prev_edge_delays = {}
+            for prev_edge in self.edges_by_state_oi[oi_idx][k - 1]:
+                node_idx = self.teg.node_map[node]
+                prev_node_idx = self.teg.optical_interfaces_to_node[
+                    prev_edge[1] if prev_edge[2] == oi_idx else prev_edge[2]
+                ]
+                new_node_idx = self.teg.node_map[new_node]
+
+                # If nodes keep their previous link, do not re-target
+                is_same_link = prev_node_idx == new_node_idx
+                if is_same_link:
+                    prev_edge_delays[prev_edge] = 0.0
+                else:
+                    pointing_nodes = np.array(
+                        [
+                            np.array(self.teg.pos[k][node_idx]),
+                            np.array(self.teg.pos[k][prev_node_idx]),
+                            np.array(self.teg.pos[k][new_node_idx]),
+                        ]
+                    )
+                    node_pointing_delay = pointing_delay(
+                        pointing_nodes, pointing_nodes
+                    )
+
+                    # is the current edge an IPN or LEO link
+                    is_ipn_edge = (
+                        node in SOURCE_NODES
+                        and (
+                            new_node in RELAY_NODES
+                            or new_node in DESTINATION_NODES
+                        )
+                    ) or (
+                        new_node in SOURCE_NODES
+                        and (node in RELAY_NODES or node in DESTINATION_NODES)
+                    )
+                    link_acq_delay = (
+                        link_acq_delay_ipn()
+                        if is_ipn_edge
+                        else link_acq_delay_leo()
+                    )
+
+                    prev_edge_delays[prev_edge] = min(
+                        node_pointing_delay + link_acq_delay, self.T[edge[0]]
+                    )
+
+            return pulp.lpSum(
+                [
+                    self.edges[prev_edge]
+                    * (self.T[edge[0]] - prev_edge_delays[prev_edge])
+                    for prev_edge in self.edges_by_state_oi[oi_idx][k - 1]
+                ]
+            )
+
+        tx_node = self.teg.nodes[
+            self.teg.optical_interfaces_to_node[tx_oi_idx]
+        ]
+        rx_node = self.teg.nodes[
+            self.teg.optical_interfaces_to_node[rx_oi_idx]
+        ]
+        return get_delay(tx_node, rx_node, tx_oi_idx), get_delay(
+            rx_node, tx_node, rx_oi_idx
+        )
+
+    def _compute_eff_contact_time_simple(self, edge):
+        # For each edge, take the previous k, and for both i and j, see if they were selected for an edge in the
+        # previous k state. If not then assume retargeting delay is 0. If it was then use the position data to compute
+        # the retargeting delay.
+        k, tx_oi_idx, rx_oi_idx = edge
+        k = min(k, len(self.teg.pos) - 1)
+
+        if k == 0:
+            return self.T[edge[0]]
+
+        tx_node = self.teg.nodes[
+            self.teg.optical_interfaces_to_node[tx_oi_idx]
+        ]
+        rx_node = self.teg.nodes[
+            self.teg.optical_interfaces_to_node[rx_oi_idx]
+        ]
+
+        is_ipn_edge = (
+            tx_node in SOURCE_NODES
+            and (rx_node in RELAY_NODES or rx_node in DESTINATION_NODES)
+        ) or (
+            rx_node in SOURCE_NODES
+            and (tx_node in RELAY_NODES or tx_node in DESTINATION_NODES)
+        )
+        link_acq_delay = (
+            link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
+        )
+        if self.T[edge[0]] < link_acq_delay:
+            link_acq_delay = self.T[edge[0]]
+
+        prev_edges = (
+            self.edges_by_state_oi[tx_oi_idx][k - 1]
+            + self.edges_by_state_oi[rx_oi_idx][k - 1]
+        )
+        for prev_edge in prev_edges:
+            if (tx_oi_idx == prev_edge[1] and rx_oi_idx == prev_edge[2]) or (
+                tx_oi_idx == prev_edge[2] and rx_oi_idx == prev_edge[1]
+            ):
+                return (self.T[edge[0]] - link_acq_delay) * (
+                    1 - self.edges[prev_edge]
+                ) + self.T[edge[0]] * self.edges[prev_edge]
+
+        return self.T[edge[0]] - link_acq_delay
+
+    def _ect(self, i):
+        """
+        In order to make the schedule fair to all the nodes we can use the enabled contact time (ECT) for each inflow
+        edge.
+        """
+        return pulp.lpSum([self.edges[edge] for edge in self.edges_by_node[i]])
+
+    def _is_edge_selected(self, edge, contact_plan):
+        if self.is_mip:
+            # The model may purposefully not select an edge when it could so it can use the time to slew to a node
+            # for the next contact, so don't add these edges even if the solution would be feasible.
+            # Gurobi will not round integer variables, so you have to leave some slack or some will not get
+            # picked up.
+            return self.edges[edge].value() > 0.9
+        else:
+            # Here we want to check that the solution is still feasible if we add the edge
+            k, tx_oi_idx, rx_oi_idx = edge
+            is_tx_good = sum(contact_plan[k][tx_oi_idx]) < 1
+            is_rx_good = sum(contact_plan[k][:, rx_oi_idx]) < 1
+            is_rx2_good = sum(contact_plan[k][rx_oi_idx]) < 1
+            is_tx2_good = sum(contact_plan[k][:, tx_oi_idx]) < 1
+
+            # if self.edges[edge].value() < 0.9 and is_tx_good and is_rx_good and is_tx2_good and is_rx2_good:
+            #     print(f"Very low weighted selection... {edge}, {self.edges[edge].value()}")
+            #     return False
+
+            return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
+
+    def schedule(self, teg: TimeExpandedGraph):
+        self.teg = teg
+        self._solve()
+        return self.teg
+
+    def _solve(self):
         # The contact plan topology here should be in the form of a list of tuples (state idx, i, j)
         contact_topology = []
         for k in range(self.teg.K):
@@ -275,7 +430,7 @@ class LLSModel:
         # Constraint for fairness of source nodes
         print("Setting up fairness constraints based on ECT for source nodes")
         source_node_ect_dict = {
-            source_node: self.ect(source_node)
+            source_node: self._ect(source_node)
             for source_node in self.teg.nodes
             if source_node in SOURCE_NODES
         }
@@ -304,7 +459,7 @@ class LLSModel:
                 "Create approximate effective contact time constraints for tx and rx..."
             )
             for edge in self.eff_contact_time:
-                eff_ct = self.compute_eff_contact_time_simple(edge)
+                eff_ct = self._compute_eff_contact_time_simple(edge)
                 self.flow_model += self.eff_contact_time[edge] <= eff_ct
         else:
             # Constraint for retargeting delay being greater than or equal to the tx and rx retargeting delays. These
@@ -313,7 +468,7 @@ class LLSModel:
             print("Create effective contact time constraints for tx and rx...")
             eff_ct_constraint_debug = {}
             for edge in self.eff_contact_time:
-                tx_eff_ct, rx_eff_ct = self.compute_effective_contact_time(
+                tx_eff_ct, rx_eff_ct = self._compute_effective_contact_time(
                     edge
                 )
                 self.flow_model += self.eff_contact_time[edge] <= tx_eff_ct
@@ -325,7 +480,8 @@ class LLSModel:
                 )
 
         print("Starting solve...")
-        if self.use_gurobi:
+        # if self.use_gurobi:
+        if False:
             self.flow_model.solve(
                 pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01)
             )
@@ -349,7 +505,7 @@ class LLSModel:
         ):
             # if self.edges[edge].value() != 0.0 and self.edges[edge].value() != 1.0:
             #     print(self.edges[edge].value())
-            if self.is_edge_selected(edge, contact_plan):
+            if self._is_edge_selected(edge, contact_plan):
                 # print(self.retargeting_delay[edge].value())
                 k, tx_oi_idx, rx_oi_idx = edge
 
@@ -425,155 +581,6 @@ class LLSModel:
             effective_contact_durations=self.teg.effective_contact_durations,
         )
 
-    def compute_effective_contact_time(self, edge):
-        # For each edge, take the previous k, and for both i and j, see if they were selected for an edge in the
-        # previous k state. If not then assume retargeting delay is 0. If it was then use the position data to compute
-        # the retargeting delay.
-        k, tx_oi_idx, rx_oi_idx = edge
-        k = min(k, len(self.teg.pos) - 1)
-
-        if k == 0:
-            return 0, 0
-
-        def get_delay(
-            node, new_node, oi_idx
-        ):  # retargeting_delay for prev edge
-            # Create a dict for each previous edge get retargeting delay
-            prev_edge_delays = {}
-            for prev_edge in self.edges_by_state_oi[oi_idx][k - 1]:
-                node_idx = self.teg.node_map[node]
-                prev_node_idx = self.teg.optical_interfaces_to_node[
-                    prev_edge[1] if prev_edge[2] == oi_idx else prev_edge[2]
-                ]
-                new_node_idx = self.teg.node_map[new_node]
-
-                # If nodes keep their previous link, do not re-target
-                is_same_link = prev_node_idx == new_node_idx
-                if is_same_link:
-                    prev_edge_delays[prev_edge] = 0.0
-                else:
-                    pointing_nodes = np.array(
-                        [
-                            np.array(self.teg.pos[k][node_idx]),
-                            np.array(self.teg.pos[k][prev_node_idx]),
-                            np.array(self.teg.pos[k][new_node_idx]),
-                        ]
-                    )
-                    node_pointing_delay = pointing_delay(
-                        pointing_nodes, pointing_nodes
-                    )
-
-                    # is the current edge an IPN or LEO link
-                    is_ipn_edge = (
-                        node in SOURCE_NODES
-                        and (
-                            new_node in RELAY_NODES
-                            or new_node in DESTINATION_NODES
-                        )
-                    ) or (
-                        new_node in SOURCE_NODES
-                        and (node in RELAY_NODES or node in DESTINATION_NODES)
-                    )
-                    link_acq_delay = (
-                        link_acq_delay_ipn()
-                        if is_ipn_edge
-                        else link_acq_delay_leo()
-                    )
-
-                    prev_edge_delays[prev_edge] = min(
-                        node_pointing_delay + link_acq_delay, self.T[edge[0]]
-                    )
-
-            return pulp.lpSum(
-                [
-                    self.edges[prev_edge]
-                    * (self.T[edge[0]] - prev_edge_delays[prev_edge])
-                    for prev_edge in self.edges_by_state_oi[oi_idx][k - 1]
-                ]
-            )
-
-        tx_node = self.teg.nodes[
-            self.teg.optical_interfaces_to_node[tx_oi_idx]
-        ]
-        rx_node = self.teg.nodes[
-            self.teg.optical_interfaces_to_node[rx_oi_idx]
-        ]
-        return get_delay(tx_node, rx_node, tx_oi_idx), get_delay(
-            rx_node, tx_node, rx_oi_idx
-        )
-
-    def compute_eff_contact_time_simple(self, edge):
-        # For each edge, take the previous k, and for both i and j, see if they were selected for an edge in the
-        # previous k state. If not then assume retargeting delay is 0. If it was then use the position data to compute
-        # the retargeting delay.
-        k, tx_oi_idx, rx_oi_idx = edge
-        k = min(k, len(self.teg.pos) - 1)
-
-        if k == 0:
-            return self.T[edge[0]]
-
-        tx_node = self.teg.nodes[
-            self.teg.optical_interfaces_to_node[tx_oi_idx]
-        ]
-        rx_node = self.teg.nodes[
-            self.teg.optical_interfaces_to_node[rx_oi_idx]
-        ]
-
-        is_ipn_edge = (
-            tx_node in SOURCE_NODES
-            and (rx_node in RELAY_NODES or rx_node in DESTINATION_NODES)
-        ) or (
-            rx_node in SOURCE_NODES
-            and (tx_node in RELAY_NODES or tx_node in DESTINATION_NODES)
-        )
-        link_acq_delay = (
-            link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
-        )
-        if self.T[edge[0]] < link_acq_delay:
-            link_acq_delay = self.T[edge[0]]
-
-        prev_edges = (
-            self.edges_by_state_oi[tx_oi_idx][k - 1]
-            + self.edges_by_state_oi[rx_oi_idx][k - 1]
-        )
-        for prev_edge in prev_edges:
-            if (tx_oi_idx == prev_edge[1] and rx_oi_idx == prev_edge[2]) or (
-                tx_oi_idx == prev_edge[2] and rx_oi_idx == prev_edge[1]
-            ):
-                return (self.T[edge[0]] - link_acq_delay) * (
-                    1 - self.edges[prev_edge]
-                ) + self.T[edge[0]] * self.edges[prev_edge]
-
-        return self.T[edge[0]] - link_acq_delay
-
-    def ect(self, i):
-        """
-        In order to make the schedule fair to all the nodes we can use the enabled contact time (ECT) for each inflow
-        edge.
-        """
-        return pulp.lpSum([self.edges[edge] for edge in self.edges_by_node[i]])
-
-    def is_edge_selected(self, edge, contact_plan):
-        if self.is_mip:
-            # The model may purposefully not select an edge when it could so it can use the time to slew to a node
-            # for the next contact, so don't add these edges even if the solution would be feasible.
-            # Gurobi will not round integer variables, so you have to leave some slack or some will not get
-            # picked up.
-            return self.edges[edge].value() > 0.9
-        else:
-            # Here we want to check that the solution is still feasible if we add the edge
-            k, tx_oi_idx, rx_oi_idx = edge
-            is_tx_good = sum(contact_plan[k][tx_oi_idx]) < 1
-            is_rx_good = sum(contact_plan[k][:, rx_oi_idx]) < 1
-            is_rx2_good = sum(contact_plan[k][rx_oi_idx]) < 1
-            is_tx2_good = sum(contact_plan[k][:, tx_oi_idx]) < 1
-
-            # if self.edges[edge].value() < 0.9 and is_tx_good and is_rx_good and is_tx2_good and is_rx2_good:
-            #     print(f"Very low weighted selection... {edge}, {self.edges[edge].value()}")
-            #     return False
-
-            return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
-
 
 if __name__ == "__main__":
     EXPERIMENT_NAME = "gs_mars_earth_xl_scenario"
@@ -587,8 +594,8 @@ if __name__ == "__main__":
         should_reduce=True,
     )
 
-    solver = LLSModel(initial_teg, is_mip=False)
-    scheduled_teg = solver.solve()
+    solver = LLSModel(is_mip=False)
+    scheduled_teg = solver.schedule(initial_teg)
 
     for k in range(scheduled_teg.K):
         for tx_idx in range(scheduled_teg.N):
