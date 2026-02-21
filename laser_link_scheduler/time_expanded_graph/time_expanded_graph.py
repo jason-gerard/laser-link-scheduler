@@ -140,7 +140,6 @@ class TimeExpandedGraph:
 
         optical_interface_idx = 0
         for node in unique_nodes:
-            __import__("ipdb").set_trace()
             num_interfaces = constants.get_num_lasers(node)
             node_to_optical_interfaces[node_map[node]] = []
             for i in range(num_interfaces):
