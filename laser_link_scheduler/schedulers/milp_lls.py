@@ -18,7 +18,7 @@ from laser_link_scheduler.models.link_acq_delay import (
     link_acq_delay_ipn,
     link_acq_delay_leo,
 )
-from laser_link_scheduler.models.pointing_delay import pointing_delay
+from laser_link_scheduler.models import pointing_delay_pair_nodes
 from laser_link_scheduler.reporting.report_generator import Reporter
 from laser_link_scheduler.topology.contact_plan import (
     IONContactPlanParser,
@@ -91,7 +91,7 @@ class LLSModel(BaseScheduler):
                             np.array(self.teg.pos[k][new_node_idx]),
                         ]
                     )
-                    node_pointing_delay = pointing_delay(
+                    node_pointing_delay = pointing_delay_pair_nodes(
                         pointing_nodes, pointing_nodes
                     )
 

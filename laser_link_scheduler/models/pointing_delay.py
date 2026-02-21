@@ -28,7 +28,7 @@ def pointing_delay_single_node(
 retargeting_delay_cache = {}
 
 
-def pointing_delay(node_set1, node_set2) -> float:
+def pointing_delay_pair_nodes(node_set1, node_set2) -> float:
     # Compute the PAT delay for node sets 1 and 2
     if node_set1.tostring() in retargeting_delay_cache:
         pointing_delay_1 = retargeting_delay_cache[node_set1.tostring()]
@@ -80,5 +80,5 @@ if __name__ == "__main__":
             np.array([1, 0, 0]),  # dst22
         ]
     )
-    delay = pointing_delay(node_set_1, node_set_2)
+    delay = pointing_delay_pair_nodes(node_set_1, node_set_2)
     print(delay)

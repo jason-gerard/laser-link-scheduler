@@ -4,15 +4,13 @@ from typing import Tuple, Optional
 import numpy as np
 from itertools import groupby
 from laser_link_scheduler import constants
-from laser_link_scheduler.models.link_acq_delay import (
+from laser_link_scheduler.models import (
     link_acq_delay_ipn,
     link_acq_delay_ipn_rand,
     link_acq_delay_leo,
     link_acq_delay_leo_rand,
-)
-from laser_link_scheduler.models.pointing_delay import (
     all_pointing_delay,
-    pointing_delay,
+    pointing_delay_pair_nodes,
 )
 
 
@@ -593,7 +591,7 @@ def compute_effective_contact_time(
         idx2_coords = np.array(positions[curr_k][idx2])
         idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
 
-        node_pointing_delay = pointing_delay(
+        node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
         )
@@ -604,7 +602,7 @@ def compute_effective_contact_time(
 
         idx2_coords = np.array(positions[curr_k][idx2])
 
-        node_pointing_delay = pointing_delay(
+        node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
         )
@@ -615,7 +613,7 @@ def compute_effective_contact_time(
 
         idx1_coords = np.array(positions[curr_k][idx1])
 
-        node_pointing_delay = pointing_delay(
+        node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
         )
@@ -701,7 +699,7 @@ def compute_delays(
         idx2_coords = np.array(positions[curr_k][idx2])
         idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
 
-        node_pointing_delay = pointing_delay(
+        node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
         )
@@ -712,7 +710,7 @@ def compute_delays(
 
         idx2_coords = np.array(positions[curr_k][idx2])
 
-        node_pointing_delay = pointing_delay(
+        node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
         )
@@ -723,7 +721,7 @@ def compute_delays(
 
         idx1_coords = np.array(positions[curr_k][idx1])
 
-        node_pointing_delay = pointing_delay(
+        node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
         )

@@ -37,7 +37,7 @@ def mission_lifetime(P0: float, decay_constant: float, P_min: float) -> float:
     Examples
     --------
     >>> mission_lifetime_rtg(P0=300.0, decay_constant=0.03, P_min=200.0)
-    13.515503603605481
+    426278983.66
     """
 
     if P0 <= 0:
@@ -54,7 +54,7 @@ def mission_lifetime(P0: float, decay_constant: float, P_min: float) -> float:
         return 0.0
 
     lifetime = (1 / decay_constant) * np.log(P0 / P_min)
-    return lifetime
+    return lifetime * 3.154e7  # Year to seconds
 
 
 if __name__ == "__main__":
@@ -62,4 +62,4 @@ if __name__ == "__main__":
     decay_constant = 0.03  # Decay constant in 1/years
     P_min = 200.0  # Minimum operational power in Watts
     lifetime = mission_lifetime(P0, decay_constant, P_min)
-    print(f"Mission lifetime under RTG power model: {lifetime:.2f} years")
+    print(f"Mission lifetime under RTG power model: {lifetime:.2f} seconds")
