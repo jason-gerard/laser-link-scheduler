@@ -23,8 +23,6 @@ class PathSchedulerModel(BaseScheduler):
         self.edges_by_state_oi = None
         self.eff_contact_time = None
         self.edge_caps = None
-        self.schedule_duration = sum(self.teg.state_durations)
-        self.T = self.teg.state_durations
 
         self.flow_model = None
 

@@ -16,10 +16,9 @@ if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
 from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
-    convert_contact_plan_to_time_expanded_graph,
+    TimeExpandedGraph,
     count_edges,
     dag_reduction,
-    fractionate_graph,
 )
 from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
 
@@ -37,12 +36,12 @@ def count_reduced_edges(experiment_name):
     contact_plan_parser = IONContactPlanParser()
     contact_plan = contact_plan_parser.read(experiment_name)
 
-    teg = convert_contact_plan_to_time_expanded_graph(
+    teg = TimeExpandedGraph.from_contact_plan(
         contact_plan, should_fractionate=False, should_reduce=False
     )
     teg_count = count_edges(teg)
 
-    frac_teg = fractionate_graph(teg)
+    frac_teg = teg.fractionate_graph()
     frac_teg_count = count_edges(frac_teg)
 
     reduced_teg = dag_reduction(frac_teg)

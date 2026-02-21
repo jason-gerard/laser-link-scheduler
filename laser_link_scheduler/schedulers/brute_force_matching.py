@@ -4,7 +4,7 @@ import math
 import networkx as nx
 
 from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
-    convert_contact_plan_to_time_expanded_graph,
+    TimeExpandedGraph,
 )
 from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
 
@@ -38,7 +38,7 @@ EXPERIMENT_NAME = "gs_mars_earth_xs_scenario"
 contact_plan_parser = IONContactPlanParser()
 contact_plan = contact_plan_parser.read(EXPERIMENT_NAME)
 
-time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
+time_expanded_graph = TimeExpandedGraph.from_contact_plan(
     contact_plan, should_fractionate=True, should_reduce=True
 )
 

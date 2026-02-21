@@ -1,19 +1,9 @@
-import networkx as nx
 import numpy as np
 from tqdm import tqdm
-
-from laser_link_scheduler import constants
 from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
 from .base_scheduler import BaseScheduler
-from laser_link_scheduler.topology.contact_plan import Contact
-from laser_link_scheduler.topology.weights import (
-    compute_node_capacity_by_graph,
-    delta_capacity,
-    disabled_contact_time,
-    merge_many_node_capacities,
-)
 
 
 class RandomScheduler(BaseScheduler):
@@ -27,7 +17,6 @@ class RandomScheduler(BaseScheduler):
         # based on a single good or bad selection of weights. Generally 21 iterations is seen as statistically
         # significant.
         num_iters = 5
-
         all_scheduled_graphs = np.zeros(
             (teg.K * num_iters, teg.N, teg.N), dtype="int64"
         )

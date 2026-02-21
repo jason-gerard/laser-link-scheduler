@@ -1,4 +1,6 @@
 from dataclasses import dataclass, replace
+from enum import StrEnum, auto
+from typing import Self
 
 import numpy as np
 from tqdm import tqdm
@@ -13,6 +15,30 @@ from laser_link_scheduler.constants import (
 )
 from laser_link_scheduler.topology.contact_plan import Contact, ContactPlan
 from laser_link_scheduler.utils import FileType, get_experiment_file
+
+
+class SatelliteType(StrEnum):
+    IPN = auto()
+    GS = auto()
+
+
+class Planet(StrEnum):
+    EARTH = auto()
+    MARS = auto()
+
+
+@dataclass(slots=True)
+class Node:
+    # name/identifier
+    id: int
+    # This is the amount of data that the node can receive from local nodes i.e. nodes on the same planet
+    capacity_in: float
+    # This is the amount of data that the node can transmit to nodes on other planets
+    capacity_out: float
+    # This is the amount of time (seconds), that the node is functional
+    lifespan: float
+    type: SatelliteType
+    planet: Planet
 
 
 @dataclass
@@ -67,165 +93,226 @@ class TimeExpandedGraph:
 
         return rep
 
+    @classmethod
+    def from_contact_plan(
+        cls,
+        contact_plan: ContactPlan,
+        should_fractionate: bool,
+        should_reduce: bool = True,
+    ) -> Self:
+        # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
+        # We are defining this as any contact with a range greater than 100,000 km.
+        # A non-ipn node can receive across interplanetary distances, but cannot transmit across interplanetary
+        # distances. We are defining interplanetary nodes here as nodes that can transmit and receive across interplanetary
+        # distances. This depends on the scenario. Some definitions say that a non-ipn node cannot receive or transmit
+        # across interplanetary distances, the code below supports both use cases.
+        # interplanetary_contacts = [contact for contact in contact_plan.contacts
+        #                            if contact.range > constants.INTERPLANETARY_RANGE]
+        # interplanetary_tx_nodes = [contact.tx_node for contact in interplanetary_contacts]
+        # interplanetary_rx_nodes = [contact.rx_node for contact in interplanetary_contacts]
+        # interplanetary_nodes = [node for node in interplanetary_tx_nodes + interplanetary_rx_nodes
+        #                         if node in interplanetary_tx_nodes and node in interplanetary_rx_nodes]
 
-def convert_contact_plan_to_time_expanded_graph(
-    contact_plan: ContactPlan,
-    should_fractionate: bool,
-    should_reduce: bool = True,
-) -> TimeExpandedGraph:
-    # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
-    # We are defining this as any contact with a range greater than 100,000 km.
-    # A non-ipn node can receive across interplanetary distances, but cannot transmit across interplanetary
-    # distances. We are defining interplanetary nodes here as nodes that can transmit and receive across interplanetary
-    # distances. This depends on the scenario. Some definitions say that a non-ipn node cannot receive or transmit
-    # across interplanetary distances, the code below supports both use cases.
-    # interplanetary_contacts = [contact for contact in contact_plan.contacts
-    #                            if contact.range > constants.INTERPLANETARY_RANGE]
-    # interplanetary_tx_nodes = [contact.tx_node for contact in interplanetary_contacts]
-    # interplanetary_rx_nodes = [contact.rx_node for contact in interplanetary_contacts]
-    # interplanetary_nodes = [node for node in interplanetary_tx_nodes + interplanetary_rx_nodes
-    #                         if node in interplanetary_tx_nodes and node in interplanetary_rx_nodes]
-
-    # Create a sets of all start times and end times, the combined length will equal numK
-    start_times = list(
-        set([contact.start_time for contact in contact_plan.contacts])
-    )
-    end_times = list(
-        set([contact.end_time for contact in contact_plan.contacts])
-    )
-    # After combining the discrete start and end times, convert to a set to only keep unique values. If there is a
-    # contact start and contact end time that are at the same time, without doing this, it will create a state of
-    # duration 0. This won't affect the results at all because no capacity can come from a state of duration = 0, but
-    # with how the logic is set up that state should not exist.
-    time_steps = sorted(list(set(start_times + end_times)))
-
-    # Create a unique list of node ids and map them to array index for the adjacency matrix graph
-    unique_nodes = sorted(
-        set(
-            [contact.rx_node for contact in contact_plan.contacts]
-            + [contact.tx_node for contact in contact_plan.contacts]
+        # Create a sets of all start times and end times, the combined length will equal numK
+        start_times = list(
+            set([contact.start_time for contact in contact_plan.contacts])
         )
-    )
-    node_map = {node: idx for idx, node in enumerate(unique_nodes)}
+        end_times = list(
+            set([contact.end_time for contact in contact_plan.contacts])
+        )
+        # After combining the discrete start and end times, convert to a set to only keep unique values. If there is a
+        # contact start and contact end time that are at the same time, without doing this, it will create a state of
+        # duration 0. This won't affect the results at all because no capacity can come from a state of duration = 0, but
+        # with how the logic is set up that state should not exist.
+        time_steps = sorted(list(set(start_times + end_times)))
 
-    optical_interfaces_to_node = {}
-    node_to_optical_interfaces = {}
-
-    optical_interface_idx = 0
-    for node in unique_nodes:
-        num_interfaces = constants.get_num_lasers(node)
-        node_to_optical_interfaces[node_map[node]] = []
-        for i in range(num_interfaces):
-            optical_interfaces_to_node[optical_interface_idx + i] = node_map[
-                node
-            ]
-            node_to_optical_interfaces[node_map[node]].append(
-                optical_interface_idx + i
+        # Create a unique list of node ids and map them to array index for the adjacency matrix graph
+        unique_nodes = sorted(
+            set(
+                [contact.rx_node for contact in contact_plan.contacts]
+                + [contact.tx_node for contact in contact_plan.contacts]
             )
+        )
+        node_map = {node: idx for idx, node in enumerate(unique_nodes)}
 
-        optical_interface_idx += num_interfaces
+        optical_interfaces_to_node = {}
+        node_to_optical_interfaces = {}
 
-    interplanetary_nodes = [
-        node for node in unique_nodes if node in constants.RELAY_NODES
-    ]
+        optical_interface_idx = 0
+        for node in unique_nodes:
+            __import__("ipdb").set_trace()
+            num_interfaces = constants.get_num_lasers(node)
+            node_to_optical_interfaces[node_map[node]] = []
+            for i in range(num_interfaces):
+                optical_interfaces_to_node[optical_interface_idx + i] = (
+                    node_map[node]
+                )
+                node_to_optical_interfaces[node_map[node]].append(
+                    optical_interface_idx + i
+                )
 
-    # We want to split the list of interplanetary nodes into different sets of nodes for each planet. We can do this
-    # by using the first digit of each node id to identify its constellation. We make the assumption that each planet
-    # has at most a single interplanetary constellation
-    ipn_node_to_planet_map = {}  # ipn_node_idx -> planet_id
-    for idx, node in enumerate(unique_nodes):
-        if node in interplanetary_nodes:
-            ipn_node_to_planet_map[idx] = node[0]
+            optical_interface_idx += num_interfaces
 
-    N = len(optical_interfaces_to_node)
-    K = len(time_steps) - 1
-
-    contact_topology_graphs = np.zeros((K, N, N), dtype="int64")
-    contacts_by_state = []
-    state_durations = np.empty(K, dtype="int64")
-
-    positions = np.empty((K, N, 3), dtype="float64")
-
-    print("Starting contact plan to time expanded graph conversion")
-    for k, time_step in enumerate(tqdm(time_steps[:-1])):
-        state_start_time = time_step
-        state_duration = time_steps[k + 1] - state_start_time
-        state_durations[k] = state_duration
-
-        # For each time step get a list of contacts that exist within that time step
-        included_contacts = [
-            contact
-            for contact in contact_plan.contacts
-            if include_contact(contact, state_start_time, state_duration)
+        interplanetary_nodes = [
+            node for node in unique_nodes if node in constants.RELAY_NODES
         ]
-        contacts_by_state.append(included_contacts)
 
-        # The index here will map the node name to its index in the adjacency matrix, by default the values are set to 0
-        # which indicates there is no contact between the two nodes
-        for tx_oi_idx, tx_idx in optical_interfaces_to_node.items():
-            # List of rx_nodes that have a contact with the tx_node in this time step
-            tx_included_contacts = [
+        # We want to split the list of interplanetary nodes into different sets of nodes for each planet. We can do this
+        # by using the first digit of each node id to identify its constellation. We make the assumption that each planet
+        # has at most a single interplanetary constellation
+        ipn_node_to_planet_map = {}  # ipn_node_idx -> planet_id
+        for idx, node in enumerate(unique_nodes):
+            if node in interplanetary_nodes:
+                ipn_node_to_planet_map[idx] = node[0]
+
+        N = len(optical_interfaces_to_node)
+        K = len(time_steps) - 1
+
+        contact_topology_graphs = np.zeros((K, N, N), dtype="int64")
+        contacts_by_state = []
+        state_durations = np.empty(K, dtype="int64")
+
+        positions = np.empty((K, N, 3), dtype="float64")
+
+        print("Starting contact plan to time expanded graph conversion")
+        for k, time_step in enumerate(tqdm(time_steps[:-1])):
+            state_start_time = time_step
+            state_duration = time_steps[k + 1] - state_start_time
+            state_durations[k] = state_duration
+
+            # For each time step get a list of contacts that exist within that time step
+            included_contacts = [
                 contact
-                for contact in included_contacts
-                if contact.tx_node == unique_nodes[tx_idx]
+                for contact in contact_plan.contacts
+                if include_contact(contact, state_start_time, state_duration)
             ]
-            rx_nodes = [contact.rx_node for contact in tx_included_contacts]
-            rx_oi_idxs = [
-                idx
-                for idx in [
-                    node_to_optical_interfaces[node_map[rx_node]]
-                    for rx_node in rx_nodes
+            contacts_by_state.append(included_contacts)
+
+            # The index here will map the node name to its index in the adjacency matrix, by default the values are set to 0
+            # which indicates there is no contact between the two nodes
+            for tx_oi_idx, tx_idx in optical_interfaces_to_node.items():
+                # List of rx_nodes that have a contact with the tx_node in this time step
+                tx_included_contacts = [
+                    contact
+                    for contact in included_contacts
+                    if contact.tx_node == unique_nodes[tx_idx]
                 ]
-            ]
+                rx_nodes = [
+                    contact.rx_node for contact in tx_included_contacts
+                ]
+                rx_oi_idxs = [
+                    idx
+                    for idx in [
+                        node_to_optical_interfaces[node_map[rx_node]]
+                        for rx_node in rx_nodes
+                    ]
+                ]
 
-            for rx_oi_idx in rx_oi_idxs:
-                # For now, we assume all satellites only have a single default interface.
-                contact_topology_graphs[k][tx_oi_idx][rx_oi_idx] = 1
+                for rx_oi_idx in rx_oi_idxs:
+                    # For now, we assume all satellites only have a single default interface.
+                    contact_topology_graphs[k][tx_oi_idx][rx_oi_idx] = 1
 
-            # Add position data for the node
-            if len(tx_included_contacts) > 0:
-                newest_contact = tx_included_contacts[0]
-                for contact in tx_included_contacts:
-                    if contact.start_time > newest_contact.start_time:
-                        newest_contact = contact
+                # Add position data for the node
+                if len(tx_included_contacts) > 0:
+                    newest_contact = tx_included_contacts[0]
+                    for contact in tx_included_contacts:
+                        if contact.start_time > newest_contact.start_time:
+                            newest_contact = contact
 
-                tx_x = newest_contact.tx_x
-                tx_y = newest_contact.tx_y
-                tx_z = newest_contact.tx_z
-                positions[k][tx_idx] = [tx_x, tx_y, tx_z]
+                    tx_x = newest_contact.tx_x
+                    tx_y = newest_contact.tx_y
+                    tx_z = newest_contact.tx_z
+                    positions[k][tx_idx] = [tx_x, tx_y, tx_z]
+                else:
+                    positions[k][tx_idx] = positions[k - 1][tx_idx]
+
+        time_expanded_graph = cls(
+            graphs=contact_topology_graphs,
+            contacts=contacts_by_state,
+            state_durations=state_durations,
+            K=K,
+            N=N,
+            nodes=unique_nodes,
+            node_map=node_map,
+            ipn_node_to_planet_map=ipn_node_to_planet_map,
+            W=np.array([]),
+            pos=positions,
+            optical_interfaces_to_node=optical_interfaces_to_node,
+            node_to_optical_interfaces=node_to_optical_interfaces,
+            effective_contact_durations=np.zeros((K, N, N), dtype="int64"),
+        )
+
+        # This process of fractionation splits long contacts in the TEG into multiple smaller contacts, this will result in
+        # each k state having a maximum duration of d_max. Since there are more states and more decision points some
+        # algorithms will have better performance.
+        time_expanded_graph = (
+            time_expanded_graph.fractionate_graph()
+            if should_fractionate
+            else time_expanded_graph
+        )
+
+        return (
+            dag_reduction(time_expanded_graph)
+            if should_reduce
+            else time_expanded_graph
+        )
+
+    def fractionate_graph(cls) -> Self:
+        new_k = cls.K
+        for k in range(cls.K):
+            if cls.state_durations[k] > constants.d_max:
+                large_duration = cls.state_durations[k]
+                new_k -= 1
+
+                while large_duration > constants.d_max:
+                    large_duration -= constants.d_max
+                    new_k += 1
+
+                if large_duration > 0:
+                    new_k += 1
+
+        new_teg_graph = np.zeros((new_k, cls.N, cls.N), dtype="int64")
+        new_teg_durations = np.empty(new_k, dtype="int64")
+        new_contacts = [[] for _ in range(new_k)]
+
+        k_offset = 0
+
+        for k in range(cls.K):
+            if cls.state_durations[k] > constants.d_max:
+                large_duration = cls.state_durations[k]
+                kth_graph = cls.graphs[k, :, :]
+                kth_contacts = cls.contacts[k]
+
+                while large_duration > constants.d_max:
+                    new_teg_durations[k + k_offset] = constants.d_max
+                    new_teg_graph[k + k_offset] = kth_graph
+                    new_contacts[k + k_offset] = kth_contacts
+
+                    large_duration -= constants.d_max
+                    k_offset += 1
+
+                if large_duration > 0:
+                    new_teg_durations[k + k_offset] = large_duration
+                    new_teg_graph[k + k_offset] = kth_graph
+                    new_contacts[k + k_offset] = kth_contacts
+                    k_offset += 1
+
+                k_offset -= 1
             else:
-                positions[k][tx_idx] = positions[k - 1][tx_idx]
+                new_teg_graph[k + k_offset] = cls.graphs[k]
+                new_teg_durations[k + k_offset] = cls.state_durations[k]
+                new_contacts[k + k_offset] = cls.contacts[k]
 
-    time_expanded_graph = TimeExpandedGraph(
-        graphs=contact_topology_graphs,
-        contacts=contacts_by_state,
-        state_durations=state_durations,
-        K=K,
-        N=N,
-        nodes=unique_nodes,
-        node_map=node_map,
-        ipn_node_to_planet_map=ipn_node_to_planet_map,
-        W=np.array([]),
-        pos=positions,
-        optical_interfaces_to_node=optical_interfaces_to_node,
-        node_to_optical_interfaces=node_to_optical_interfaces,
-        effective_contact_durations=np.zeros((K, N, N), dtype="int64"),
-    )
+        print(
+            f"Finished graph fractionation, old k count: {cls.K}, new k count: {new_k}"
+        )
 
-    # This process of fractionation splits long contacts in the TEG into multiple smaller contacts, this will result in
-    # each k state having a maximum duration of d_max. Since there are more states and more decision points some
-    # algorithms will have better performance.
-    time_expanded_graph = (
-        fractionate_graph(time_expanded_graph)
-        if should_fractionate
-        else time_expanded_graph
-    )
+        cls.graphs = new_teg_graph
+        cls.state_durations = new_teg_durations
+        cls.contacts = new_contacts
+        cls.K = new_k
 
-    return (
-        dag_reduction(time_expanded_graph)
-        if should_reduce
-        else time_expanded_graph
-    )
+        return cls
 
 
 def include_contact(
@@ -238,70 +325,6 @@ def include_contact(
         contact.start_time <= state_start_time
         and contact.end_time >= state_end_time
     )
-
-
-def fractionate_graph(
-    time_expanded_graph: TimeExpandedGraph,
-) -> TimeExpandedGraph:
-    new_k = time_expanded_graph.K
-    for k in range(time_expanded_graph.K):
-        if time_expanded_graph.state_durations[k] > constants.d_max:
-            large_duration = time_expanded_graph.state_durations[k]
-            new_k -= 1
-
-            while large_duration > constants.d_max:
-                large_duration -= constants.d_max
-                new_k += 1
-
-            if large_duration > 0:
-                new_k += 1
-
-    new_teg_graph = np.zeros(
-        (new_k, time_expanded_graph.N, time_expanded_graph.N), dtype="int64"
-    )
-    new_teg_durations = np.empty(new_k, dtype="int64")
-    new_contacts = [[] for _ in range(new_k)]
-
-    k_offset = 0
-
-    for k in range(time_expanded_graph.K):
-        if time_expanded_graph.state_durations[k] > constants.d_max:
-            large_duration = time_expanded_graph.state_durations[k]
-            kth_graph = time_expanded_graph.graphs[k, :, :]
-            kth_contacts = time_expanded_graph.contacts[k]
-
-            while large_duration > constants.d_max:
-                new_teg_durations[k + k_offset] = constants.d_max
-                new_teg_graph[k + k_offset] = kth_graph
-                new_contacts[k + k_offset] = kth_contacts
-
-                large_duration -= constants.d_max
-                k_offset += 1
-
-            if large_duration > 0:
-                new_teg_durations[k + k_offset] = large_duration
-                new_teg_graph[k + k_offset] = kth_graph
-                new_contacts[k + k_offset] = kth_contacts
-                k_offset += 1
-
-            k_offset -= 1
-        else:
-            new_teg_graph[k + k_offset] = time_expanded_graph.graphs[k]
-            new_teg_durations[k + k_offset] = (
-                time_expanded_graph.state_durations[k]
-            )
-            new_contacts[k + k_offset] = time_expanded_graph.contacts[k]
-
-    print(
-        f"Finished graph fractionation, old k count: {time_expanded_graph.K}, new k count: {new_k}"
-    )
-
-    time_expanded_graph.graphs = new_teg_graph
-    time_expanded_graph.state_durations = new_teg_durations
-    time_expanded_graph.contacts = new_contacts
-    time_expanded_graph.K = new_k
-
-    return time_expanded_graph
 
 
 def convert_time_expanded_graph_to_contact_plan(

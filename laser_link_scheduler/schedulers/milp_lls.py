@@ -10,7 +10,6 @@ from laser_link_scheduler.constants import (
 from laser_link_scheduler.schedulers.base_scheduler import BaseScheduler
 
 from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
-    convert_contact_plan_to_time_expanded_graph,
     convert_time_expanded_graph_to_contact_plan,
     TimeExpandedGraph,
     write_time_expanded_graph,
@@ -50,8 +49,6 @@ class LLSModel(BaseScheduler):
         self.edges_by_state_oi = {}
         self.eff_contact_time = None
         self.edge_caps = None
-        self.schedule_duration = sum(self.teg.state_durations)
-        self.T = self.teg.state_durations
 
         self.flow_model = None
 
@@ -116,13 +113,17 @@ class LLSModel(BaseScheduler):
                     )
 
                     prev_edge_delays[prev_edge] = min(
-                        node_pointing_delay + link_acq_delay, self.T[edge[0]]
+                        node_pointing_delay + link_acq_delay,
+                        self.teg.state_durations[edge[0]],
                     )
 
             return pulp.lpSum(
                 [
                     self.edges[prev_edge]
-                    * (self.T[edge[0]] - prev_edge_delays[prev_edge])
+                    * (
+                        self.teg.state_durations[edge[0]]
+                        - prev_edge_delays[prev_edge]
+                    )
                     for prev_edge in self.edges_by_state_oi[oi_idx][k - 1]
                 ]
             )
@@ -145,7 +146,7 @@ class LLSModel(BaseScheduler):
         k = min(k, len(self.teg.pos) - 1)
 
         if k == 0:
-            return self.T[edge[0]]
+            return self.teg.state_durations[edge[0]]
 
         tx_node = self.teg.nodes[
             self.teg.optical_interfaces_to_node[tx_oi_idx]
@@ -164,8 +165,8 @@ class LLSModel(BaseScheduler):
         link_acq_delay = (
             link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
         )
-        if self.T[edge[0]] < link_acq_delay:
-            link_acq_delay = self.T[edge[0]]
+        if self.teg.state_durations[edge[0]] < link_acq_delay:
+            link_acq_delay = self.teg.state_durations[edge[0]]
 
         prev_edges = (
             self.edges_by_state_oi[tx_oi_idx][k - 1]
@@ -175,11 +176,11 @@ class LLSModel(BaseScheduler):
             if (tx_oi_idx == prev_edge[1] and rx_oi_idx == prev_edge[2]) or (
                 tx_oi_idx == prev_edge[2] and rx_oi_idx == prev_edge[1]
             ):
-                return (self.T[edge[0]] - link_acq_delay) * (
+                return (self.teg.state_durations[edge[0]] - link_acq_delay) * (
                     1 - self.edges[prev_edge]
-                ) + self.T[edge[0]] * self.edges[prev_edge]
+                ) + self.teg.state_durations[edge[0]] * self.edges[prev_edge]
 
-        return self.T[edge[0]] - link_acq_delay
+        return self.teg.state_durations[edge[0]] - link_acq_delay
 
     def _ect(self, i):
         """
@@ -405,7 +406,10 @@ class LLSModel(BaseScheduler):
             )
 
             self.flow_model += (
-                capacity <= self.edges[edge] * self.T[edge[0]] * bit_rate
+                capacity
+                <= self.edges[edge]
+                * self.teg.state_durations[edge[0]]
+                * bit_rate
             )  # max flow
             self.flow_model += (
                 capacity <= self.eff_contact_time[edge] * bit_rate
@@ -587,8 +591,7 @@ if __name__ == "__main__":
 
     contact_plan_parser = IONContactPlanParser()
     contact_plan = contact_plan_parser.read(EXPERIMENT_NAME)
-
-    initial_teg = convert_contact_plan_to_time_expanded_graph(
+    initial_teg = TimeExpandedGraph.from_contact_plan(
         contact_plan,
         should_fractionate=True,
         should_reduce=True,

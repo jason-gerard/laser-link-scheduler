@@ -7,7 +7,6 @@ from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
 from .base_scheduler import BaseScheduler
-from laser_link_scheduler.topology.contact_plan import Contact
 from laser_link_scheduler.topology.weights import (
     compute_node_capacity_by_graph,
     delta_capacity,

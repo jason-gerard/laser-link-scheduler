@@ -5,11 +5,11 @@ import typer
 import numpy as np
 
 from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
-    convert_contact_plan_to_time_expanded_graph,
+    TimeExpandedGraph,
     convert_time_expanded_graph_to_contact_plan,
     write_time_expanded_graph,
 )
-from laser_link_scheduler.models import pointing_delay as pointing_delay_model
+from laser_link_scheduler.models.pointing_delay import retargeting_delay_cache
 from laser_link_scheduler.reporting.report_generator import Reporter
 from laser_link_scheduler.schedulers import (
     BaseScheduler,
@@ -28,7 +28,7 @@ from laser_link_scheduler.topology.contact_plan import (
 )
 from laser_link_scheduler.utils import FileType
 
-SCHEDULER_REGISTRY: dict[str, BaseScheduler] = {
+SCHEDULER: dict[str, BaseScheduler] = {
     "lls": LaserLinkScheduler(),
     "lls_pat_unaware": LaserLinkScheduler(should_bypass_retargeting_time=True),
     "lls_mip": LLSModel(is_mip=True),
@@ -47,7 +47,7 @@ def experiment_driver(
     # Clear all caches
     weights.effective_contact_time_cache = {}
     weights.coordinate_cache = {}
-    pointing_delay_model.retargeting_delay_cache = {}
+    retargeting_delay_cache = {}
 
     start = timer()
 
@@ -59,8 +59,10 @@ def experiment_driver(
     # Convert contact plan into a time expanded graph (TEG). From our testing on the Fair Contact Plan algorithm
     # benefits from graph fractionation.
     should_reduce = scheduler_name in ["lls_mip", "lls_lp"]
-    time_expanded_graph = convert_contact_plan_to_time_expanded_graph(
-        contact_plan, should_fractionate=True, should_reduce=should_reduce
+    time_expanded_graph = TimeExpandedGraph.from_contact_plan(
+        contact_plan=contact_plan,
+        should_fractionate=True,
+        should_reduce=should_reduce,
     )
     write_time_expanded_graph(
         experiment_name, time_expanded_graph, FileType.TEG
@@ -69,12 +71,12 @@ def experiment_driver(
 
     try:
         print("Starting contact scheduling")
-        if scheduler_name not in SCHEDULER_REGISTRY:
+        if scheduler_name not in SCHEDULER:
             raise ValueError(f"Unknown scheduler name: {scheduler_name}")
 
-        scheduled_time_expanded_graph = SCHEDULER_REGISTRY[
-            scheduler_name
-        ].schedule(time_expanded_graph)
+        scheduled_time_expanded_graph = SCHEDULER[scheduler_name].schedule(
+            time_expanded_graph
+        )
 
         write_time_expanded_graph(
             experiment_name,
