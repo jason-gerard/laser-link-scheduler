@@ -121,15 +121,12 @@ def multi_experiment_driver(
     reporter = Reporter(write_pkl=True)
 
     for experiment_name in experiment_names:
-        try:
-            for scheduler_name in scheduler_names:
-                print(
-                    f"Starting execution of experiment: {experiment_name}, with scheduler: {scheduler_name}"
-                )
-                experiment_driver(experiment_name, scheduler_name, reporter)
-                print("\n\n")
-        except Exception:
-            break
+        for scheduler_name in scheduler_names:
+            print(
+                f"Starting execution of experiment: {experiment_name}, with scheduler: {scheduler_name}"
+            )
+            experiment_driver(experiment_name, scheduler_name, reporter)
+            print("\n\n")
 
     reporter.write_report()
 
