@@ -1,5 +1,6 @@
 import numpy as np
 from tqdm import tqdm
+from laser_link_scheduler.constants import RELAY_NODES
 from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
@@ -33,15 +34,13 @@ class AlternatingScheduler(BaseScheduler):
                     weight = rng.integers(low=0, high=10, size=1)[0]
 
                     # If it is an even state then assign the weights to the intra-constellation edges
-                    is_intra_edge = (
-                        tx_idx not in teg.ipn_node_to_planet_map
-                        and rx_idx in teg.ipn_node_to_planet_map
-                    )
+                    tx_node = teg.nodes[teg.optical_interfaces_to_node[tx_idx]]
+                    rx_node = teg.nodes[teg.optical_interfaces_to_node[rx_idx]]
+                    tx_is_ipn = tx_node.id in RELAY_NODES
+                    rx_is_ipn = rx_node.id in RELAY_NODES
+                    is_intra_edge = not tx_is_ipn and rx_is_ipn
                     # If it is an odd state then assign the weights to the inter-constellation edges
-                    is_inter_edge = (
-                        tx_idx in teg.ipn_node_to_planet_map
-                        and rx_idx in teg.ipn_node_to_planet_map
-                    )
+                    is_inter_edge = tx_is_ipn and rx_is_ipn
                     weights[k][tx_idx][rx_idx] = (
                         weight
                         if (k % 2 == 0 and is_intra_edge)
@@ -66,7 +65,6 @@ class AlternatingScheduler(BaseScheduler):
             N=teg.N,
             nodes=teg.nodes,
             node_map=teg.node_map,
-            ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
             W=weights,
             pos=teg.pos,
             optical_interfaces_to_node=teg.optical_interfaces_to_node,

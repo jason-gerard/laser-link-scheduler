@@ -1,7 +1,3 @@
-from dataclasses import dataclass, replace
-from enum import StrEnum, auto
-from typing import Self
-
 import numpy as np
 from tqdm import tqdm
 
@@ -12,33 +8,49 @@ from laser_link_scheduler.constants import (
     NODE_TO_PLANET_MAP,
     RELAY_NODES,
     SOURCE_NODES,
+    get_num_lasers,
 )
 from laser_link_scheduler.topology.contact_plan import Contact, ContactPlan
 from laser_link_scheduler.utils import FileType, get_experiment_file
 
-
-class SatelliteType(StrEnum):
-    IPN = auto()
-    GS = auto()
-
-
-class Planet(StrEnum):
-    EARTH = auto()
-    MARS = auto()
+from dataclasses import dataclass, field, replace
+from functools import total_ordering
+from typing import Self
 
 
+@total_ordering
 @dataclass(slots=True)
 class Node:
-    # name/identifier
-    id: int
-    # This is the amount of data that the node can receive from local nodes i.e. nodes on the same planet
-    capacity_in: float
-    # This is the amount of data that the node can transmit to nodes on other planets
-    capacity_out: float
-    # This is the amount of time (seconds), that the node is functional
-    lifespan: float
-    type: SatelliteType
-    planet: Planet
+    id: str
+    num_interfaces: int = field(init=False)
+    planet: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.id = str(self.id)
+        self.planet = NODE_TO_PLANET_MAP[self.id]
+        self.num_interfaces = get_num_lasers(self.id)
+
+    def __hash__(self) -> int:
+        # Nodes are identified uniquely by id.
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Node):
+            return self.id == other.id
+        if isinstance(other, str):
+            return self.id == other
+        if isinstance(other, int):
+            return self.id == str(other)
+        return NotImplemented
+
+    def __lt__(self, other: object) -> bool:
+        if isinstance(other, Node):
+            return int(self.id) < int(other.id)
+        if isinstance(other, str):
+            return int(self.id) < int(other)
+        if isinstance(other, int):
+            return int(self.id) < other
+        return NotImplemented
 
 
 @dataclass
@@ -47,11 +59,9 @@ class TimeExpandedGraph:
     contacts: list[list[Contact]]
     state_durations: np.ndarray
     K: int  # number of states
-    N: int  # number of nodes
-    nodes: list[str]
+    N: int  # number of optical interfaces (adjacency-matrix dimension)
+    nodes: list[Node]
     node_map: dict[str, int]
-    ipn_node_to_planet_map: dict[int, str]
-
     optical_interfaces_to_node: dict[int, int]
     node_to_optical_interfaces: dict[int, list[int]]
 
@@ -67,7 +77,6 @@ class TimeExpandedGraph:
         rep += f"num_k={len(self.graphs)}\n"
         rep += f"num_nodes={len(self.nodes)}\n"
         rep += f"duration={end_time / 60 / 60} hours\n"
-        rep += f"ipn_node_to_planet_map={self.ipn_node_to_planet_map}\n"
         rep += f"nodes={self.nodes}\n"
         rep += f"oi to node={self.optical_interfaces_to_node}\n"
         rep += f"node to oi={self.node_to_optical_interfaces}\n"
@@ -127,42 +136,43 @@ class TimeExpandedGraph:
         time_steps = sorted(list(set(start_times + end_times)))
 
         # Create a unique list of node ids and map them to array index for the adjacency matrix graph
-        unique_nodes = sorted(
+        nodes: list[Node] = sorted(
             set(
-                [contact.rx_node for contact in contact_plan.contacts]
-                + [contact.tx_node for contact in contact_plan.contacts]
+                [Node(contact.rx_node) for contact in contact_plan.contacts]
+                + [Node(contact.tx_node) for contact in contact_plan.contacts]
             )
         )
-        node_map = {node: idx for idx, node in enumerate(unique_nodes)}
+
+        node_map = {node.id: idx for idx, node in enumerate(nodes)}
 
         optical_interfaces_to_node = {}
         node_to_optical_interfaces = {}
 
         optical_interface_idx = 0
-        for node in unique_nodes:
-            num_interfaces = constants.get_num_lasers(node)
-            node_to_optical_interfaces[node_map[node]] = []
-            for i in range(num_interfaces):
+        for node_idx, node in enumerate(nodes):
+            node_to_optical_interfaces[node_idx] = []
+            for i in range(node.num_interfaces):
                 optical_interfaces_to_node[optical_interface_idx + i] = (
-                    node_map[node]
+                    node_idx
                 )
-                node_to_optical_interfaces[node_map[node]].append(
+                node_to_optical_interfaces[node_idx].append(
                     optical_interface_idx + i
                 )
 
-            optical_interface_idx += num_interfaces
+            optical_interface_idx += node.num_interfaces
 
-        interplanetary_nodes = [
-            node for node in unique_nodes if node in constants.RELAY_NODES
-        ]
+        # optical_interface_idx = 0
+        # for node in nodes:
+        #     node_to_optical_interfaces[node.id] = []
+        #     for i in range(node.num_interfaces):
+        #         optical_interfaces_to_node[optical_interface_idx + i] = int(
+        #             node.id
+        #         )
+        #         node_to_optical_interfaces[node.id].append(
+        #             optical_interface_idx + i
+        #         )
 
-        # We want to split the list of interplanetary nodes into different sets of nodes for each planet. We can do this
-        # by using the first digit of each node id to identify its constellation. We make the assumption that each planet
-        # has at most a single interplanetary constellation
-        ipn_node_to_planet_map = {}  # ipn_node_idx -> planet_id
-        for idx, node in enumerate(unique_nodes):
-            if node in interplanetary_nodes:
-                ipn_node_to_planet_map[idx] = node[0]
+        #     optical_interface_idx += node.num_interfaces
 
         N = len(optical_interfaces_to_node)
         K = len(time_steps) - 1
@@ -171,7 +181,8 @@ class TimeExpandedGraph:
         contacts_by_state = []
         state_durations = np.empty(K, dtype="int64")
 
-        positions = np.empty((K, N, 3), dtype="float64")
+        # Positions are indexed by node index (not optical-interface index).
+        positions = np.zeros((K, len(nodes), 3), dtype="float64")
 
         print("Starting contact plan to time expanded graph conversion")
         for k, time_step in enumerate(tqdm(time_steps[:-1])):
@@ -183,10 +194,9 @@ class TimeExpandedGraph:
             included_contacts = [
                 contact
                 for contact in contact_plan.contacts
-                if include_contact(contact, state_start_time, state_duration)
+                if contact.is_include(state_start_time, state_duration)
             ]
             contacts_by_state.append(included_contacts)
-
             # The index here will map the node name to its index in the adjacency matrix, by default the values are set to 0
             # which indicates there is no contact between the two nodes
             for tx_oi_idx, tx_idx in optical_interfaces_to_node.items():
@@ -194,7 +204,7 @@ class TimeExpandedGraph:
                 tx_included_contacts = [
                     contact
                     for contact in included_contacts
-                    if contact.tx_node == unique_nodes[tx_idx]
+                    if contact.tx_node == nodes[tx_idx].id
                 ]
                 rx_nodes = [
                     contact.rx_node for contact in tx_included_contacts
@@ -212,7 +222,7 @@ class TimeExpandedGraph:
                     contact_topology_graphs[k][tx_oi_idx][rx_oi_idx] = 1
 
                 # Add position data for the node
-                if len(tx_included_contacts) > 0:
+                if tx_included_contacts:
                     newest_contact = tx_included_contacts[0]
                     for contact in tx_included_contacts:
                         if contact.start_time > newest_contact.start_time:
@@ -222,7 +232,7 @@ class TimeExpandedGraph:
                     tx_y = newest_contact.tx_y
                     tx_z = newest_contact.tx_z
                     positions[k][tx_idx] = [tx_x, tx_y, tx_z]
-                else:
+                elif k > 0:
                     positions[k][tx_idx] = positions[k - 1][tx_idx]
 
         time_expanded_graph = cls(
@@ -231,9 +241,8 @@ class TimeExpandedGraph:
             state_durations=state_durations,
             K=K,
             N=N,
-            nodes=unique_nodes,
+            nodes=nodes,
             node_map=node_map,
-            ipn_node_to_planet_map=ipn_node_to_planet_map,
             W=np.array([]),
             pos=positions,
             optical_interfaces_to_node=optical_interfaces_to_node,
@@ -314,18 +323,6 @@ class TimeExpandedGraph:
         return cls
 
 
-def include_contact(
-    contact: Contact, state_start_time: int, state_duration: int
-) -> bool:
-    state_end_time = state_start_time + state_duration
-    # The current state should include contacts that start before the state start time, inclusive, and end after the
-    # start end time, inclusive
-    return (
-        contact.start_time <= state_start_time
-        and contact.end_time >= state_end_time
-    )
-
-
 def convert_time_expanded_graph_to_contact_plan(
     teg: TimeExpandedGraph,
 ) -> ContactPlan:
@@ -357,9 +354,9 @@ def convert_time_expanded_graph_to_contact_plan(
                         contact
                         for contact in teg.contacts[k - 1]
                         if contact.tx_node
-                        == teg.nodes[teg.optical_interfaces_to_node[tx_idx]]
+                        == teg.nodes[teg.optical_interfaces_to_node[tx_idx]].id
                         and contact.rx_node
-                        == teg.nodes[teg.optical_interfaces_to_node[rx_idx]]
+                        == teg.nodes[teg.optical_interfaces_to_node[rx_idx]].id
                     ]
 
                     if possible_contact:
@@ -392,9 +389,9 @@ def convert_time_expanded_graph_to_contact_plan(
                         contact
                         for contact in teg.contacts[k]
                         if contact.tx_node
-                        == teg.nodes[teg.optical_interfaces_to_node[tx_idx]]
+                        == teg.nodes[teg.optical_interfaces_to_node[tx_idx]].id
                         and contact.rx_node
-                        == teg.nodes[teg.optical_interfaces_to_node[rx_idx]]
+                        == teg.nodes[teg.optical_interfaces_to_node[rx_idx]].id
                     ]
 
                     if possible_contact:
@@ -441,31 +438,35 @@ def dag_reduction(teg: TimeExpandedGraph):
         for tx_oi_idx in range(teg.N):
             for rx_oi_idx in range(teg.N):
                 if teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
-                    tx_node = teg.nodes[
+                    tx_node_id = teg.nodes[
                         teg.optical_interfaces_to_node[tx_oi_idx]
-                    ]
-                    rx_node = teg.nodes[
+                    ].id
+                    rx_node_id = teg.nodes[
                         teg.optical_interfaces_to_node[rx_oi_idx]
-                    ]
+                    ].id
 
                     # Req. 1
                     is_src_dst = (
-                        tx_node in SOURCE_NODES
-                        and rx_node in DESTINATION_NODES
+                        tx_node_id in SOURCE_NODES
+                        and rx_node_id in DESTINATION_NODES
                     )
                     is_src_rly = (
-                        tx_node in SOURCE_NODES and rx_node in RELAY_NODES
+                        tx_node_id in SOURCE_NODES
+                        and rx_node_id in RELAY_NODES
                     )
                     is_rly_dst = (
-                        tx_node in RELAY_NODES and rx_node in DESTINATION_NODES
+                        tx_node_id in RELAY_NODES
+                        and rx_node_id in DESTINATION_NODES
                     )
 
                     # Req. 2
                     are_nodes_same_planet = (
-                        NODE_TO_PLANET_MAP[tx_node]
-                        == NODE_TO_PLANET_MAP[rx_node]
+                        NODE_TO_PLANET_MAP[tx_node_id]
+                        == NODE_TO_PLANET_MAP[rx_node_id]
                     )
-                    is_rly_on_dst_planet = NODE_TO_PLANET_MAP[rx_node] == EARTH
+                    is_rly_on_dst_planet = (
+                        NODE_TO_PLANET_MAP[rx_node_id] == EARTH
+                    )
 
                     if (
                         is_src_dst
@@ -487,7 +488,6 @@ def dag_reduction(teg: TimeExpandedGraph):
         N=teg.N,
         nodes=teg.nodes,
         node_map=teg.node_map,
-        ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
         W=teg.W,
         pos=teg.pos,
         optical_interfaces_to_node=teg.optical_interfaces_to_node,

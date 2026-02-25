@@ -24,6 +24,15 @@ class Contact:
     rx_y: float
     rx_z: float
 
+    def is_include(self, state_start_time: int, state_duration: int) -> bool:
+        state_end_time = state_start_time + state_duration
+        # The current state should include contacts that start before the state start time, inclusive, and end after the
+        # start end time, inclusive
+        return (
+            self.start_time <= state_start_time
+            and self.end_time >= state_end_time
+        )
+
 
 @dataclass
 class ContactPlan:

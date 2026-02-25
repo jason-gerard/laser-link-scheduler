@@ -112,7 +112,6 @@ class LaserLinkScheduler(BaseScheduler):
             N=teg.N,
             nodes=teg.nodes,
             node_map=teg.node_map,
-            ipn_node_to_planet_map=teg.ipn_node_to_planet_map,
             W=weights,
             pos=teg.pos,
             optical_interfaces_to_node=teg.optical_interfaces_to_node,

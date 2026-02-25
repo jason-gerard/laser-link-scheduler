@@ -81,42 +81,43 @@ INTERPLANETARY_RANGE = 100_000 * 1_000 / 299_792_458
 EARTH = "EARTH"
 MARS = "MARS"
 
-# GS
-DESTINATION_NODES = ["9001", "9002", "9003"]
+# Optical ground stations, sink nodes, T, from 9001 to 9012
+DESTINATION_NODES = [str(i) for i in range(9001, 9013)]
 
 # Mars Science sats from 2001 to 2064
-# SOURCE_NODES = [str(i) for i in range(2001, 2065)]
+SOURCE_NODES = [str(i) for i in range(2001, 2065)]
 
-# Relay nodes from 1001 to 1006
-# RELAY_NODES = [str(i) for i in range(1001, 1007)]
+# Relay nodes from 1001 to 1012
+RELAY_NODES = [str(i) for i in range(1001, 1013)]
 
-# Destination nodes from 1001 to 1008 (EARTH)
+# Relay nodes from 1001 to 1012 (EARTH or MARS, depends the scenario)
 # Source nodes from 2001 to 2064 (MARS)
-# Ground stations from 9001 to 9003 (EARTH)
-# NODE_TO_PLANET_MAP = {
-#     **{str(i): EARTH for i in range(1001, 1009)},
-#     **{str(i): MARS for i in range(2001, 2065)},
-#     **{str(i): EARTH for i in range(9001, 9004)},
-# }
-
-
-# Destination nodes from 1001 to 1008
-DESTINATION_NODES = [str(i) for i in range(1001, 1009)]
-
-# from 2001 to 2192
-SOURCE_NODES = [str(i) for i in range(2001, 2193)]
-
-# Relay nodes from 3001 to 3016
-RELAY_NODES = [str(i) for i in range(3001, 3017)]
-
-# Destination nodes from 1001 to 1008 (EARTH)
-# Source nodes from 2001 to 2192 (MARS)
-# Relay nodes from 3001 to 3016 (MARS)
+# Ground stations, destination nodes, from 9001 to 9012 (EARTH)
 NODE_TO_PLANET_MAP = {
-    **{node_id: EARTH for node_id in DESTINATION_NODES},
-    **{node_id: MARS for node_id in SOURCE_NODES},
-    **{node_id: MARS for node_id in RELAY_NODES},
+    # **{str(i): EARTH for i in range(1001, 1013)},
+    **{str(i): MARS for i in range(1001, 1013)},
+    **{str(i): MARS for i in range(2001, 2065)},
+    **{str(i): EARTH for i in range(9001, 9013)},
 }
+
+
+# # Destination nodes from 1001 to 1008
+# DESTINATION_NODES = [str(i) for i in range(1001, 1009)]
+
+# # from 2001 to 2192
+# SOURCE_NODES = [str(i) for i in range(2001, 2193)]
+
+# # Relay nodes from 3001 to 3016
+# RELAY_NODES = [str(i) for i in range(3001, 3017)]
+
+# # Destination nodes from 1001 to 1008 (EARTH)
+# # Source nodes from 2001 to 2192 (MARS)
+# # Relay nodes from 3001 to 3016 (MARS)
+# NODE_TO_PLANET_MAP = {
+#     **{node_id: EARTH for node_id in DESTINATION_NODES},
+#     **{node_id: MARS for node_id in SOURCE_NODES},
+#     **{node_id: MARS for node_id in RELAY_NODES},
+# }
 
 SOURCE_NODE_BIT_RATE = 187  # DSOC Psyche @ 100 million km 50 mbps
 # SOURCE_NODE_BIT_RATE = 1000  # DSOC Psyche @ 33 million km 267 mbps

@@ -577,7 +577,6 @@ class LLSModel(BaseScheduler):
             N=self.teg.N,
             nodes=self.teg.nodes,
             node_map=self.teg.node_map,
-            ipn_node_to_planet_map=self.teg.ipn_node_to_planet_map,
             W=self.teg.W,
             pos=self.teg.pos,
             optical_interfaces_to_node=self.teg.optical_interfaces_to_node,
