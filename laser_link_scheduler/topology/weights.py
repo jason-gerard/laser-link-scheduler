@@ -32,7 +32,6 @@ def delta_capacity(
     state_duration: int,
     positions: np.ndarray,
     optical_interfaces_to_node: dict[int, int],
-    node_to_optical_interfaces: dict[int, list[int]],
     should_bypass_retargeting_time: bool = False,
 ) -> np.ndarray:
     """
@@ -64,7 +63,6 @@ def delta_capacity(
                         scheduled_contact_topology,
                         positions,
                         optical_interfaces_to_node,
-                        node_to_optical_interfaces,
                         should_bypass_retargeting_time,
                     )
                 )
@@ -205,13 +203,16 @@ def compute_node_capacity_by_single_edge_graph(
     nodes: list[Node],
     scheduled_contact_topology: np.ndarray,
     positions: np.ndarray,
-    optical_interfaces_to_node,
-    node_to_optical_interfaces: dict[int, list[int]],
+    optical_interfaces_to_node: dict[int, int],
     should_bypass_retargeting_time: bool = False,
 ) -> NodeCapacity | None:
+    # Phisical edges nodes implicated
+    tx_node: Node = nodes[optical_interfaces_to_node[tx_oi_idx]]
+    rx_node: Node = nodes[optical_interfaces_to_node[rx_oi_idx]]
+
     bit_rate = min(
-        constants.BIT_RATES[nodes[optical_interfaces_to_node[tx_oi_idx]]],
-        constants.BIT_RATES[nodes[optical_interfaces_to_node[rx_oi_idx]]],
+        constants.BIT_RATES[tx_node.id],
+        constants.BIT_RATES[rx_node.id],
     )
 
     effective_contact_duration = compute_effective_contact_time(
@@ -228,30 +229,26 @@ def compute_node_capacity_by_single_edge_graph(
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
     # the tx and rx
     # Inflow for single hop and two hop
-    if nodes[
-        optical_interfaces_to_node[tx_oi_idx]
-    ] in constants.SOURCE_NODES and (
-        nodes[optical_interfaces_to_node[rx_oi_idx]] in constants.RELAY_NODES
-        or nodes[optical_interfaces_to_node[rx_oi_idx]]
-        in constants.DESTINATION_NODES
+    if tx_node.id in constants.SOURCE_NODES and (
+        rx_node.id in constants.RELAY_NODES
+        or rx_node.id in constants.DESTINATION_NODES
     ):
-        rx_idx = optical_interfaces_to_node[rx_oi_idx]
+        rx_node_idx = optical_interfaces_to_node[rx_oi_idx]
         return NodeCapacity(
-            id=rx_idx,
+            id=rx_node_idx,
             capacity_in=effective_contact_duration * bit_rate,
             capacity_out=0
-            if nodes[rx_idx] in constants.RELAY_NODES
+            if nodes[rx_node_idx] in constants.RELAY_NODES
             else float("inf"),
         )
     # Outflow for two hop
     elif (
-        nodes[optical_interfaces_to_node[tx_oi_idx]] in constants.RELAY_NODES
-        and nodes[optical_interfaces_to_node[rx_oi_idx]]
-        in constants.DESTINATION_NODES
+        tx_node.id in constants.RELAY_NODES
+        and rx_node.id in constants.DESTINATION_NODES
     ):
-        tx_idx = optical_interfaces_to_node[tx_oi_idx]
+        tx_node_idx = optical_interfaces_to_node[tx_oi_idx]
         return NodeCapacity(
-            id=tx_idx,
+            id=tx_node_idx,
             capacity_in=0,
             capacity_out=effective_contact_duration * bit_rate,
         )

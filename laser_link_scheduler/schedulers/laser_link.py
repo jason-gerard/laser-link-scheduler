@@ -65,7 +65,6 @@ class LaserLinkScheduler(BaseScheduler):
                 teg.state_durations[k],
                 teg.pos,
                 teg.optical_interfaces_to_node,
-                teg.node_to_optical_interfaces,
                 self.should_bypass_retargeting_time,
             )
 
