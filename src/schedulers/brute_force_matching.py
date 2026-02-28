@@ -3,10 +3,10 @@ import math
 
 import networkx as nx
 
-from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
+from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
-from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
+from src.topology.contact_plan import IONContactPlanParser
 
 
 def all_maximal_matchings(T):

@@ -1,11 +1,11 @@
 import numpy as np
 from tqdm import tqdm
 
-from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
+from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
 from .base_scheduler import BaseScheduler
-from laser_link_scheduler.topology.weights import (
+from src.topology.weights import (
     disabled_contact_time,
 )
 

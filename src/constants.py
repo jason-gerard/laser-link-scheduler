@@ -140,3 +140,20 @@ def get_num_lasers(node_id: str):
     elif node_id in DESTINATION_NODES:
         return 1
         # return 2
+
+
+"""
+-----------------      MISSION LIFETIME      ------------------
+
+
+We took as reference the NASA New Horizons spacecraft RTG:
+
+    'Besides its suite of scientific instruments, New Horizons carries a cylindrical 
+    radioisotope thermoelectric generator (a spare from the Cassini mission) 
+    that provided about 250 watts of power at launch (decaying to 200 watts by the 
+    time of the Pluto encounter).'
+    https://science.nasa.gov/mission/new-horizons/#:~:text=Besides,encounter%29%2E
+"""
+SOURCE_NODE_MISSION_LIFESTIME_WATTS = 250
+RELAY_NODE_MISSION_LIFESTIME = 240  #
+GS_NODE_MISSION_LIFESTIME = float("inf")

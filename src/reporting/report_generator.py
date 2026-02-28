@@ -3,12 +3,12 @@ import os
 import pickle
 import time
 
-from laser_link_scheduler import constants
-from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
+from src import constants
+from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
-from laser_link_scheduler.topology import weights
-from laser_link_scheduler.topology.weights import (
+from src.topology import weights
+from src.topology.weights import (
     compute_capacity,
     compute_jains_fairness_index,
     compute_node_capacities,
@@ -16,7 +16,7 @@ from laser_link_scheduler.topology.weights import (
     compute_wasted_buffer,
     compute_wasted_capacity,
 )
-from laser_link_scheduler.utils import FileType
+from src.utils import FileType
 
 
 class Reporter:

@@ -1,9 +1,9 @@
-from laser_link_scheduler.constants import (
+from src.constants import (
     DESTINATION_NODES,
     RELAY_NODES,
     SOURCE_NODES,
 )
-from laser_link_scheduler.time_expanded_graph import TimeExpandedGraph
+from src.time_expanded_graph import TimeExpandedGraph
 from .base_scheduler import BaseScheduler
 
 

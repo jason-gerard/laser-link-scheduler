@@ -1,30 +1,30 @@
 import numpy as np
 import pulp
 
-from laser_link_scheduler import constants
-from laser_link_scheduler.constants import (
+from src import constants
+from src.constants import (
     DESTINATION_NODES,
     RELAY_NODES,
     SOURCE_NODES,
 )
-from laser_link_scheduler.schedulers.base_scheduler import BaseScheduler
+from src.schedulers.base_scheduler import BaseScheduler
 
-from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
+from src.time_expanded_graph.time_expanded_graph import (
     convert_time_expanded_graph_to_contact_plan,
     TimeExpandedGraph,
     write_time_expanded_graph,
 )
-from laser_link_scheduler.models.link_acq_delay import (
+from src.models.link_acq_delay import (
     link_acq_delay_ipn,
     link_acq_delay_leo,
 )
-from laser_link_scheduler.models import pointing_delay_pair_nodes
-from laser_link_scheduler.reporting.report_generator import Reporter
-from laser_link_scheduler.topology.contact_plan import (
+from src.models import pointing_delay_pair_nodes
+from src.reporting.report_generator import Reporter
+from src.topology.contact_plan import (
     IONContactPlanParser,
     IPNDContactPlanParser,
 )
-from laser_link_scheduler.utils import FileType
+from src.utils import FileType
 
 
 MAX_TIME = 2.5 * 60 * 60  # seconds

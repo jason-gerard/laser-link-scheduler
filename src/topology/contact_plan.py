@@ -3,8 +3,8 @@ from dataclasses import dataclass
 import json
 import os
 
-from laser_link_scheduler.constants import SOURCES_ROOT
-from laser_link_scheduler.utils import FileType, get_experiment_file
+from src.constants import SOURCES_ROOT
+from src.utils import FileType, get_experiment_file
 
 
 @dataclass(frozen=True)

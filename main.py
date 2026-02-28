@@ -4,14 +4,14 @@ import typer
 
 import numpy as np
 
-from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
+from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
     convert_time_expanded_graph_to_contact_plan,
     write_time_expanded_graph,
 )
-from laser_link_scheduler.models.pointing_delay import retargeting_delay_cache
-from laser_link_scheduler.reporting.report_generator import Reporter
-from laser_link_scheduler.schedulers import (
+from src.models.pointing_delay import retargeting_delay_cache
+from src.reporting.report_generator import Reporter
+from src.schedulers import (
     BaseScheduler,
     LaserLinkScheduler,
     LLSModel,
@@ -21,12 +21,12 @@ from laser_link_scheduler.schedulers import (
     FairContactPlan,
     LifespanAware,
 )
-from laser_link_scheduler.topology import weights
-from laser_link_scheduler.topology.contact_plan import (
+from src.topology import weights
+from src.topology.contact_plan import (
     IONContactPlanParser,
     IPNDContactPlanParser,
 )
-from laser_link_scheduler.utils import FileType
+from src.utils import FileType
 
 SCHEDULER: dict[str, BaseScheduler] = {
     "lls": LaserLinkScheduler(),

@@ -14,11 +14,11 @@ SRC_ROOT = os.path.join(REPO_ROOT, "src")
 if SRC_ROOT not in sys.path:
     sys.path.append(SRC_ROOT)
 
-from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
+from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
-from laser_link_scheduler.models.pointing_delay import SLEW_RATE
-from laser_link_scheduler.topology.weights import compute_all_delays
+from src.models.pointing_delay import SLEW_RATE
+from src.topology.weights import compute_all_delays
 
 
 plt.rcParams.update({"font.size": 26})

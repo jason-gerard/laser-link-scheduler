@@ -1,6 +1,6 @@
-from laser_link_scheduler.time_expanded_graph import TimeExpandedGraph
-from laser_link_scheduler.schedulers import LaserLinkScheduler
-from laser_link_scheduler.topology.contact_plan import IONContactPlanParser
+from src.time_expanded_graph import TimeExpandedGraph
+from src.schedulers import LaserLinkScheduler
+from src.topology.contact_plan import IONContactPlanParser
 
 
 def scheduler_test_driver(experiment_name):

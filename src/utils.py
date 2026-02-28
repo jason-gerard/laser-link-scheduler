@@ -1,7 +1,7 @@
 from enum import StrEnum, auto
 import os
 
-from laser_link_scheduler.constants import SOURCES_ROOT
+from src.constants import SOURCES_ROOT
 
 
 class FileType(StrEnum):

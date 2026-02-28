@@ -1,8 +1,8 @@
 import numpy as np
 from tqdm import tqdm
 
-from laser_link_scheduler import constants
-from laser_link_scheduler.constants import (
+from src import constants
+from src.constants import (
     DESTINATION_NODES,
     EARTH,
     NODE_TO_PLANET_MAP,
@@ -10,8 +10,8 @@ from laser_link_scheduler.constants import (
     SOURCE_NODES,
     get_num_lasers,
 )
-from laser_link_scheduler.topology.contact_plan import Contact, ContactPlan
-from laser_link_scheduler.utils import FileType, get_experiment_file
+from src.topology.contact_plan import Contact, ContactPlan
+from src.utils import FileType, get_experiment_file
 
 from dataclasses import dataclass, field, replace
 from functools import total_ordering

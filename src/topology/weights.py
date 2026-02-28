@@ -3,8 +3,8 @@ from typing import Tuple, Optional
 
 import numpy as np
 from itertools import groupby
-from laser_link_scheduler import constants
-from laser_link_scheduler.models import (
+from src import constants
+from src.models import (
     link_acq_delay_ipn,
     link_acq_delay_ipn_rand,
     link_acq_delay_leo,
@@ -12,7 +12,7 @@ from laser_link_scheduler.models import (
     all_pointing_delay,
     pointing_delay_pair_nodes,
 )
-from laser_link_scheduler.time_expanded_graph.time_expanded_graph import Node
+from src.time_expanded_graph.time_expanded_graph import Node
 
 
 @dataclass
@@ -206,13 +206,13 @@ def compute_node_capacity_by_single_edge_graph(
     optical_interfaces_to_node: dict[int, int],
     should_bypass_retargeting_time: bool = False,
 ) -> NodeCapacity | None:
-    # Phisical edges nodes implicated
-    tx_node: Node = nodes[optical_interfaces_to_node[tx_oi_idx]]
-    rx_node: Node = nodes[optical_interfaces_to_node[rx_oi_idx]]
+    # Phisical edges nodes id implicated
+    tx_node_id: str = nodes[optical_interfaces_to_node[tx_oi_idx]].id
+    rx_node_id: str = nodes[optical_interfaces_to_node[rx_oi_idx]].id
 
     bit_rate = min(
-        constants.BIT_RATES[tx_node.id],
-        constants.BIT_RATES[rx_node.id],
+        constants.BIT_RATES[tx_node_id],
+        constants.BIT_RATES[rx_node_id],
     )
 
     effective_contact_duration = compute_effective_contact_time(
@@ -229,9 +229,9 @@ def compute_node_capacity_by_single_edge_graph(
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
     # the tx and rx
     # Inflow for single hop and two hop
-    if tx_node.id in constants.SOURCE_NODES and (
-        rx_node.id in constants.RELAY_NODES
-        or rx_node.id in constants.DESTINATION_NODES
+    if tx_node_id in constants.SOURCE_NODES and (
+        rx_node_id in constants.RELAY_NODES
+        or rx_node_id in constants.DESTINATION_NODES
     ):
         rx_node_idx = optical_interfaces_to_node[rx_oi_idx]
         return NodeCapacity(
@@ -243,8 +243,8 @@ def compute_node_capacity_by_single_edge_graph(
         )
     # Outflow for two hop
     elif (
-        tx_node.id in constants.RELAY_NODES
-        and rx_node.id in constants.DESTINATION_NODES
+        tx_node_id in constants.RELAY_NODES
+        and rx_node_id in constants.DESTINATION_NODES
     ):
         tx_node_idx = optical_interfaces_to_node[tx_oi_idx]
         return NodeCapacity(

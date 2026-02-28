@@ -2,10 +2,10 @@ from abc import abstractmethod
 import networkx as nx
 import numpy as np
 
-from laser_link_scheduler.time_expanded_graph.time_expanded_graph import (
+from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
-from laser_link_scheduler.topology.contact_plan import Contact
+from src.topology.contact_plan import Contact
 
 
 class BaseScheduler:
