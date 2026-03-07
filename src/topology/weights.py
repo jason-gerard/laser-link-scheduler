@@ -620,19 +620,19 @@ def compute_effective_contact_time(
     is_same_link = idx1_rx == idx2 or idx2_rx == idx1
     if not is_same_link:
         # Add link_acq delay, check if edge is an IPN or LEO link
-        node1 = nodes[optical_interfaces_to_node[tx_oi_idx1]]
-        node2 = nodes[optical_interfaces_to_node[rx_oi_idx2]]
+        node1_id = nodes[optical_interfaces_to_node[tx_oi_idx1]].id
+        node2_id = nodes[optical_interfaces_to_node[rx_oi_idx2]].id
         is_ipn_edge = (
-            node1 in constants.SOURCE_NODES
+            node1_id in constants.SOURCE_NODES
             and (
-                node2 in constants.RELAY_NODES
-                or node2 in constants.DESTINATION_NODES
+                node2_id in constants.RELAY_NODES
+                or node2_id in constants.DESTINATION_NODES
             )
         ) or (
-            node2 in constants.SOURCE_NODES
+            node2_id in constants.SOURCE_NODES
             and (
-                node1 in constants.RELAY_NODES
-                or node1 in constants.DESTINATION_NODES
+                node1_id in constants.RELAY_NODES
+                or node1_id in constants.DESTINATION_NODES
             )
         )
         link_acq_delay = (

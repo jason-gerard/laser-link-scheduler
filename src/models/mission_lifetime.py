@@ -58,8 +58,8 @@ def mission_lifetime(P0: float, decay_constant: float, P_min: float) -> float:
 
 
 if __name__ == "__main__":
-    P0 = 300.0  # Initial power in Watts
-    decay_constant = 0.03  # Decay constant in 1/years
-    P_min = 200.0  # Minimum operational power in Watts
+    P0 = 250.0  # Initial power in Watts
+    decay_constant = 0.013  # Decay constant in 1/years
+    P_min = 60.0  # Minimum operational power in Watts
     lifetime = mission_lifetime(P0, decay_constant, P_min)
     print(f"Mission lifetime under RTG power model: {lifetime:.2f} seconds")

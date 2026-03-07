@@ -1,5 +1,5 @@
 import os
-
+from enum import Enum
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SOURCES_ROOT = os.path.join(REPO_ROOT, "scenarios", "experiments")
@@ -26,14 +26,18 @@ d_max = 600
 # The default interface, a = 1, has the default bit rate of 100 mbps.
 default_a = 1
 
-# Alpha is a weighting factor that scales how much impact fairness has on the algorithm. If alpha is low it will only
-# be used for tie breaking when multiple options have the same change in capacity. If alpha is high then increasing
-# fairness will be used over increasing capacity in some cases i.e. if a node has little impact on capacity but has
-# not been given an opportunity to transmit
-# alpha must be set greater than or equal to 0 and less than or equal to 1, i.e. [0, 1]
-# if alpha = 1 then only consider fairness
-# if alpha = 0 then only consider capacity
+# TODO: change descrition for general propourse.
 alpha = 0.99
+"""
+    Alpha is a weighting factor that scales how much impact fairness has on the algorithm. If alpha is low it will only
+    be used for tie breaking when multiple options have the same change in capacity. If alpha is high then increasing
+    fairness will be used over increasing capacity in some cases i.e. if a node has little impact on capacity but has
+    not been given an opportunity to transmit
+    alpha must be set greater than or equal to 0 and less than or equal to 1, i.e. [0, 1]
+    if alpha = 1 then only consider fairness
+    if alpha = 0 then only consider capacity
+"""
+
 
 # The matrix A, contains the integer IDs of the communication interfaces for each node. Each laser
 # communication interface is associated in an integer ID, a, where a >= 1.
@@ -142,18 +146,68 @@ def get_num_lasers(node_id: str):
         # return 2
 
 
-"""
------------------      MISSION LIFETIME      ------------------
+class MissionLifespanConfig:
+    """
+    MISSION LIFETIME
+    -----
+    We took as reference the NASA New Horizons spacecraft RTG:
+
+        'Besides its suite of scientific instruments, New Horizons carries a cylindrical
+        radioisotope thermoelectric generator (a spare from the Cassini mission)
+        that provided about 250 W of power at launch (decaying to 200 W by the
+        time of the Pluto encounter).' (11kg of plutonium oxide fuel)
+
+        'https://science.nasa.gov/mission/new-horizons/#:~:text=Besides,encounter%29%2E'
+
+        The minimum it is set at 69.9W to function until the Low-Power Helio Science
+
+        'https://www.jhuapl.edu/sites/default/files/2024-09/37-01-Hersman.pdf'
+
+        The approximate rate of decay in power output is currently about 3.2 W/year.
+
+            λ = 0.012882625831013605 ≃ 0.013
+
+    """
+
+    SOURCE_NODE_MISSION_LIFESTIME = 250.0  # Watts
+    RELAY_NODE_MISSION_LIFESTIME = 250.0  # Watts
+    DECAY_RATE = 0.013  # ~3.2W/year
+    GS_NODE_MISSION_LIFESTIME = float("inf")
+
+    @classmethod
+    def get_mission_lifetime(self, node_id: str):
+        # Obtain the mission lifestime by satellite type
+        if node_id in RELAY_NODES:
+            initial_power = self.RELAY_NODE_MISSION_LIFESTIME
+        elif node_id in SOURCE_NODES:
+            initial_power = self.SOURCE_NODE_MISSION_LIFESTIME
+        else:
+            initial_power = self.GS_NODE_MISSION_LIFESTIME
+        return initial_power
 
 
-We took as reference the NASA New Horizons spacecraft RTG:
+class OPTConfig:
+    """
+    OPTICAL COMUNICATION TERMINAL
+    ------------
+    The optical communication terminal (OCT) energy consumption is defined across three
+    states: idle, acquisition (PAT), and transmission.
+    - 16-PPM -> 2⁴ -> 4 bits of data
+    - 4W average transmit power.
+    - Forward Error Correction (FEC) code rate (r = 1 if no coding), generally 2/3
+    - Data rate of 267 mbps (Net information bit rate)
+    - Duration of a single PPM time slot
+    """
 
-    'Besides its suite of scientific instruments, New Horizons carries a cylindrical 
-    radioisotope thermoelectric generator (a spare from the Cassini mission) 
-    that provided about 250 watts of power at launch (decaying to 200 watts by the 
-    time of the Pluto encounter).'
-    https://science.nasa.gov/mission/new-horizons/#:~:text=Besides,encounter%29%2E
-"""
-SOURCE_NODE_MISSION_LIFESTIME_WATTS = 250
-RELAY_NODE_MISSION_LIFESTIME = 240  #
-GS_NODE_MISSION_LIFESTIME = float("inf")
+    AVG_TRANSMISSION_POWER = 4  # P_avg
+    PAYLOAD_BITS = 4  # m = log2(L)
+    SLOTS_PER_SYMBOL = 16  # L = 2^m
+    FEC = 2 / 3  # r
+    BIT_RATE = 267  # R_b
+    TIME_SLOT = (FEC * PAYLOAD_BITS) / (BIT_RATE * (SLOTS_PER_SYMBOL + 1 / 4))
+    GUARD_TIME = (  #  (L / 4) · T_slot
+        (SLOTS_PER_SYMBOL / 4) * TIME_SLOT
+    )
+    SYMBOL_DURATION = (  # (L × T_slot) + T_guard
+        (SLOTS_PER_SYMBOL * TIME_SLOT) + GUARD_TIME
+    )

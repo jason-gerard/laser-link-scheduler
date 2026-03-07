@@ -17,9 +17,10 @@ def transmission_energy(power: float, duration: float) -> float:
     return power * duration
 
 
+# TODO: Change implementation
 def transmission_duration(
-    N_bits: float,
-    M: int,
+    number_of_bits: int,
+    m: int,
     L: int,
     T_chip: float,
     T_guard: float,
@@ -29,9 +30,9 @@ def transmission_duration(
 
     Parameters
     ----------
-    N_bits : int
+    number_of_bits : int
         Number of bits in the message.
-    M : int
+    m : int
         Bits encoded per slot (modulation order).
     L : int
         Number of slots.
@@ -45,12 +46,13 @@ def transmission_duration(
     float
         Total transmission duration (T_tx) in seconds.
     """
-    if L != 2**M:
-        raise ValueError("L must be equal to 2^M")
+    if L != 2**m:
+        raise ValueError("L must be equal to 2^m")
 
-    return (N_bits / (2**M)) * (M / (L * T_chip + T_guard))
+    return (number_of_bits / (2**m)) * (m / (L * T_chip + T_guard))
 
 
+# TODO: Change implementation
 def bit_rate(
     M: int,
     L: int,
@@ -92,8 +94,8 @@ if __name__ == "__main__":
     print(f"\tDuration: {duration} s")
     print(f"Transmission Energy: {energy} J\n")
 
-    N_bits = 1e6  # bits
-    M = 40  # bits per slot
+    N_bits = 8  # bits
+    M = 4  # bits per slot
     L = 2**M  # slots
     T_chip = 1e-6  # seconds
     T_guard = 1e-7  # seconds

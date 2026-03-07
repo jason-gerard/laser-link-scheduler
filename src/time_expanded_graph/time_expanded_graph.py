@@ -58,17 +58,20 @@ class TimeExpandedGraph:
     graphs: np.ndarray
     contacts: list[list[Contact]]
     state_durations: np.ndarray
+    max_state_duration: int = field(init=False)
     K: int  # number of states
     N: int  # number of optical interfaces (adjacency-matrix dimension)
     nodes: list[Node]
     node_map: dict[str, int]
     optical_interfaces_to_node: dict[int, int]
     node_to_optical_interfaces: dict[int, list[int]]
-
     pos: np.ndarray
 
     W: np.ndarray  # 3D Weights matrix [k][tx_idx][rx_idx]
     effective_contact_durations: np.ndarray
+
+    def __post_init__(self):
+        self.state_durations = max(self.state_durations)
 
     def __repr__(self):
         end_time = sum(self.state_durations)
@@ -143,6 +146,7 @@ class TimeExpandedGraph:
             )
         )
 
+        # NOTE: review this definition
         node_map = {node.id: idx for idx, node in enumerate(nodes)}
 
         optical_interfaces_to_node = {}
