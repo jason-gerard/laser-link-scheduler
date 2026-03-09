@@ -33,11 +33,6 @@ def mission_lifetime(P0: float, decay_constant: float, P_min: float) -> float:
     ------
     ValueError
         If P0 <= 0, P_min <= 0, or decay_constant <= 0.
-
-    Examples
-    --------
-    >>> mission_lifetime_rtg(P0=300.0, decay_constant=0.03, P_min=200.0)
-    426278983.66
     """
 
     if P0 <= 0:
@@ -54,7 +49,24 @@ def mission_lifetime(P0: float, decay_constant: float, P_min: float) -> float:
         return 0.0
 
     lifetime = (1 / decay_constant) * np.log(P0 / P_min)
-    return lifetime * 3.154e7  # Year to seconds
+    return lifetime  # Year to seconds
+
+
+def generating_power(
+    time: float,  # t
+    initial_power: float,  # P_0
+    decay_constant: float,  # λ
+):
+    """
+    Energy Source and Generation Modeling
+    -----
+    The radioisotope thermoelectric generator (RTG) is modeled as an exponentially decaying power source:
+        P(t) = P0 * exp(-λ * t)
+        where P(t) is the available power at time t,
+        P0 is the initial power, and λ is the decay constant.
+    """
+
+    return initial_power * np.exp(decay_constant * time)
 
 
 if __name__ == "__main__":
@@ -62,4 +74,4 @@ if __name__ == "__main__":
     decay_constant = 0.013  # Decay constant in 1/years
     P_min = 60.0  # Minimum operational power in Watts
     lifetime = mission_lifetime(P0, decay_constant, P_min)
-    print(f"Mission lifetime under RTG power model: {lifetime:.2f} seconds")
+    print(f"Mission lifetime under RTG power model: {lifetime:.2f} years")

@@ -71,7 +71,7 @@ class TimeExpandedGraph:
     effective_contact_durations: np.ndarray
 
     def __post_init__(self):
-        self.state_durations = max(self.state_durations)
+        self.max_state_duration = max(self.state_durations)
 
     def __repr__(self):
         end_time = sum(self.state_durations)
