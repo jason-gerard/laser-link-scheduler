@@ -1,5 +1,6 @@
 from collections import defaultdict
 import os
+from pathlib import Path
 import pickle
 import sys
 
@@ -7,15 +8,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-REPO_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..")
-)
-SRC_ROOT = os.path.join(REPO_ROOT, "src")
-if SRC_ROOT not in sys.path:
-    sys.path.append(SRC_ROOT)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-from src.time_expanded_graph import TimeExpandedGraph
-from src.topology.weights import compute_all_delays
+from src.time_expanded_graph import TimeExpandedGraph  # noqa: E402
+from src.topology.weights import compute_all_delays  # noqa: E402
 
 
 plt.rcParams.update({"font.size": 22})

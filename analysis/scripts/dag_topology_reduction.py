@@ -1,5 +1,6 @@
 import math
 import os
+from pathlib import Path
 import sys
 
 import matplotlib.pyplot as plt
@@ -8,19 +9,16 @@ import networkx as nx
 import numpy as np
 
 
-REPO_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..")
-)
-SRC_ROOT = os.path.join(REPO_ROOT, "src")
-if SRC_ROOT not in sys.path:
-    sys.path.append(SRC_ROOT)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-from src.time_expanded_graph.time_expanded_graph import (
-    TimeExpandedGraph,
+from src.time_expanded_graph.time_expanded_graph import (  # noqa: E402
     count_edges,
     dag_reduction,
+    TimeExpandedGraph,
 )
-from src.topology.contact_plan import IONContactPlanParser
+from src.topology.contact_plan import IONContactPlanParser  # noqa: E402
 
 
 SHOW_FIGS = False

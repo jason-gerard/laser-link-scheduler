@@ -13,120 +13,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from analysis.scripts.utils import compute_energy_metrics  # noqa: E402
 from src.time_expanded_graph.time_expanded_graph import (  # noqa: E402
     TimeExpandedGraph,
 )
-from src.topology.weights import compute_delays  # noqa: E402
 
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
 plt.rcParams.update({"font.family": "Times New Roman"})
-
-algorithms = ["lls", "lls_pat_unaware", "lls_mip", "fcp"]
-
-report_id = 1748949730
-tegs = []
-
-pattern = re.compile(r"^([a-zA-Z_]+)_gs_.*?_(\d+)\.pkl$")
-
-report_dir = os.path.join("reports", str(report_id))
-for file_name in os.listdir(report_dir):
-    if file_name.endswith(".pkl"):
-        file_path = os.path.join(report_dir, file_name)
-
-        match = pattern.match(file_name)
-        if match is None:
-            continue
-        algorithm = match.group(1)
-        number = int(match.group(2))
-
-        if algorithm not in algorithms:
-            continue
-
-        with open(file_path, "rb") as f:
-            teg: TimeExpandedGraph = pickle.load(f)
-            tegs.append((algorithm, number, teg))
-
-all_pointing_delays = []
-all_link_acq_delays = []
-
-retargeting_duty_cycles = []
-
-for algorithm, node_count, teg in tegs:
-    print(f"Processing {algorithm} node count {node_count}")
-    delays_by_node = {node: [] for node in teg.nodes}
-
-    for k in range(teg.K):
-        for tx_oi_idx in range(teg.N):
-            for rx_oi_idx in range(teg.N):
-                if teg.graphs[k][tx_oi_idx][rx_oi_idx] == 1:
-                    pointing_delay, link_acq_delay = compute_delays(
-                        tx_oi_idx,
-                        rx_oi_idx,
-                        teg.graphs[:k],
-                        teg.state_durations[k],
-                        teg.pos,
-                        teg.optical_interfaces_to_node,
-                        teg.nodes,
-                    )
-
-                    tx_node = teg.nodes[
-                        teg.optical_interfaces_to_node[tx_oi_idx]
-                    ]
-                    rx_node = teg.nodes[
-                        teg.optical_interfaces_to_node[rx_oi_idx]
-                    ]
-
-                    # state duration, pointing delay, link acq delay
-                    delays_by_node[tx_node].append(
-                        (
-                            teg.state_durations[k],
-                            pointing_delay,
-                            link_acq_delay,
-                        )
-                    )
-                    delays_by_node[rx_node].append(
-                        (
-                            teg.state_durations[k],
-                            pointing_delay,
-                            link_acq_delay,
-                        )
-                    )
-
-                    all_pointing_delays.append(pointing_delay)
-                    all_link_acq_delays.append(link_acq_delay)
-
-    network_total_time = 0
-    network_total_eff_time = 0
-    retargeting_duty_cycle = {}
-    for node, delays in delays_by_node.items():
-        total_time = 0
-        total_eff_time = 0
-        for state_duration, pointing_delay, link_acq_delay in delays:
-            total_time += state_duration
-            total_eff_time += state_duration - (
-                pointing_delay + link_acq_delay
-            )
-
-            network_total_time += state_duration
-            network_total_eff_time += state_duration - (
-                pointing_delay + link_acq_delay
-            )
-
-        # proportion of time spent transmitting vs total time
-        retargeting_duty_cycle[node] = total_eff_time / total_time
-        # print(node, total_time, total_eff_time)
-
-    # pprint.pprint(retargeting_duty_cycle)
-
-    network_retargeting_duty_cycle = (
-        network_total_eff_time / network_total_time
-    )
-    print("network retargeting duty cycle", network_retargeting_duty_cycle)
-    retargeting_duty_cycles.append(
-        (algorithm, node_count, network_retargeting_duty_cycle)
-    )
 
 algorithms = [
     ("lls", "LLS_Greedy"),
@@ -135,6 +30,112 @@ algorithms = [
     ("fcp", "FCP"),
 ]
 
+report_id = 1773312306
+tegs = []
+
+pattern = re.compile(r"^([a-zA-Z_]+).*?_(\d+)\.pkl$")
+
+report_dir = os.path.join("output", "reports", str(report_id))
+for file_name in os.listdir(report_dir):
+    if file_name.endswith(".pkl"):
+        file_path = os.path.join(report_dir, file_name)
+
+        match = file_name.split(("_"))
+        if match is None:
+            print(f"{file_name} doesn't match with the pattern")
+            continue
+        algorithm = match[0]
+        number = int(match[-1].split(".")[0])
+
+        if algorithm not in [alg[0] for alg in algorithms]:
+            continue
+        with open(file_path, "rb") as f:
+            teg: TimeExpandedGraph = pickle.load(f)
+            tegs.append((algorithm, number, teg))
+
+all_generation = []
+all_consumption = []
+for algorithm, node_count, teg in tegs:
+    print(f"Processing {algorithm} node count {node_count}")
+    metrics_by_node = {node: [] for node in teg.nodes}
+    acumulated_time = 0
+    for k in range(teg.K):
+        for tx_oi_idx in range(teg.N):
+            for rx_oi_idx in range(teg.N):
+                if teg.graphs[k][tx_oi_idx][rx_oi_idx] == 1:
+                    tx_node_id = teg.nodes[
+                        teg.optical_interfaces_to_node[tx_oi_idx]
+                    ].id
+                    rx_node_id = teg.nodes[
+                        teg.optical_interfaces_to_node[rx_oi_idx]
+                    ].id
+
+                    generated, consumed = compute_energy_metrics(
+                        teg,
+                        tx_oi_idx,
+                        rx_oi_idx,
+                        teg.graphs[:k],
+                        teg.state_durations[k],
+                        acumulated_time,
+                        tx_node_id,
+                    )
+
+                    # state duration, generated energy, consumed energy
+                    metrics_by_node[tx_node_id].append(
+                        (
+                            teg.state_durations[k],
+                            generated,
+                            consumed,
+                        )
+                    )
+                    metrics_by_node[rx_node_id].append(
+                        (
+                            teg.state_durations[k],
+                            generated,
+                            consumed,
+                        )
+                    )
+
+                    all_generation.append(generated)
+                    all_consumption.append(consumed)
+        # move the state time pointer
+        acumulated_time += teg.state_durations[k]
+
+    network_total_time = 0
+    network_total_additional_energy = 0
+    network_total_generated = 0
+    network_total_consumed = 0
+
+    state_additional_energy = {}
+    for node_id, metrics in metrics_by_node.items():
+        total_time = 0
+        total_additional_energy = 0
+        total_generated = 0
+        total_consumed = 0
+        for state_duration, generated, consumed in metrics:
+            total_time += state_duration
+            total_generated += generated
+            total_consumed += consumed
+
+            network_total_time += state_duration
+            network_total_additional_energy += generated - consumed
+
+        # proportion of energy spent transmitting vs total generated
+        # retargeting_duty_cycle[node_id] = total_eff_time / total_time
+        # print(node, total_time, total_eff_time)
+
+    # pprint.pprint(retargeting_duty_cycle)
+
+    # network_retargeting_duty_cycle = (
+    #     network_total_eff_time / network_total_time
+    # )
+    # print("network retargeting duty cycle", network_retargeting_duty_cycle)
+    # retargeting_duty_cycles.append(
+    #     (algorithm, node_count, network_retargeting_duty_cycle)
+    # )
+
+
+retargeting_duty_cycles = []
 # X-axis ticks
 x = sorted(
     list(set([node_count for _, node_count, _ in retargeting_duty_cycles]))
@@ -186,14 +187,14 @@ ax.set_xticklabels([f"{i}/{math.ceil(i / 16)}" for i in x if i % 8 == 0])
 
 # Save the figure
 file_name = "network_retargeting_duty_cycle"
-os.makedirs("analysis", exist_ok=True)
+os.makedirs("output/plots", exist_ok=True)
 plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"),
+    os.path.join("output/plots", f"{file_name}.pdf"),
     format="pdf",
     bbox_inches="tight",
 )
 plt.savefig(
-    os.path.join("analysis", f"{file_name}.png"),
+    os.path.join("output/plots", f"{file_name}.png"),
     format="png",
     bbox_inches="tight",
     dpi=300,

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import pickle
 import sys
 
@@ -7,18 +8,15 @@ import numpy as np
 from scipy.stats import gaussian_kde
 
 
-REPO_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..")
-)
-SRC_ROOT = os.path.join(REPO_ROOT, "src")
-if SRC_ROOT not in sys.path:
-    sys.path.append(SRC_ROOT)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-from src.time_expanded_graph.time_expanded_graph import (
+from src.models.pointing_delay import SLEW_RATE  # noqa: E402
+from src.time_expanded_graph.time_expanded_graph import (  # noqa: E402
     TimeExpandedGraph,
 )
-from src.models.pointing_delay import SLEW_RATE
-from src.topology.weights import compute_all_delays
+from src.topology.weights import compute_all_delays  # noqa: E402
 
 
 plt.rcParams.update({"font.size": 26})

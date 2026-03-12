@@ -17,7 +17,7 @@ from src.models import *
 from functools import total_ordering
 from dataclasses import dataclass
 
-MLcfg = constants.MissionLifespanConfig
+MLcfg = constants.MLConfig
 OPTcfg = constants.OPTConfig
 
 
@@ -50,7 +50,7 @@ class LifespanAware(BaseScheduler):
         # TODO: Implement with bit_rate() from models, to obtain a dinamic bit_rate
         # node_bit_rate = OPTcfg.BIT_RATE
 
-        initial_power = MLcfg.get_mission_lifetime(node_id)
+        initial_power = MLcfg.get_initial_power(node_id)
         decay_constant = MLcfg.DECAY_RATE
         minimum_power = transmission_energy(
             OPTcfg.AVG_TRANSMISSION_POWER, max_state_duration

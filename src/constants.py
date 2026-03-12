@@ -146,7 +146,7 @@ def get_num_lasers(node_id: str):
         # return 2
 
 
-class MissionLifespanConfig:
+class MLConfig:
     """
     MISSION LIFETIME
     -----
@@ -169,20 +169,20 @@ class MissionLifespanConfig:
 
     """
 
-    SOURCE_NODE_MISSION_LIFESTIME = 250.0  # Watts
-    RELAY_NODE_MISSION_LIFESTIME = 250.0  # Watts
+    SOURCE_NODE_INITIAL_POWER = 250.0  # Watts
+    RELAY_NODE_INITIAL_POWER = 250.0  # Watts
     DECAY_RATE = 0.013  # ~3.2W/year
-    GS_NODE_MISSION_LIFESTIME = float("inf")
+    GS_NODE_INITIAL_POWER = float("inf")
 
     @classmethod
-    def get_mission_lifetime(self, node_id: str):
+    def get_initial_power(self, node_id: str):
         # Obtain the mission lifestime by satellite type
         if node_id in RELAY_NODES:
-            initial_power = self.RELAY_NODE_MISSION_LIFESTIME
+            initial_power = self.RELAY_NODE_INITIAL_POWER
         elif node_id in SOURCE_NODES:
-            initial_power = self.SOURCE_NODE_MISSION_LIFESTIME
+            initial_power = self.SOURCE_NODE_INITIAL_POWER
         else:
-            initial_power = self.GS_NODE_MISSION_LIFESTIME
+            initial_power = self.GS_NODE_INITIAL_POWER
         return initial_power
 
 
