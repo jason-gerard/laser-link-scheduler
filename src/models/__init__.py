@@ -3,7 +3,11 @@ from .energy_comsumption import (
     transmission_duration,
     bit_rate,
 )
-from .mission_lifetime import mission_lifetime, generating_power
+from .mission_lifetime import (
+    mission_lifetime,
+    generating_power,
+    generated_energy,
+)
 from .link_acq_delay import (
     link_acq_delay,
     link_acq_delay_ipn,
@@ -37,4 +41,5 @@ __all__ = [
     "all_pointing_delay",
     "survivability",
     "generating_power",
+    "generated_energy",
 ]

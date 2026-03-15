@@ -122,6 +122,8 @@ class Reporter:
         report_id = int(time.time())
         print(f"Writing report ID {report_id} to disk")
 
+        os.makedirs(constants.REPORTS_ROOT, exist_ok=True)
+
         report_dir = os.path.join(constants.REPORTS_ROOT, f"{report_id}")
         os.mkdir(report_dir)
 

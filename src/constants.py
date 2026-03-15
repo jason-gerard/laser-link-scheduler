@@ -4,6 +4,7 @@ from enum import Enum
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SOURCES_ROOT = os.path.join(REPO_ROOT, "scenarios", "experiments")
 REPORTS_ROOT = os.path.join(REPO_ROOT, "output", "reports")
+PLOTS_ROOT = os.path.join(REPO_ROOT, "output", "plots")
 
 # Minimum duration an edge i,j in state k can have
 # There is a minimum amount of time required for acquisition, tracking, and pointing (ATP). If there is a contact in the
@@ -171,8 +172,11 @@ class MLConfig:
 
     SOURCE_NODE_INITIAL_POWER = 250.0  # Watts
     RELAY_NODE_INITIAL_POWER = 250.0  # Watts
-    DECAY_RATE = 0.013  # ~3.2W/year
     GS_NODE_INITIAL_POWER = float("inf")
+    # TODO: Change it to 1.6% per year to match the decay of the New Horizons RTG, but for now we set it to 0.013e-3 per second to match the units of the calculations.
+    DECAY_RATE = (
+        0.013e-3  # per year, converted to per second for the calculations
+    )
 
     @classmethod
     def get_initial_power(self, node_id: str):
@@ -200,6 +204,7 @@ class OPTConfig:
     """
 
     AVG_TRANSMISSION_POWER = 4  # P_avg
+    PEAK_TRANSMISSION_POWER = 64  # P_peak
     PAYLOAD_BITS = 4  # m = log2(L)
     SLOTS_PER_SYMBOL = 16  # L = 2^m
     FEC = 2 / 3  # r

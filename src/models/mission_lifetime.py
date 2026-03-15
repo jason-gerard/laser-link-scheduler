@@ -69,7 +69,53 @@ def generating_power(
     return initial_power * np.exp(decay_constant * time)
 
 
+def generated_energy(
+    from_time: float,
+    to_time: float,
+    initial_power: float,
+    decay_constant: float,
+):
+    """
+    Compute the generated energy during a time interval [from_time, to_time] under the RTG power model.
+
+    The generated energy E during the interval can be computed as the integral of the power function P(t) over that interval:
+        E = ∫[from_time, to_time] P(t) dt
+          = ∫[from_time, to_time] P0 * exp(-λ * t) dt
+          = (P0 / λ) * [exp(-λ * from_time) - exp(-λ * to_time)]
+
+    Parameters
+    ----------
+    from_time : float
+        Start of the time interval. Units: time (same as 1/λ).
+    to_time : float
+        End of the time interval. Units: time (same as 1/λ).
+    initial_power : float
+        Initial available power at t = 0. Units: power (e.g., W).
+    decay_constant : float
+        Exponential decay constant λ. Units: 1 / time (must be > 0 for finite decay).
+
+    Returns
+    -------
+    float
+        Generated energy E during the interval [from_time, to_time]. Units: energy (e.g., J).
+    """
+    if decay_constant <= 0:
+        raise ValueError(
+            "Decay constant must be greater than 0 for finite decay."
+        )
+    if to_time < from_time:
+        raise ValueError("to_time must be greater than or equal to from_time.")
+    if initial_power <= 0:
+        raise ValueError("Initial power must be greater than 0.")
+
+    energy = (initial_power / decay_constant) * (
+        np.exp(-decay_constant * from_time) - np.exp(-decay_constant * to_time)
+    )
+    return energy
+
+
 if __name__ == "__main__":
+    # TODO: Re do.
     P0 = 250.0  # Initial power in Watts
     decay_constant = 0.013  # Decay constant in 1/years
     P_min = 60.0  # Minimum operational power in Watts

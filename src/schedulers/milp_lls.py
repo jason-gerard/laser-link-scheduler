@@ -128,14 +128,14 @@ class LLSModel(BaseScheduler):
                 ]
             )
 
-        tx_node = self.teg.nodes[
+        tx_node_id = self.teg.nodes[
             self.teg.optical_interfaces_to_node[tx_oi_idx]
-        ]
-        rx_node = self.teg.nodes[
+        ].id
+        rx_node_id = self.teg.nodes[
             self.teg.optical_interfaces_to_node[rx_oi_idx]
-        ]
-        return get_delay(tx_node, rx_node, tx_oi_idx), get_delay(
-            rx_node, tx_node, rx_oi_idx
+        ].id
+        return get_delay(tx_node_id, rx_node_id, tx_oi_idx), get_delay(
+            rx_node_id, tx_node_id, rx_oi_idx
         )
 
     def _compute_eff_contact_time_simple(self, edge):
@@ -148,19 +148,19 @@ class LLSModel(BaseScheduler):
         if k == 0:
             return self.teg.state_durations[edge[0]]
 
-        tx_node = self.teg.nodes[
+        tx_node_id = self.teg.nodes[
             self.teg.optical_interfaces_to_node[tx_oi_idx]
-        ]
-        rx_node = self.teg.nodes[
+        ].id
+        rx_node_id = self.teg.nodes[
             self.teg.optical_interfaces_to_node[rx_oi_idx]
-        ]
+        ].id
 
         is_ipn_edge = (
-            tx_node in SOURCE_NODES
-            and (rx_node in RELAY_NODES or rx_node in DESTINATION_NODES)
+            tx_node_id in SOURCE_NODES
+            and (rx_node_id in RELAY_NODES or rx_node_id in DESTINATION_NODES)
         ) or (
-            rx_node in SOURCE_NODES
-            and (tx_node in RELAY_NODES or tx_node in DESTINATION_NODES)
+            rx_node_id in SOURCE_NODES
+            and (tx_node_id in RELAY_NODES or tx_node_id in DESTINATION_NODES)
         )
         link_acq_delay = (
             link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
@@ -262,9 +262,9 @@ class LLSModel(BaseScheduler):
         # of edges
         print("Pre-computing edge dictionary")
         self.edges_by_state = {
-            node: [[] for _ in range(self.teg.K)] for node in self.teg.nodes
+            node.id: [[] for _ in range(self.teg.K)] for node in self.teg.nodes
         }
-        self.edges_by_node = {node: [] for node in self.teg.nodes}
+        self.edges_by_node = {node.id: [] for node in self.teg.nodes}
         self.edges_by_state_oi = {
             oi: [[] for _ in range(self.teg.K)]
             for oi in self.teg.optical_interfaces_to_node
@@ -275,32 +275,33 @@ class LLSModel(BaseScheduler):
             self.edges_by_state_oi[tx_oi_idx][k].append(edge)
             self.edges_by_state_oi[rx_oi_idx][k].append(edge)
 
-            tx_node = self.teg.nodes[
+            tx_node_id = self.teg.nodes[
                 self.teg.optical_interfaces_to_node[tx_oi_idx]
-            ]
-            rx_node = self.teg.nodes[
+            ].id
+            rx_node_id = self.teg.nodes[
                 self.teg.optical_interfaces_to_node[rx_oi_idx]
-            ]
+            ].id
+            self.edges_by_state[tx_node_id][k].append(edge)
+            self.edges_by_state[rx_node_id][k].append(edge)
 
-            self.edges_by_state[tx_node][k].append(edge)
-            self.edges_by_state[rx_node][k].append(edge)
-
-            self.edges_by_node[tx_node].append(edge)
-            self.edges_by_node[rx_node].append(edge)
+            self.edges_by_node[tx_node_id].append(edge)
+            self.edges_by_node[rx_node_id].append(edge)
 
         print("Initializing the capacity variables")
         capacities = {
-            relay_node: pulp.LpVariable(f"Capacity_{relay_node}", lowBound=0)
+            relay_node.id: pulp.LpVariable(
+                f"Capacity_{relay_node.id}", lowBound=0
+            )
             for relay_node in self.teg.nodes
-            if relay_node in RELAY_NODES
+            if relay_node.id in RELAY_NODES
         }
 
         # Create new single hop capacity variables
         print("Initializing single hop capacity variables")
         single_hop_capacities = {
-            gs_node: pulp.LpVariable(f"Capacity_{gs_node}", lowBound=0)
+            gs_node.id: pulp.LpVariable(f"Capacity_{gs_node.id}", lowBound=0)
             for gs_node in self.teg.nodes
-            if gs_node in DESTINATION_NODES
+            if gs_node.id in DESTINATION_NODES
         }
 
         self.edge_caps = pulp.LpVariable.dicts(
@@ -347,19 +348,19 @@ class LLSModel(BaseScheduler):
             )
 
         relay_inflow = {
-            relay_node: []
+            relay_node.id: []
             for relay_node in self.teg.nodes
-            if relay_node in RELAY_NODES
+            if relay_node.id in RELAY_NODES
         }
         relay_outflow = {
-            relay_node: []
+            relay_node.id: []
             for relay_node in self.teg.nodes
-            if relay_node in RELAY_NODES
+            if relay_node.id in RELAY_NODES
         }
         ogs_inflow = {
-            ogs_node: []
+            ogs_node.id: []
             for ogs_node in self.teg.nodes
-            if ogs_node in DESTINATION_NODES
+            if ogs_node.id in DESTINATION_NODES
         }
 
         if self.use_convex_penalty:
@@ -375,34 +376,35 @@ class LLSModel(BaseScheduler):
         print("Setting up per edge capacity constraints")
         for edge, capacity in self.edge_caps.items():
             k, tx_oi_idx, rx_oi_idx = edge
-            tx_node = self.teg.nodes[
+            tx_node_id = self.teg.nodes[
                 self.teg.optical_interfaces_to_node[tx_oi_idx]
-            ]
-            rx_node = self.teg.nodes[
+            ].id
+            rx_node_id = self.teg.nodes[
                 self.teg.optical_interfaces_to_node[rx_oi_idx]
-            ]
+            ].id
 
             if (
-                rx_node in constants.RELAY_NODES
-                and tx_node in constants.SOURCE_NODES
+                rx_node_id in constants.RELAY_NODES
+                and tx_node_id in constants.SOURCE_NODES
             ):
-                relay_inflow[rx_node].append(capacity)
+                relay_inflow[rx_node_id].append(capacity)
             elif (
-                tx_node in constants.RELAY_NODES
-                and rx_node in constants.DESTINATION_NODES
+                tx_node_id in constants.RELAY_NODES
+                and rx_node_id in constants.DESTINATION_NODES
             ):
-                relay_outflow[tx_node].append(capacity)
+                relay_outflow[tx_node_id].append(capacity)
             elif (
-                rx_node in constants.DESTINATION_NODES
-                and tx_node in constants.SOURCE_NODES
+                rx_node_id in constants.DESTINATION_NODES
+                and tx_node_id in constants.SOURCE_NODES
             ):
-                ogs_inflow[rx_node].append(capacity)
+                ogs_inflow[rx_node_id].append(capacity)
             else:
                 # Due to the graph transformation there should never be any edges not in the previous three categories.
                 raise Exception(f"Bad edge {edge}")
 
             bit_rate = min(
-                constants.BIT_RATES[tx_node], constants.BIT_RATES[rx_node]
+                constants.BIT_RATES[tx_node_id],
+                constants.BIT_RATES[rx_node_id],
             )
 
             self.flow_model += (
@@ -434,9 +436,9 @@ class LLSModel(BaseScheduler):
         # Constraint for fairness of source nodes
         print("Setting up fairness constraints based on ECT for source nodes")
         source_node_ect_dict = {
-            source_node: self._ect(source_node)
+            source_node.id: self._ect(source_node.id)
             for source_node in self.teg.nodes
-            if source_node in SOURCE_NODES
+            if source_node.id in SOURCE_NODES
         }
         sum_ect = pulp.lpSum([source_node_ect_dict.values()])
         for ect in source_node_ect_dict.values():
@@ -486,11 +488,15 @@ class LLSModel(BaseScheduler):
         print("Starting solve...")
         # if self.use_gurobi:
         if False:
-            self.flow_model.solve(
-                pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01)
-            )
+            solver = pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01)
         else:
-            self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
+            solver = pulp.PULP_CBC_CMD(
+                path="/opt/homebrew/bin/cbc",
+                timeLimit=MAX_TIME,
+                msg=True,
+            )
+            # self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
+        self.flow_model.solve(solver)
 
         print("Generating adjacency matrix from the scheduled contact plan")
         contact_plan = np.zeros(
@@ -516,13 +522,13 @@ class LLSModel(BaseScheduler):
                 contact_plan[k][tx_oi_idx][rx_oi_idx] = 1
                 contact_plan[k][rx_oi_idx][tx_oi_idx] = 1
 
-                tx_node = self.teg.nodes[
+                tx_node_id = self.teg.nodes[
                     self.teg.optical_interfaces_to_node[tx_oi_idx]
-                ]
-                rx_node = self.teg.nodes[
+                ].id
+                rx_node_id = self.teg.nodes[
                     self.teg.optical_interfaces_to_node[rx_oi_idx]
-                ]
-                matched_edges_by_k[k].append((tx_node, rx_node))
+                ].id
+                matched_edges_by_k[k].append((tx_node_id, rx_node_id))
                 matched_edges_by_k_oi[k].append((tx_oi_idx, rx_oi_idx))
 
         for k in range(len(matched_edges_by_k)):
@@ -548,10 +554,10 @@ class LLSModel(BaseScheduler):
         # for k in range(40, 45):
         #     print("K:", k)
         #     for tx_oi_idx, rx_oi_idx in matched_edges_by_k_oi[k]:
-        #         tx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]]
-        #         rx_node = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]]
+        #         tx_node_id = self.teg.nodes[self.teg.optical_interfaces_to_node[tx_oi_idx]].id
+        #         rx_node_id = self.teg.nodes[self.teg.optical_interfaces_to_node[rx_oi_idx]].id
         #
-        #         print("Edge", tx_oi_idx, tx_node, rx_oi_idx, rx_node, self.eff_contact_time[(k, tx_oi_idx, rx_oi_idx)].value())
+        #         print("Edge", tx_oi_idx, tx_node_id, rx_oi_idx, rx_node_id, self.eff_contact_time[(k, tx_oi_idx, rx_oi_idx)].value())
         #         # print(eff_ct_constraint_debug[(k, tx_oi_idx, rx_oi_idx)])
         #         # print(self.eff_contact_time[(k, tx_oi_idx, rx_oi_idx)])
         #         print_filled_expression(eff_ct_constraint_debug[(k, tx_oi_idx, rx_oi_idx)][0])
