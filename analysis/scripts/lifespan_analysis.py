@@ -29,10 +29,11 @@ algorithms = [
     ("fcp", "FCP"),
 ]
 
-report_id = 1773495127
+report_id = 1773658287
 tegs = []
 report_dir = os.path.join(REPORTS_ROOT, str(report_id))
-
+plot_dir = os.path.join(PLOTS_ROOT, str(report_id))
+os.makedirs(plot_dir, exist_ok=True)
 for file_name in os.listdir(report_dir):
     if file_name.endswith(".pkl"):
         file_path = os.path.join(report_dir, file_name)
@@ -48,6 +49,7 @@ for file_name in os.listdir(report_dir):
 all_generation = []
 all_consumption = []
 for algorithm, scenario, teg in tegs:
+    should_bypass_retargeting_time = algorithm != "lls_pat_unaware"
     print(
         f"Processing {algorithm} scenario {scenario} with {teg.N} nodes and {teg.K} states..."
     )
@@ -88,6 +90,7 @@ for algorithm, scenario, teg in tegs:
                         teg.state_durations[k],
                         accumulated_time,
                         tx_node_id,
+                        should_bypass_retargeting_time,
                     )
 
                     # Add row to state dataframe

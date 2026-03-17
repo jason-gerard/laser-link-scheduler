@@ -490,12 +490,12 @@ class LLSModel(BaseScheduler):
         if False:
             solver = pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01)
         else:
-            solver = pulp.PULP_CBC_CMD(
-                path="/opt/homebrew/bin/cbc",
-                timeLimit=MAX_TIME,
-                msg=True,
-            )
-            # self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))
+            # solver = pulp.PULP_CBC_CMD(
+            #     path="/opt/homebrew/bin/cbc",
+            #     timeLimit=MAX_TIME,
+            #     msg=True,
+            # )
+            solver = pulp.PULP_CBC_CMD(timeLimit=MAX_TIME)
         self.flow_model.solve(solver)
 
         print("Generating adjacency matrix from the scheduled contact plan")

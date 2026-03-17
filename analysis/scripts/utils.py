@@ -31,6 +31,7 @@ def compute_energy_metrics(
     state_duration: int,
     accumulated_time: float,
     tx_node_id: str,
+    should_bypass_retargeting_time: bool,
 ):
     from_time = accumulated_time
     to_time = accumulated_time + state_duration
@@ -41,7 +42,12 @@ def compute_energy_metrics(
         from_time, to_time, initial_power
     )  # Joules
     consumed: float = _get_consumed_energy(
-        teg, tx_oi_idx, rx_oi_idx, state_contact_topology, state_duration
+        teg,
+        tx_oi_idx,
+        rx_oi_idx,
+        state_contact_topology,
+        state_duration,
+        should_bypass_retargeting_time,
     )  # Joules
 
     return generated, consumed
@@ -66,6 +72,7 @@ def _get_consumed_energy(
     rx_oi_idx: int,
     state_contact_topology: Any,
     state_duration: int,
+    should_bypass_retargeting_time: bool,
 ):
     # Obtain the effective contact time
     effective_contact_time = compute_effective_contact_time(
@@ -76,7 +83,7 @@ def _get_consumed_energy(
         positions=teg.pos,
         optical_interfaces_to_node=teg.optical_interfaces_to_node,
         nodes=teg.nodes,
-        should_bypass_retargeting_time=True,  # In this first version, we assume that the retargeting time is null
+        should_bypass_retargeting_time=should_bypass_retargeting_time,
     )
 
     # Get the consumed energy during the effective contact time

@@ -6,20 +6,20 @@ uv run main.py \
     -e  dte_mars_earth_scenario_inc_20  \
     -e  dte_mars_earth_scenario_inc_24  \
     -e  dte_mars_earth_scenario_inc_28  \
-    -e  dte_mars_earth_scenario_inc_32  \
-    -e  dte_mars_earth_scenario_inc_36  \
-    -e  dte_mars_earth_scenario_inc_40  \
-    -e  dte_mars_earth_scenario_inc_44  \
-    -e  dte_mars_earth_scenario_inc_48  \
-    -e  dte_mars_earth_scenario_inc_52  \
-    -e  dte_mars_earth_scenario_inc_56  \
-    -e  dte_mars_earth_scenario_inc_60  \
-    -e  dte_mars_earth_scenario_inc_64  \
-    -s  fcp \
-    -s  lls \
-    -s  lls_pat_unaware \
-    -s  lls_mip         \
-    -s  lls_lp
+    # -e  dte_mars_earth_scenario_inc_32  \
+    # -e  dte_mars_earth_scenario_inc_36  \
+    # -e  dte_mars_earth_scenario_inc_40  \
+    # -e  dte_mars_earth_scenario_inc_44  \
+    # -e  dte_mars_earth_scenario_inc_48  \
+    # -e  dte_mars_earth_scenario_inc_52  \
+    # -e  dte_mars_earth_scenario_inc_56  \
+    # -e  dte_mars_earth_scenario_inc_60  \
+    # -e  dte_mars_earth_scenario_inc_64  \
+    -s  fcp 
+    # -s  lls \
+    # -s  lls_pat_unaware
+    # -s  lls_mip         \
+    # -s  lls_lp
 
 
 uv run main.py \
@@ -30,9 +30,9 @@ uv run main.py \
     -e  gs_mars_earth_scenario_24  \
     -s  fcp \
     -s  lls \
-    -s  lls_pat_unaware \
-    -s  lls_mip         \
-    -s  lls_lp
+    -s  lls_pat_unaware 
+    # -s  lls_mip         \
+    # -s  lls_lp
 
 uv run main.py \
     -e  gs_mars_earth_scenario_inc_4  \
@@ -52,9 +52,9 @@ uv run main.py \
     -e  gs_mars_earth_scenario_inc_64  \
     -s  fcp \
     -s  lls \
-    -s  lls_pat_unaware \
-    -s  lls_mip         \
-    -s  lls_lp
+    -s  lls_pat_unaware
+    # -s  lls_mip         \
+    # -s  lls_lp
 
 
 uv run main.py \
@@ -75,7 +75,7 @@ uv run main.py \
     -e  gs_mars_earth_scenario_inc_reduced_64  \
     -s  fcp \
     -s  lls \
-    -s  lls_pat_unaware \
-    -s  lls_mip         \
-    -s  lls_lp
+    -s  lls_pat_unaware
+    # -s  lls_mip         \
+    # -s  lls_lp
 
