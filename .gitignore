@@ -5,3 +5,9 @@ output/plots/*
 output/reports/*
 analysis/*.json
 *.egg-info/
+!output/
+!output/plots/
+!output/reports/
+!output/.gitkeep
+!output/plots/.gitkeep
+!output/reports/.gitkeep
