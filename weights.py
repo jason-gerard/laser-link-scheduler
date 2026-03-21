@@ -332,7 +332,8 @@ def compute_jains_fairness_index(
 
     enabled_contact_time_graph = np.sum(enabled_contact_times, axis=0)
     # Compute a list of the amount of data each Mars orbiter transmitted to a Mars relay
-    enabled_contact_time_by_node = np.array([np.sum(enabled_contact_time_graph[node_idx]) for node_idx in source_nodes])
+    # Scale down final result uniformly to prevent overflow with large scenarios.
+    enabled_contact_time_by_node = np.array([np.sum(enabled_contact_time_graph[node_idx]) for node_idx in source_nodes]) / 1000
 
     # Solve for the network level Jain's fairness index with x as the throughput of the Mars orbiter nodes
     return (np.sum(enabled_contact_time_by_node) ** 2) / (len(source_nodes) * np.sum(enabled_contact_time_by_node ** 2))

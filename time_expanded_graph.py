@@ -266,21 +266,25 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                 if should_start_contact:
                     active_contacts[tx_idx][rx_idx] = np.sum(teg.state_durations[0:k]) if k > 0 else 0
                 elif should_end_contact:
-                    # Find the associated contact in the previous state since now the contact is over
-                    possible_contact = [contact for contact in teg.contacts[k - 1]
-                                        if contact.tx_node == teg.nodes[teg.optical_interfaces_to_node[tx_idx]] and contact.rx_node == teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
-                    
-                    if possible_contact:
-                        bit_rate = min(
-                            constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[tx_idx]]],
-                            constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
-                        )
+                    bit_rate = min(
+                        constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[tx_idx]]],
+                        constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
+                    )
 
-                        contacts.append(replace(
-                            possible_contact[0],
-                            start_time=active_contacts[tx_idx][rx_idx],
-                            end_time=np.sum(teg.state_durations[0:k]),
-                            bit_rate=bit_rate))
+                    contacts.append(Contact(
+                        tx_node=teg.nodes[teg.optical_interfaces_to_node[tx_idx]],
+                        rx_node=teg.nodes[teg.optical_interfaces_to_node[rx_idx]],
+                        start_time=active_contacts[tx_idx][rx_idx],
+                        end_time=np.sum(teg.state_durations[0:k]),
+                        bit_rate=bit_rate,
+                        range=0,
+                        tx_x=0,
+                        tx_y=0,
+                        tx_z=0,
+                        rx_x=0,
+                        rx_y=0,
+                        rx_z=0,
+                    ))
 
                     active_contacts[tx_idx][rx_idx] = -1
 
@@ -290,20 +294,25 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
                 is_contact_in_progress = teg.graphs[k][tx_idx][rx_idx] >= 1 and active_contacts[tx_idx][rx_idx] >= 0
                 should_cleanup_contact = k == teg.K - 1 and (should_start_contact or is_contact_in_progress)
                 if should_cleanup_contact:
-                    possible_contact = [contact for contact in teg.contacts[k]
-                                        if contact.tx_node == teg.nodes[teg.optical_interfaces_to_node[tx_idx]] and contact.rx_node == teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
+                    bit_rate = min(
+                        constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[tx_idx]]],
+                        constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
+                    )
 
-                    if possible_contact:
-                        bit_rate = min(
-                            constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[tx_idx]]],
-                            constants.BIT_RATES[teg.nodes[teg.optical_interfaces_to_node[rx_idx]]]
-                        )
-
-                        contacts.append(replace(
-                            possible_contact[0],
-                            start_time=active_contacts[tx_idx][rx_idx],
-                            end_time=np.sum(teg.state_durations[0:k + 1]),
-                            bit_rate=bit_rate))
+                    contacts.append(Contact(
+                        tx_node=teg.nodes[teg.optical_interfaces_to_node[tx_idx]],
+                        rx_node=teg.nodes[teg.optical_interfaces_to_node[rx_idx]],
+                        start_time=active_contacts[tx_idx][rx_idx],
+                        end_time=np.sum(teg.state_durations[0:k + 1]),
+                        bit_rate=bit_rate,
+                        range=0,
+                        tx_x=0,
+                        tx_y=0,
+                        tx_z=0,
+                        rx_x=0,
+                        rx_y=0,
+                        rx_z=0,
+                    ))
 
     return ContactPlan(sorted(contacts, key=lambda c: c.end_time))
 
@@ -342,17 +351,17 @@ def dag_reduction(teg: TimeExpandedGraph, is_bipartite=False):
                     are_nodes_same_planet = NODE_TO_PLANET_MAP[tx_node] == NODE_TO_PLANET_MAP[rx_node]
                     is_rly_on_dst_planet = NODE_TO_PLANET_MAP[rx_node] == EARTH
 
-                    # SCENARIO: Mars relay IPN links only
-                    # if is_src_rly or is_rly_dst:
-                    #     reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+                    # SCENARIO: source-to-relay and relay-to-sink edges only (mars_earth_relay_scenario_inc) (sparse_optical_earth_network_inc)
+                    if is_src_rly or is_rly_dst:
+                        reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
 
                     # SCENARIO: Earth relay
-                    if is_bipartite:
-                        if is_src_dst:
-                            reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
-                    else:
-                        if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
-                            reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+                    # if is_bipartite:
+                    #     if is_src_dst:
+                    #         reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
+                    # else:
+                    #     if is_src_dst or (is_src_rly and (are_nodes_same_planet or is_rly_on_dst_planet)) or is_rly_dst:
+                    #         reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][tx_oi_idx][rx_oi_idx]
 
 
     reduced_teg = TimeExpandedGraph(

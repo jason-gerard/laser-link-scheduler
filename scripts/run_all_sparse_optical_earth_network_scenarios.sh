@@ -1,0 +1,6 @@
+#!/bin/bash
+
+python3 main.py \
+-e sparse_optical_earth_network_inc_16 sparse_optical_earth_network_inc_32 sparse_optical_earth_network_inc_64 \
+sparse_optical_earth_network_inc_128 sparse_optical_earth_network_inc_192 sparse_optical_earth_network_inc_264 \
+-s fcp lls_pat_unaware lls
