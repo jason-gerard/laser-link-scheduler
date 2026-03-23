@@ -1,5 +1,5 @@
 import os
-from enum import Enum
+import numpy as np
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SOURCES_ROOT = os.path.join(REPO_ROOT, "scenarios", "experiments")
@@ -182,15 +182,31 @@ class MLConfig:
     )
 
     @classmethod
-    def get_initial_power(self, node_id: str):
-        # Obtain the mission lifestime by satellite type
-        if node_id in RELAY_NODES:
-            initial_power = self.RELAY_NODE_INITIAL_POWER
-        elif node_id in SOURCE_NODES:
-            initial_power = self.SOURCE_NODE_INITIAL_POWER
-        else:
-            initial_power = self.GS_NODE_INITIAL_POWER
-        return initial_power
+    def get_initial_power(cls, node_id: str):
+        # Obtain the mission lifetime by satellite type
+        return (
+            cls.RELAY_NODE_INITIAL_POWER
+            if node_id in RELAY_NODES
+            else cls.SOURCE_NODE_INITIAL_POWER
+            if node_id in SOURCE_NODES
+            else cls.GS_NODE_INITIAL_POWER
+        )
+
+    @classmethod
+    def get_initial_powers(cls, node_ids: np.ndarray) -> np.ndarray:
+        node_ids = np.asarray(node_ids)
+
+        return np.select(
+            [
+                np.isin(node_ids, RELAY_NODES),
+                np.isin(node_ids, SOURCE_NODES),
+            ],
+            [
+                cls.RELAY_NODE_INITIAL_POWER,
+                cls.SOURCE_NODE_INITIAL_POWER,
+            ],
+            default=cls.GS_NODE_INITIAL_POWER,
+        )
 
 
 class OPTConfig:

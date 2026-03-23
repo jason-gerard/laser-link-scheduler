@@ -7,7 +7,7 @@ from src import constants
 from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
-from src.topology import weights
+from src.topology.weights import EVAL_EFFECTIVE_CONTACT
 from src.topology.weights import (
     compute_capacity,
     compute_jains_fairness_index,
@@ -41,8 +41,7 @@ class Reporter:
             }
         )
 
-        weights.eval_eff_ct = {}
-
+        # EVAL_EFFECTIVE_CONTACT.clear()
         node_capacities = compute_node_capacities(
             teg.graphs,
             teg.state_durations,
@@ -58,7 +57,7 @@ class Reporter:
         # for cap in node_capacities:
         #     print(cap.id, min(cap.capacity_in, cap.capacity_out))
         #
-        # for (k, tx, rx, d), t in weights.eval_eff_ct.items():
+        # for (k, tx, rx, d), t in weights.EVAL_EFFECTIVE_CONTACT.items():
         #     print(k, tx, rx, t, d)
 
         network_capacity = int(compute_capacity(node_capacities))

@@ -72,7 +72,7 @@ def generating_power(
 def generated_energy(
     from_time: float,
     to_time: float,
-    initial_power: float,
+    initial_power: float | np.ndarray,
     decay_constant: float,
 ):
     """
@@ -105,7 +105,7 @@ def generated_energy(
         )
     if to_time < from_time:
         raise ValueError("to_time must be greater than or equal to from_time.")
-    if initial_power <= 0:
+    if np.any(initial_power <= 0):
         raise ValueError("Initial power must be greater than 0.")
 
     energy = (initial_power / decay_constant) * (

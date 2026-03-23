@@ -256,7 +256,7 @@ def compute_node_capacity_by_single_edge_graph(
         return None
 
 
-eval_eff_ct = {}
+EVAL_EFFECTIVE_CONTACT = {}
 
 
 def compute_node_capacity_by_graph(
@@ -309,9 +309,9 @@ def compute_node_capacity_by_graph(
                     # print("K:", curr_k)
                     tx_node = nodes[optical_interfaces_to_node[tx_oi_idx]].id
                     rx_node = nodes[optical_interfaces_to_node[rx_oi_idx]].id
-                    eval_eff_ct[(curr_k, tx_node, rx_node, state_duration)] = (
-                        effective_contact_duration
-                    )
+                    EVAL_EFFECTIVE_CONTACT[
+                        (curr_k, tx_node, rx_node, state_duration)
+                    ] = effective_contact_duration
 
                     # print("Edge", tx_node, rx_node, effective_contact_duration, state_duration)
 
