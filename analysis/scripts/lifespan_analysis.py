@@ -18,6 +18,7 @@ from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
 from src.constants import DESTINATION_NODES, REPORTS_ROOT, PLOTS_ROOT
+from src.topology.weights import EFFECTIVE_CONTACT_TIME_CACHE, COORDINATE_CACHE
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
@@ -30,7 +31,7 @@ algorithms = [
     ("fcp", "FCP"),
 ]
 
-report_id = 1773792920
+report_id = 1773495127
 tegs = []
 report_dir = os.path.join(REPORTS_ROOT, str(report_id))
 plot_dir = os.path.join(PLOTS_ROOT, str(report_id))
@@ -50,6 +51,9 @@ for file_name in os.listdir(report_dir):
 all_generation = []
 all_consumption = []
 for algorithm, scenario, teg in tegs:
+    EFFECTIVE_CONTACT_TIME_CACHE.clear()
+    COORDINATE_CACHE.clear()
+
     should_bypass_retargeting_time = algorithm == "lls-pat-unaware"
     print(
         f"Processing {algorithm} scenario {scenario} with {teg.N} nodes and {teg.K} states..."
@@ -103,8 +107,6 @@ for algorithm, scenario, teg in tegs:
                     generated,
                     consumed,
                 ]
-                if teg.graphs[state][tx_oi_idx][rx_oi_idx] != 1:
-                    __import__("ipdb").set_trace()
 
                 all_generation.append(generated)
                 all_consumption.append(consumed)

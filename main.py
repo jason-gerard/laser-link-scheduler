@@ -9,7 +9,7 @@ from src.time_expanded_graph.time_expanded_graph import (
     convert_time_expanded_graph_to_contact_plan,
     write_time_expanded_graph,
 )
-from src.models.pointing_delay import retargeting_delay_cache
+from src.models.pointing_delay import RETARGETING_DELAY_CACHE
 from src.reporting.report_generator import Reporter
 from src.schedulers import (
     BaseScheduler,
@@ -21,7 +21,7 @@ from src.schedulers import (
     FairContactPlan,
     LifespanAware,
 )
-from src.topology import weights
+from src.topology.weights import EFFECTIVE_CONTACT_TIME_CACHE, COORDINATE_CACHE
 from src.topology.contact_plan import (
     IONContactPlanParser,
     IPNDContactPlanParser,
@@ -45,9 +45,9 @@ def experiment_driver(
     experiment_name: str, scheduler_name: str, reporter: Reporter
 ):
     # Clear all caches
-    weights.effective_contact_time_cache = {}
-    weights.coordinate_cache = {}
-    retargeting_delay_cache = {}
+    EFFECTIVE_CONTACT_TIME_CACHE.clear()
+    COORDINATE_CACHE.clear()
+    RETARGETING_DELAY_CACHE.clear()
 
     start = timer()
 

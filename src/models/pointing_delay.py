@@ -38,22 +38,22 @@ def pointing_delay_single_node(
 
 
 # L2 cache delay value for same nodes idx1, idx1_rx, k
-retargeting_delay_cache = {}
+RETARGETING_DELAY_CACHE = {}
 
 
 def pointing_delay_pair_nodes(node_set1, node_set2) -> float:
     # Compute the PAT delay for node sets 1 and 2
-    if node_set1.tostring() in retargeting_delay_cache:
-        pointing_delay_1 = retargeting_delay_cache[node_set1.tostring()]
+    if node_set1.tostring() in RETARGETING_DELAY_CACHE:
+        pointing_delay_1 = RETARGETING_DELAY_CACHE[node_set1.tostring()]
     else:
         pointing_delay_1 = pointing_delay_single_node(*node_set1)
-        retargeting_delay_cache[node_set1.tostring()] = pointing_delay_1
+        RETARGETING_DELAY_CACHE[node_set1.tostring()] = pointing_delay_1
 
-    if node_set2.tostring() in retargeting_delay_cache:
-        pointing_delay_2 = retargeting_delay_cache[node_set2.tostring()]
+    if node_set2.tostring() in RETARGETING_DELAY_CACHE:
+        pointing_delay_2 = RETARGETING_DELAY_CACHE[node_set2.tostring()]
     else:
         pointing_delay_2 = pointing_delay_single_node(*node_set2)
-        retargeting_delay_cache[node_set2.tostring()] = pointing_delay_2
+        RETARGETING_DELAY_CACHE[node_set2.tostring()] = pointing_delay_2
 
     # The max between them is the actual delay since both must be finished pointing
     # before starting acquisition
