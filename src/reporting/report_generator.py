@@ -36,7 +36,7 @@ class Reporter:
 
         self.time_expanded_graph_data.append(
             {
-                "name": f"{scheduler_name}_{experiment_name}",
+                "name": f"{scheduler_name.replace('_', '-')}_{experiment_name}",
                 "teg": teg,
             }
         )

@@ -528,12 +528,12 @@ def compute_scheduled_delay(
 effective_contact_time_cache = {}
 
 # L2 cache coordinates for a specific node
-coordinate_cache = {}
+coordinate_cache: dict[tuple[int, int], int] = {}
 
 
 def compute_effective_contact_time(
-    tx_oi_idx1: int,
-    rx_oi_idx2: int,
+    oi_idx1: int,
+    oi_idx2: int,
     scheduled_contact_topology: np.ndarray,
     state_duration: int,
     positions: np.ndarray,
@@ -550,35 +550,38 @@ def compute_effective_contact_time(
     if curr_k == 0:
         return state_duration
 
-    if curr_k != len(positions) - 1 and (
-        (tx_oi_idx1, rx_oi_idx2, curr_k) in effective_contact_time_cache
-    ):
-        return effective_contact_time_cache[(tx_oi_idx1, rx_oi_idx2, curr_k)]
+    if (
+        (oi_idx1, oi_idx2, curr_k) in effective_contact_time_cache
+        or (oi_idx2, oi_idx1, curr_k) in effective_contact_time_cache
+    ) and curr_k != len(positions) - 1:
+        return effective_contact_time_cache[(oi_idx1, oi_idx2, curr_k)]
 
     def get_contact_in_prev_state(oi_idx):
         for rx_oi_idx in range(len(scheduled_contact_topology[curr_k - 1])):
             if scheduled_contact_topology[curr_k - 1][oi_idx][rx_oi_idx] >= 1:
                 rx_idx = optical_interfaces_to_node[rx_oi_idx]
-                coordinate_cache[(oi_idx, curr_k)] = rx_idx
+                # coordinate_cache[(oi_idx, curr_k)] = rx_idx
                 return rx_idx
 
         return -1
 
     # For each node check in the scheduled topology if it had a contact in the previous state and with which node
     # Check the coordinates of it and the rx at that time, this will give the previous coordinates.
-    idx1_rx = (
-        coordinate_cache[(tx_oi_idx1, curr_k)]
-        if (tx_oi_idx1, curr_k) in coordinate_cache
-        else get_contact_in_prev_state(tx_oi_idx1)
-    )
-    idx2_rx = (
-        coordinate_cache[(rx_oi_idx2, curr_k)]
-        if (rx_oi_idx2, curr_k) in coordinate_cache
-        else get_contact_in_prev_state(rx_oi_idx2)
-    )
+    idx1_rx = get_contact_in_prev_state(oi_idx1)
+    idx2_rx = get_contact_in_prev_state(oi_idx2)
+    # idx1_rx = (
+    #     coordinate_cache[(oi_idx1, curr_k)]
+    #     if (oi_idx1, curr_k) in coordinate_cache
+    #     else get_contact_in_prev_state(oi_idx1)
+    # )
+    # idx2_rx = (
+    #     coordinate_cache[(oi_idx2, curr_k)]
+    #     if (oi_idx2, curr_k) in coordinate_cache
+    #     else get_contact_in_prev_state(oi_idx2)
+    # )
 
-    idx1 = optical_interfaces_to_node[tx_oi_idx1]
-    idx2 = optical_interfaces_to_node[rx_oi_idx2]
+    idx1 = optical_interfaces_to_node[oi_idx1]
+    idx2 = optical_interfaces_to_node[oi_idx2]
     # Use PAT lib to compute delay
     if idx1_rx != -1 and idx2_rx != -1:
         idx1_coords = np.array(positions[curr_k][idx1])
@@ -593,15 +596,20 @@ def compute_effective_contact_time(
         )
     elif idx1_rx != -1 and idx2_rx == -1:
         # idx2 first contact
-        idx1_coords = np.array(positions[curr_k][idx1])
-        idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
+        try:
+            idx1_coords = np.array(positions[curr_k][idx1])
+            idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
 
-        idx2_coords = np.array(positions[curr_k][idx2])
+            idx2_coords = np.array(positions[curr_k][idx2])
 
-        node_pointing_delay = pointing_delay_pair_nodes(
-            np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
-            np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
-        )
+            node_pointing_delay = pointing_delay_pair_nodes(
+                np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
+                np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
+            )
+        except Exception as e:
+            print(f"{e}")
+            __import__("ipdb").set_trace()
+
     elif idx1_rx == -1 and idx2_rx != -1:
         # idx1 first contact
         idx2_coords = np.array(positions[curr_k][idx2])
@@ -620,8 +628,8 @@ def compute_effective_contact_time(
     is_same_link = idx1_rx == idx2 or idx2_rx == idx1
     if not is_same_link:
         # Add link_acq delay, check if edge is an IPN or LEO link
-        node1_id = nodes[optical_interfaces_to_node[tx_oi_idx1]].id
-        node2_id = nodes[optical_interfaces_to_node[rx_oi_idx2]].id
+        node1_id = nodes[optical_interfaces_to_node[oi_idx1]].id
+        node2_id = nodes[optical_interfaces_to_node[oi_idx2]].id
         is_ipn_edge = (
             node1_id in constants.SOURCE_NODES
             and (
@@ -647,10 +655,10 @@ def compute_effective_contact_time(
     # effective contact duration = contact duration - retargeting_delay
     effective_contact_time = max(state_duration - retargeting_delay, 0)
 
-    effective_contact_time_cache[(tx_oi_idx1, rx_oi_idx2, curr_k)] = (
+    effective_contact_time_cache[(oi_idx1, oi_idx2, curr_k)] = (
         effective_contact_time
     )
-    effective_contact_time_cache[(rx_oi_idx2, tx_oi_idx1, curr_k)] = (
+    effective_contact_time_cache[(oi_idx2, oi_idx1, curr_k)] = (
         effective_contact_time
     )
 

@@ -27,6 +27,7 @@ def compute_energy_metrics(
     teg: TimeExpandedGraph,
     tx_oi_idx: int,
     rx_oi_idx: int,
+    state: int,
     state_contact_topology: Any,
     state_duration: int,
     accumulated_time: float,
@@ -37,18 +38,23 @@ def compute_energy_metrics(
     to_time = accumulated_time + state_duration
     initial_power = MLConfig.get_initial_power(tx_node_id)
 
-    # Obtain the generated and consumed energy during the state duration
+    # Obtain the generated energy during the state duration for the tx node
     generated: float = _get_generated_energy(
         from_time, to_time, initial_power
     )  # Joules
-    consumed: float = _get_consumed_energy(
-        teg,
-        tx_oi_idx,
-        rx_oi_idx,
-        state_contact_topology,
-        state_duration,
-        should_bypass_retargeting_time,
-    )  # Joules
+
+    # If the is a transmission we obtain the consumed energy during the state duration for the tx node
+    if teg.graphs[state][tx_oi_idx][rx_oi_idx] == 1:
+        consumed: float = _get_consumed_energy(
+            teg,
+            tx_oi_idx,
+            rx_oi_idx,
+            state_contact_topology,
+            state_duration,
+            should_bypass_retargeting_time,
+        )  # Joules
+    else:
+        consumed = 0.0
 
     return generated, consumed
 
@@ -76,8 +82,8 @@ def _get_consumed_energy(
 ):
     # Obtain the effective contact time
     effective_contact_time = compute_effective_contact_time(
-        tx_oi_idx1=tx_oi_idx,
-        rx_oi_idx2=rx_oi_idx,
+        oi_idx1=tx_oi_idx,
+        oi_idx2=rx_oi_idx,
         scheduled_contact_topology=state_contact_topology,
         state_duration=state_duration,
         positions=teg.pos,
