@@ -160,22 +160,25 @@ class MLConfig:
 
         'https://science.nasa.gov/mission/new-horizons/#:~:text=Besides,encounter%29%2E'
 
-        The minimum it is set at 69.9W to function until the Low-Power Helio Science
+        The minimum it is set at 69.9 W to function until the Low-Power Helio Science
 
         'https://www.jhuapl.edu/sites/default/files/2024-09/37-01-Hersman.pdf'
 
-        The approximate rate of decay in power output is currently about 3.2 W/year.
+        The approximate rate of decay in power output is currently about 1.6% per year.
 
-            λ = 0.012882625831013605 ≃ 0.013
+        'https://ntrs.nasa.gov/api/citations/20160001769/downloads/20160001769.pdf'
+
+                λ = 0.016
 
     """
 
     SOURCE_NODE_INITIAL_POWER = 250.0  # Watts
     RELAY_NODE_INITIAL_POWER = 250.0  # Watts
     GS_NODE_INITIAL_POWER = float("inf")
-    # TODO: Change it to 1.6% per year to match the decay of the New Horizons RTG, but for now we set it to 0.013e-3 per second to match the units of the calculations.
+    # TODO: Change it to 1.6% per year to match the decay of the New Horizons RTG,
+    #       but for now we set it to 0.016e-3 per second to match the units of the calculations.
     DECAY_RATE = (
-        0.013e-3  # per year, converted to per second for the calculations
+        0.016e-3  # per year, converted to per second for the calculations
     )
 
     @classmethod
