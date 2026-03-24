@@ -14,6 +14,11 @@ from src.models import (
 )
 from src.time_expanded_graph.time_expanded_graph import Node
 
+SOURCE_IDS = set(constants.SOURCE_NODES)
+RELAY_IDS = set(constants.RELAY_NODES)
+DESTINATION_IDS = set(constants.DESTINATION_NODES)
+RELAY_OR_DESTINATION_IDS = RELAY_IDS | DESTINATION_IDS
+
 
 @dataclass
 class NodeCapacity:
@@ -210,42 +215,46 @@ def compute_node_capacity_by_single_edge_graph(
     tx_node_id: str = nodes[optical_interfaces_to_node[tx_oi_idx]].id
     rx_node_id: str = nodes[optical_interfaces_to_node[rx_oi_idx]].id
 
-    bit_rate = min(
-        constants.BIT_RATES[tx_node_id],
-        constants.BIT_RATES[rx_node_id],
-    )
-
-    effective_contact_duration = compute_effective_contact_time(
-        tx_oi_idx,
-        rx_oi_idx,
-        scheduled_contact_topology,
-        duration,
-        positions,
-        optical_interfaces_to_node,
-        nodes,
-        should_bypass_retargeting_time,
-    )
-
     # Only one of these two conditions can ever be true since we don't count contacts with the same node as
     # the tx and rx
     # Inflow for single hop and two hop
-    if tx_node_id in constants.SOURCE_NODES and (
-        rx_node_id in constants.RELAY_NODES
-        or rx_node_id in constants.DESTINATION_NODES
-    ):
+    if tx_node_id in SOURCE_IDS and rx_node_id in RELAY_OR_DESTINATION_IDS:
+        bit_rate = min(
+            constants.BIT_RATES[tx_node_id],
+            constants.BIT_RATES[rx_node_id],
+        )
+        effective_contact_duration = compute_effective_contact_time(
+            tx_oi_idx,
+            rx_oi_idx,
+            scheduled_contact_topology,
+            duration,
+            positions,
+            optical_interfaces_to_node,
+            nodes,
+            should_bypass_retargeting_time,
+        )
         rx_node_idx = optical_interfaces_to_node[rx_oi_idx]
         return NodeCapacity(
             id=rx_node_idx,
             capacity_in=effective_contact_duration * bit_rate,
-            capacity_out=0
-            if nodes[rx_node_idx] in constants.RELAY_NODES
-            else float("inf"),
+            capacity_out=0 if rx_node_id in RELAY_IDS else float("inf"),
         )
     # Outflow for two hop
-    elif (
-        tx_node_id in constants.RELAY_NODES
-        and rx_node_id in constants.DESTINATION_NODES
-    ):
+    elif tx_node_id in RELAY_IDS and rx_node_id in DESTINATION_IDS:
+        bit_rate = min(
+            constants.BIT_RATES[tx_node_id],
+            constants.BIT_RATES[rx_node_id],
+        )
+        effective_contact_duration = compute_effective_contact_time(
+            tx_oi_idx,
+            rx_oi_idx,
+            scheduled_contact_topology,
+            duration,
+            positions,
+            optical_interfaces_to_node,
+            nodes,
+            should_bypass_retargeting_time,
+        )
         tx_node_idx = optical_interfaces_to_node[tx_oi_idx]
         return NodeCapacity(
             id=tx_node_idx,
@@ -273,15 +282,13 @@ def compute_node_capacity_by_graph(
 
     capacities = []
     for node_idx, node in enumerate(nodes):
-        if node.id not in constants.RELAY_NODES + constants.DESTINATION_NODES:
+        if node.id not in RELAY_OR_DESTINATION_IDS:
             continue
 
         node_capacity = NodeCapacity(
             id=node_idx,
             capacity_in=0,
-            capacity_out=0
-            if node.id in constants.RELAY_NODES
-            else float("inf"),
+            capacity_out=0 if node.id in RELAY_IDS else float("inf"),
         )
 
         # The list if ipn_nodes contains the node idx i.e. its index in the adjacency matrix
@@ -315,20 +322,17 @@ def compute_node_capacity_by_graph(
 
                     # print("Edge", tx_node, rx_node, effective_contact_duration, state_duration)
 
+                tx_node_id = nodes[optical_interfaces_to_node[tx_oi_idx]].id
+                rx_node_id = nodes[optical_interfaces_to_node[rx_oi_idx]].id
                 bit_rate = min(
-                    constants.BIT_RATES[
-                        nodes[optical_interfaces_to_node[tx_oi_idx]]
-                    ],
-                    constants.BIT_RATES[
-                        nodes[optical_interfaces_to_node[rx_oi_idx]]
-                    ],
+                    constants.BIT_RATES[tx_node_id],
+                    constants.BIT_RATES[rx_node_id],
                 )
 
                 # Only one of these two conditions can ever be true since we don't count contacts with the same node as
                 # the tx and rx
                 if (
-                    nodes[optical_interfaces_to_node[tx_oi_idx]]
-                    in constants.SOURCE_NODES
+                    tx_node_id in SOURCE_IDS
                     and rx_oi_idx in node_to_optical_interfaces[node_idx]
                 ):
                     # Compute the amount of data transmitted to the IPN node from a non-IPN node.
@@ -338,8 +342,7 @@ def compute_node_capacity_by_graph(
                     )
                 elif (
                     tx_oi_idx in node_to_optical_interfaces[node_idx]
-                    and nodes[optical_interfaces_to_node[rx_oi_idx]]
-                    in constants.DESTINATION_NODES
+                    and rx_node_id in DESTINATION_IDS
                 ):
                     # Compute the amount of data transmitted by the IPN node to an IPN node that is orbiting the
                     # destination planet.
@@ -409,8 +412,7 @@ def compute_jains_fairness_index(
     source_nodes = [
         oi_idx
         for oi_idx in range(N)
-        if nodes[optical_interfaces_to_node[oi_idx]].id
-        in constants.SOURCE_NODES
+        if nodes[optical_interfaces_to_node[oi_idx]].id in SOURCE_IDS
     ]  # Mars orbiter optical interfaces
 
     # Create a single graph the sums the enabled contact times of all k states
@@ -418,23 +420,16 @@ def compute_jains_fairness_index(
     for k in range(K):
         for tx_idx in range(N):
             for rx_idx in range(N):
+                rx_node_id = nodes[optical_interfaces_to_node[rx_idx]].id
                 if (
                     graphs[k][tx_idx][rx_idx] >= 1
                     and tx_idx in source_nodes
-                    and (
-                        nodes[optical_interfaces_to_node[rx_idx]]
-                        in constants.RELAY_NODES
-                        or nodes[optical_interfaces_to_node[rx_idx]]
-                        in constants.DESTINATION_NODES
-                    )
+                    and rx_node_id in RELAY_OR_DESTINATION_IDS
                 ):
+                    tx_node_id = nodes[optical_interfaces_to_node[tx_idx]].id
                     bit_rate = min(
-                        constants.BIT_RATES[
-                            nodes[optical_interfaces_to_node[tx_idx]]
-                        ],
-                        constants.BIT_RATES[
-                            nodes[optical_interfaces_to_node[rx_idx]]
-                        ],
+                        constants.BIT_RATES[tx_node_id],
+                        constants.BIT_RATES[rx_node_id],
                     )
 
                     enabled_contact_times[k][tx_idx][rx_idx] = (
@@ -471,15 +466,13 @@ def compute_scheduled_delay(
     orbiter_nodes = [
         node_idx
         for node_idx in range(N)
-        if nodes[optical_interfaces_to_node[node_idx]]
-        in constants.SOURCE_NODES
+        if nodes[optical_interfaces_to_node[node_idx]].id in SOURCE_IDS
     ]
     non_source_nodes = [
         node_idx
         for node_idx in range(N)
-        if nodes[optical_interfaces_to_node[node_idx]] in constants.RELAY_NODES
-        or nodes[optical_interfaces_to_node[node_idx]]
-        in constants.DESTINATION_NODES
+        if nodes[optical_interfaces_to_node[node_idx]].id
+        in RELAY_OR_DESTINATION_IDS
     ]
     node_delays = {
         node_idx: {"total_delay": 0, "num_contacts": 0}
@@ -627,18 +620,8 @@ def compute_effective_contact_time(
         node1_id = nodes[optical_interfaces_to_node[oi_idx1]].id
         node2_id = nodes[optical_interfaces_to_node[oi_idx2]].id
         is_ipn_edge = (
-            node1_id in constants.SOURCE_NODES
-            and (
-                node2_id in constants.RELAY_NODES
-                or node2_id in constants.DESTINATION_NODES
-            )
-        ) or (
-            node2_id in constants.SOURCE_NODES
-            and (
-                node1_id in constants.RELAY_NODES
-                or node1_id in constants.DESTINATION_NODES
-            )
-        )
+            node1_id in SOURCE_IDS and node2_id in RELAY_OR_DESTINATION_IDS
+        ) or (node2_id in SOURCE_IDS and node1_id in RELAY_OR_DESTINATION_IDS)
         link_acq_delay = (
             link_acq_delay_ipn() if is_ipn_edge else link_acq_delay_leo()
         )
@@ -733,21 +716,11 @@ def compute_delays(
     is_same_link = idx1_rx == idx2 or idx2_rx == idx1
     if not is_same_link:
         # Add link_acq delay, check if edge is an IPN or LEO link
-        node1 = nodes[optical_interfaces_to_node[oi_idx1]]
-        node2 = nodes[optical_interfaces_to_node[oi_idx2]]
+        node1_id = nodes[optical_interfaces_to_node[oi_idx1]].id
+        node2_id = nodes[optical_interfaces_to_node[oi_idx2]].id
         is_ipn_edge = (
-            node1 in constants.SOURCE_NODES
-            and (
-                node2 in constants.RELAY_NODES
-                or node2 in constants.DESTINATION_NODES
-            )
-        ) or (
-            node2 in constants.SOURCE_NODES
-            and (
-                node1 in constants.RELAY_NODES
-                or node1 in constants.DESTINATION_NODES
-            )
-        )
+            node1_id in SOURCE_IDS and node2_id in RELAY_OR_DESTINATION_IDS
+        ) or (node2_id in SOURCE_IDS and node1_id in RELAY_OR_DESTINATION_IDS)
         link_acq_delay = (
             link_acq_delay_ipn_rand()
             if is_ipn_edge
@@ -837,21 +810,11 @@ def compute_all_delays(
     is_same_link = idx1_rx == idx2 or idx2_rx == idx1
     if not is_same_link:
         # Add link_acq delay, check if edge is an IPN or LEO link
-        node1 = nodes[optical_interfaces_to_node[oi_idx1]]
-        node2 = nodes[optical_interfaces_to_node[oi_idx2]]
+        node1_id = nodes[optical_interfaces_to_node[oi_idx1]].id
+        node2_id = nodes[optical_interfaces_to_node[oi_idx2]].id
         is_ipn_edge = (
-            node1 in constants.SOURCE_NODES
-            and (
-                node2 in constants.RELAY_NODES
-                or node2 in constants.DESTINATION_NODES
-            )
-        ) or (
-            node2 in constants.SOURCE_NODES
-            and (
-                node1 in constants.RELAY_NODES
-                or node1 in constants.DESTINATION_NODES
-            )
-        )
+            node1_id in SOURCE_IDS and node2_id in RELAY_OR_DESTINATION_IDS
+        ) or (node2_id in SOURCE_IDS and node1_id in RELAY_OR_DESTINATION_IDS)
         link_acq_delay = (
             link_acq_delay_ipn_rand()
             if is_ipn_edge
