@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Tuple, Optional
 
 import numpy as np
-from itertools import groupby
 from src import constants
 from src.models import (
     link_acq_delay_ipn,
@@ -29,6 +28,27 @@ class NodeCapacity:
     capacity_out: float
 
 
+def build_node_capacity_map(
+    capacities: list[NodeCapacity],
+) -> dict[int, NodeCapacity]:
+    merged_capacities: dict[int, NodeCapacity] = {}
+
+    for capacity in capacities:
+        existing = merged_capacities.get(capacity.id)
+        if existing is None:
+            merged_capacities[capacity.id] = NodeCapacity(
+                id=capacity.id,
+                capacity_in=capacity.capacity_in,
+                capacity_out=capacity.capacity_out,
+            )
+            continue
+
+        existing.capacity_in += capacity.capacity_in
+        existing.capacity_out += capacity.capacity_out
+
+    return merged_capacities
+
+
 def delta_capacity(
     contact_topology_k: np.ndarray,
     scheduled_contact_topology: np.ndarray,
@@ -48,44 +68,60 @@ def delta_capacity(
     num_nodes = len(contact_topology_k)
 
     # Compute network capacity with current node_capacities list
-    network_current_capacity = compute_capacity(node_capacities)
+    node_capacity_map = build_node_capacity_map(node_capacities)
+    network_current_capacity = compute_capacity(
+        list(node_capacity_map.values())
+    )
 
     delta_capacities = np.zeros((num_nodes, num_nodes), dtype="int64")
-    for tx_idx in range(num_nodes):
-        for rx_idx in range(num_nodes):
-            # The id of the optical communication interface that the edge uses for the contact. An id of 0 corresponds
-            # to no contact
-            # For each edge in topology_k that is active i.e. graph[i][j] >= 1, create a new graph where only that edge
-            # is active and compute the capacity if that edge was selected
-            if contact_topology_k[tx_idx][rx_idx] >= 1:
-                # Compute the node capacity from the single edge graph
-                single_edge_node_capacity = (
-                    compute_node_capacity_by_single_edge_graph(
-                        tx_idx,
-                        rx_idx,
-                        state_duration,
-                        nodes,
-                        scheduled_contact_topology,
-                        positions,
-                        optical_interfaces_to_node,
-                        should_bypass_retargeting_time,
-                    )
+
+    active_tx, active_rx = np.where(contact_topology_k >= 1)
+    for tx_idx, rx_idx in zip(active_tx, active_rx):
+        # The id of the optical communication interface that the edge uses for the contact. An id of 0 corresponds
+        # to no contact
+        # For each edge in topology_k that is active i.e. graph[i][j] >= 1, create a new graph where only that edge
+        # is active and compute the capacity if that edge was selected
+        # Compute the node capacity from the single edge graph
+        single_edge_node_capacity = compute_node_capacity_by_single_edge_graph(
+            tx_idx,
+            rx_idx,
+            state_duration,
+            nodes,
+            scheduled_contact_topology,
+            positions,
+            optical_interfaces_to_node,
+            should_bypass_retargeting_time,
+        )
+
+        # Since the delta caps matrix is already filled with zeros, if the single edge node capacity returns
+        # None i.e. there was no new capacity then we can just leave the delta as 0, otherwise compute
+        # the new total capacity then the new delta
+        if single_edge_node_capacity is not None:
+            current_node_capacity = node_capacity_map.get(
+                single_edge_node_capacity.id
+            )
+            current_contribution = (
+                min(
+                    current_node_capacity.capacity_in,
+                    current_node_capacity.capacity_out,
                 )
+                if current_node_capacity is not None
+                else 0
+            )
 
-                # Since the delta caps matrix is already filled with zeros, if the single edge node capacity returns
-                # None i.e. there was no new capacity then we can just leave the delta as 0, otherwise compute
-                # the new total capacity then the new delta
-                if single_edge_node_capacity is not None:
-                    # Merge it with the node_capacities list and compute the network capacity with the new list
-                    new_node_capacities = merge_many_node_capacities(
-                        node_capacities + [single_edge_node_capacity]
-                    )
-                    new_capacity = compute_capacity(new_node_capacities)
+            new_capacity_in = single_edge_node_capacity.capacity_in
+            new_capacity_out = single_edge_node_capacity.capacity_out
+            if current_node_capacity is not None:
+                new_capacity_in += current_node_capacity.capacity_in
+                new_capacity_out += current_node_capacity.capacity_out
 
-                    # Take the difference and that is the new weight
-                    delta_capacities[tx_idx][rx_idx] = (
-                        new_capacity - network_current_capacity
-                    )
+            new_contribution = min(new_capacity_in, new_capacity_out)
+            delta_capacities[tx_idx][rx_idx] = (
+                network_current_capacity
+                - current_contribution
+                + new_contribution
+                - network_current_capacity
+            )
 
     return delta_capacities
 
@@ -135,20 +171,7 @@ def merge_many_node_capacities(
     """
     Merges capacities for many different node ids
     """
-    # Convert to dict of node to list of capacities
-    node_capacities_dict = {
-        node_idx: list(node_capacities)
-        for node_idx, node_capacities in groupby(
-            sorted(capacities, key=lambda x: x.id), key=lambda x: x.id
-        )
-    }
-
-    # Merge node capacities calculated over all graphs in the TEG to a single capacity, this gives a list of node
-    # capacities where each is the total capacity in and out over all graphs for a single IPN node
-    return [
-        merge_node_capacities(node_capacities, node_idx)
-        for node_idx, node_capacities in node_capacities_dict.items()
-    ]
+    return list(build_node_capacity_map(capacities).values())
 
 
 def merge_node_capacities(
@@ -520,8 +543,8 @@ def compute_scheduled_delay(
 # L1 cache effective contact time for same nodes idx1, idx2, k
 EFFECTIVE_CONTACT_TIME_CACHE = {}
 
-# L2 cache coordinates for a specific node
-COORDINATE_CACHE: dict[tuple[int, int], int] = {}
+# L2 cache previous contact partner by OI for a specific state
+COORDINATE_CACHE: dict[int, np.ndarray] = {}
 
 
 def compute_effective_contact_time(
@@ -549,39 +572,35 @@ def compute_effective_contact_time(
     ) and curr_k != len(positions) - 1:
         return EFFECTIVE_CONTACT_TIME_CACHE[(oi_idx1, oi_idx2, curr_k)]
 
-    def get_contact_in_prev_state(oi_idx):
-        for rx_oi_idx in range(len(scheduled_contact_topology[curr_k - 1])):
-            if scheduled_contact_topology[curr_k - 1][oi_idx][rx_oi_idx] >= 1:
-                rx_idx = optical_interfaces_to_node[rx_oi_idx]
-                COORDINATE_CACHE[(oi_idx, curr_k)] = rx_idx
-                return rx_idx
-
-        return -1
+    if curr_k not in COORDINATE_CACHE:
+        prev_graph = scheduled_contact_topology[curr_k - 1]
+        # We obtain an array of size rx
+        prev_partner_by_oi = np.full(prev_graph.shape[0], -1, dtype=int)
+        active_tx, active_rx = np.where(prev_graph >= 1)
+        for tx_oi_idx, rx_oi_idx in zip(active_tx, active_rx):
+            prev_partner_by_oi[tx_oi_idx] = optical_interfaces_to_node[
+                rx_oi_idx
+            ]
+        COORDINATE_CACHE[curr_k] = prev_partner_by_oi
 
     # For each node check in the scheduled topology if it had a contact in the previous state and with which node
     # Check the coordinates of it and the rx at that time, this will give the previous coordinates.
-    # idx1_rx = get_contact_in_prev_state(oi_idx1)
-    # idx2_rx = get_contact_in_prev_state(oi_idx2)
-    idx1_rx = (
-        COORDINATE_CACHE[(oi_idx1, curr_k)]
-        if (oi_idx1, curr_k) in COORDINATE_CACHE
-        else get_contact_in_prev_state(oi_idx1)
-    )
-    idx2_rx = (
-        COORDINATE_CACHE[(oi_idx2, curr_k)]
-        if (oi_idx2, curr_k) in COORDINATE_CACHE
-        else get_contact_in_prev_state(oi_idx2)
-    )
+    prev_partner_by_oi = COORDINATE_CACHE[curr_k]
+    idx1_rx = prev_partner_by_oi[oi_idx1]
+    idx2_rx = prev_partner_by_oi[oi_idx2]
 
+    curr_positions = positions[curr_k]
     idx1 = optical_interfaces_to_node[oi_idx1]
     idx2 = optical_interfaces_to_node[oi_idx2]
+    node1_id = nodes[idx1].id
+    node2_id = nodes[idx2].id
     # Use PAT lib to compute delay
     if idx1_rx != -1 and idx2_rx != -1:
-        idx1_coords = np.array(positions[curr_k][idx1])
-        idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
+        idx1_coords = curr_positions[idx1]
+        idx1_rx_coords = curr_positions[idx1_rx]
 
-        idx2_coords = np.array(positions[curr_k][idx2])
-        idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
+        idx2_coords = curr_positions[idx2]
+        idx2_rx_coords = curr_positions[idx2_rx]
 
         node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
@@ -589,10 +608,10 @@ def compute_effective_contact_time(
         )
     elif idx1_rx != -1 and idx2_rx == -1:
         # idx2 first contact
-        idx1_coords = np.array(positions[curr_k][idx1])
-        idx1_rx_coords = np.array(positions[curr_k][idx1_rx])
+        idx1_coords = curr_positions[idx1]
+        idx1_rx_coords = curr_positions[idx1_rx]
 
-        idx2_coords = np.array(positions[curr_k][idx2])
+        idx2_coords = curr_positions[idx2]
 
         node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx1_coords, idx1_rx_coords, idx2_coords]),
@@ -601,10 +620,10 @@ def compute_effective_contact_time(
 
     elif idx1_rx == -1 and idx2_rx != -1:
         # idx1 first contact
-        idx2_coords = np.array(positions[curr_k][idx2])
-        idx2_rx_coords = np.array(positions[curr_k][idx2_rx])
+        idx2_coords = curr_positions[idx2]
+        idx2_rx_coords = curr_positions[idx2_rx]
 
-        idx1_coords = np.array(positions[curr_k][idx1])
+        idx1_coords = curr_positions[idx1]
 
         node_pointing_delay = pointing_delay_pair_nodes(
             np.array([idx2_coords, idx2_rx_coords, idx1_coords]),
@@ -617,8 +636,6 @@ def compute_effective_contact_time(
     is_same_link = idx1_rx == idx2 or idx2_rx == idx1
     if not is_same_link:
         # Add link_acq delay, check if edge is an IPN or LEO link
-        node1_id = nodes[optical_interfaces_to_node[oi_idx1]].id
-        node2_id = nodes[optical_interfaces_to_node[oi_idx2]].id
         is_ipn_edge = (
             node1_id in SOURCE_IDS and node2_id in RELAY_OR_DESTINATION_IDS
         ) or (node2_id in SOURCE_IDS and node1_id in RELAY_OR_DESTINATION_IDS)

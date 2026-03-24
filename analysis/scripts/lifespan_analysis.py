@@ -145,11 +145,7 @@ def run_analysis(report_id: int) -> None:
             total_state_metrics = pd.DataFrame(metrics_rows)
             total_state_metrics.index.name = "state_index"
 
-            total_state_metrics.to_csv(
-                f"{REPORTS_ROOT}/{report_id}/energy_metrics_{algorithm}_{scenario}.csv"
-            )
-
-            plot_dir = os.path.join(PLOTS_ROOT, str(f"{algorithm}_{scenario}"))
+            plot_dir = os.path.join(PLOTS_ROOT, scenario, algorithm)
             os.makedirs(plot_dir, exist_ok=True)
 
             total_state_metrics.plot(
@@ -167,7 +163,7 @@ def run_analysis(report_id: int) -> None:
             plt.legend()
             plt.tight_layout()
             plt.savefig(
-                f"{PLOTS_ROOT}/{algorithm}_{scenario}/energy_metrics_{algorithm}_{scenario}.png"
+                f"{PLOTS_ROOT}/{scenario}/{algorithm}/energy_metrics.png"
             )
             plt.close()
 
