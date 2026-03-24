@@ -1,5 +1,3 @@
-import cProfile
-from pathlib import Path
 from timeit import default_timer as timer
 import copy
 import traceback
@@ -42,34 +40,6 @@ SCHEDULER: dict[str, BaseScheduler] = {
     "alternating": AlternatingScheduler(),
     "lifespan_aware": LifespanAware(),
 }
-
-
-def run_with_optional_profile(
-    experiment_names: list[str],
-    scheduler_names: list[str],
-    profile_output: str | None,
-) -> None:
-    with RunTablePrinter(experiment_names, scheduler_names) as run_table:
-        if profile_output is None:
-            multi_experiment_driver(
-                experiment_names, scheduler_names, run_table
-            )
-            return
-
-        profile_path = Path(profile_output)
-        profile_path.parent.mkdir(parents=True, exist_ok=True)
-
-        profiler = cProfile.Profile()
-        profiler.enable()
-        try:
-            multi_experiment_driver(
-                experiment_names, scheduler_names, run_table
-            )
-        finally:
-            profiler.disable()
-            profiler.dump_stats(str(profile_path))
-
-        print(f"\nprofile_output={profile_path}")
 
 
 def experiment_driver(
@@ -223,16 +193,10 @@ def main(
         "-s",
         help="Name of scheduler algorithm to use",
     ),
-    profile_output: str | None = typer.Option(
-        None,
-        "--profile-output",
-        help="Write cProfile stats to this .prof file.",
-    ),
 ):
     np.random.seed(42)
-    run_with_optional_profile(
-        experiment_names, scheduler_names, profile_output
-    )
+    with RunTablePrinter(experiment_names, scheduler_names) as run_table:
+        multi_experiment_driver(experiment_names, scheduler_names, run_table)
 
 
 if __name__ == "__main__":

@@ -17,19 +17,22 @@ class BaseScheduler:
         This algorithm does support individually defining the properties of the laser in each direction i.e. A -> B with
         laser ID 1 but B -> A with laser ID 3.
         """
-        num_nodes = len(P_k)
 
-        # Create list of edges, represented by three-tuple of (tx_idx, rx_idx, weight) based on the contact topology P_k
-        # and computed weights based on delta_capacity + alpha * delta_time
-        edges = []
-        for tx_idx in range(num_nodes):
-            for rx_idx in range(num_nodes):
-                if P_k[tx_idx][rx_idx] >= 1:
-                    # When we compute the weight matrix it is not symmetric because we compute the capacity on an edge basis
-                    # but since the networkx lib uses a symmetric matrix it will select both edges. To account for this we
-                    # sum the weights of the edges in either direction to become the total weight for that undirected edge.
-                    total_weight = W_k[tx_idx][rx_idx] + W_k[rx_idx][tx_idx]
-                    edges.append((tx_idx, rx_idx, total_weight))
+        # Create list of edges, represented by three-tuples of (tx_idx, rx_idx, weight),
+        # based on the contact topology P_k and computed weights based on
+        # delta_capacity + alpha * delta_time.
+        #
+        # Because the contact topology is symmetric, we can omit the bottom triangle.
+        # When we compute the weight matrix it is not symmetric, because we compute the
+        # capacity on an edge basis, but since NetworkX uses an undirected graph it
+        # will consider both directions of the edge. To account for this, we sum the
+        # weights in either direction to obtain the total weight for that undirected edge.
+
+        sym_weights = W_k + W_k.T
+        valid_mask = np.triu(P_k >= 1, k=1) & (sym_weights >= 0)
+
+        tx_idx, rx_idx = np.where(valid_mask)
+        edges = list(zip(tx_idx, rx_idx, sym_weights[tx_idx, rx_idx]))
 
         # Create graph containing edges from P_k
         G = nx.Graph()
