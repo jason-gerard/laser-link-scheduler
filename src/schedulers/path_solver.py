@@ -5,6 +5,7 @@ from src.constants import (
 )
 from src.time_expanded_graph import TimeExpandedGraph
 from .base_scheduler import BaseScheduler
+from src.utils import ProgressCallback
 
 
 MAX_TIME = 2.5 * 60 * 60  # seconds
@@ -26,12 +27,16 @@ class PathSchedulerModel(BaseScheduler):
 
         self.flow_model = None
 
-    def schedule(self, teg: TimeExpandedGraph):
+    def schedule(
+        self,
+        teg: TimeExpandedGraph,
+        progress_callback: ProgressCallback | None = None,
+    ):
         self.teg = teg
-        self._solve()
+        self._solve(progress_callback)
         return self.teg
 
-    def _solve(self):
+    def _solve(self, progress_callback: ProgressCallback | None = None):
         # Compute all single hop paths for each k
         # I motif
         single_hop_paths = []
@@ -52,6 +57,9 @@ class PathSchedulerModel(BaseScheduler):
                 for rx_oi_idx in rx_dest:
                     if self.teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
                         single_hop_paths.append((k, tx_oi_idx, rx_oi_idx))
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("schedule", k + 1, self.teg.K * 3)
 
         # Compute all two hop paths for each k
         # L motif
@@ -88,6 +96,11 @@ class PathSchedulerModel(BaseScheduler):
                             two_hop_paths.append(
                                 (k, tx_oi_idx, relay_oi_idx, rx_oi_idx)
                             )
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback(
+                    "schedule", self.teg.K + k + 1, self.teg.K * 3
+                )
 
         # Compute all V paths for each k
         # V motif
@@ -120,11 +133,11 @@ class PathSchedulerModel(BaseScheduler):
                             v_paths.append(
                                 (k, tx_oi_idx1, tx_oi_idx2, relay_oi_idx)
                             )
-
-        print(len(single_hop_paths))
-        print(len(two_hop_paths))
-        print(len(v_paths))
-        print(two_hop_paths[10])
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback(
+                    "schedule", (2 * self.teg.K) + k + 1, self.teg.K * 3
+                )
 
         # The contact plan topology here should be in the form of a list of tuples (state idx, i, j)
         contact_topology = []
@@ -133,5 +146,3 @@ class PathSchedulerModel(BaseScheduler):
                 for rx_oi_idx in range(self.teg.N):
                     if self.teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
                         contact_topology.append((k, tx_oi_idx, rx_oi_idx))
-
-        print("num edges", len(contact_topology))

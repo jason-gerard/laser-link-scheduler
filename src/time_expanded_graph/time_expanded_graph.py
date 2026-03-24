@@ -1,5 +1,5 @@
+import pickle
 import numpy as np
-from tqdm import tqdm
 
 from src import constants
 from src.constants import (
@@ -11,7 +11,7 @@ from src.constants import (
     get_num_lasers,
 )
 from src.topology.contact_plan import Contact, ContactPlan
-from src.utils import FileType, get_experiment_file
+from src.utils import FileType, ProgressCallback, get_experiment_file
 
 from dataclasses import dataclass, field, replace
 from functools import total_ordering
@@ -74,43 +74,24 @@ class TimeExpandedGraph:
         self.max_state_duration = max(self.state_durations)
 
     def __repr__(self):
-        end_time = sum(self.state_durations)
-
-        rep = ""
-        rep += f"num_k={len(self.graphs)}\n"
-        rep += f"num_nodes={len(self.nodes)}\n"
-        rep += f"duration={end_time / 60 / 60} hours\n"
-        rep += f"nodes={self.nodes}\n"
-        rep += f"oi to node={self.optical_interfaces_to_node}\n"
-        rep += f"node to oi={self.node_to_optical_interfaces}\n"
-        rep += "\n"
-        for k in range(self.K):
-            rep += "  "
-            for oi_idx in range(self.N):
-                rep += f"{oi_idx},"
-
-            rep += "\n"
-            for row_idx in range(self.N):
-                rep += f"{row_idx} "
-                for col_idx in range(self.N):
-                    if row_idx == col_idx:
-                        rep += "*,"
-                    else:
-                        rep += f"{self.graphs[k][row_idx][col_idx]},"
-
-                rep += "\n"
-            rep += f"k={k + 1}\n"
-            rep += f"t={self.state_durations[k]}\n"
-            rep += "\n"
-
-        return rep
+        total_duration_hours = float(np.sum(self.state_durations)) / 3600
+        total_edges = int(np.count_nonzero(self.graphs))
+        return (
+            "TimeExpandedGraph("
+            f"K={self.K}, "
+            f"N={self.N}, "
+            f"nodes={len(self.nodes)}, "
+            f"duration_hours={total_duration_hours:.2f}, "
+            f"edges={total_edges}"
+            ")"
+        )
 
     @classmethod
     def from_contact_plan(
         cls,
         contact_plan: ContactPlan,
         should_fractionate: bool,
-        should_reduce: bool = True,
+        progress_callback: ProgressCallback | None = None,
     ) -> Self:
         # Define the list of interplanetary nodes i.e. the nodes who can establish interplanetary links.
         # We are defining this as any contact with a range greater than 100,000 km.
@@ -188,8 +169,7 @@ class TimeExpandedGraph:
         # Positions are indexed by node index (not optical-interface index).
         positions = np.zeros((K, len(nodes), 3), dtype="float64")
 
-        print("Starting contact plan to time expanded graph conversion")
-        for k, time_step in enumerate(tqdm(time_steps[:-1])):
+        for k, time_step in enumerate(time_steps[:-1]):
             state_start_time = time_step
             state_duration = time_steps[k + 1] - state_start_time
             state_durations[k] = state_duration
@@ -239,6 +219,10 @@ class TimeExpandedGraph:
                 elif k > 0:
                     positions[k][tx_idx] = positions[k - 1][tx_idx]
 
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("build_teg", k + 1, len(time_steps) - 1)
+
         time_expanded_graph = cls(
             graphs=contact_topology_graphs,
             contacts=contacts_by_state,
@@ -257,23 +241,19 @@ class TimeExpandedGraph:
         # This process of fractionation splits long contacts in the TEG into multiple smaller contacts, this will result in
         # each k state having a maximum duration of d_max. Since there are more states and more decision points some
         # algorithms will have better performance.
-        time_expanded_graph = (
-            time_expanded_graph.fractionate_graph()
+        return (
+            time_expanded_graph.fractionate_graph(progress_callback)
             if should_fractionate
             else time_expanded_graph
         )
 
-        return (
-            dag_reduction(time_expanded_graph)
-            if should_reduce
-            else time_expanded_graph
-        )
-
-    def fractionate_graph(cls) -> Self:
-        new_k = cls.K
-        for k in range(cls.K):
-            if cls.state_durations[k] > constants.d_max:
-                large_duration = cls.state_durations[k]
+    def fractionate_graph(
+        self, progress_callback: ProgressCallback | None = None
+    ) -> Self:
+        new_k = self.K
+        for k in range(self.K):
+            if self.state_durations[k] > constants.d_max:
+                large_duration = self.state_durations[k]
                 new_k -= 1
 
                 while large_duration > constants.d_max:
@@ -283,17 +263,17 @@ class TimeExpandedGraph:
                 if large_duration > 0:
                     new_k += 1
 
-        new_teg_graph = np.zeros((new_k, cls.N, cls.N), dtype="int64")
+        new_teg_graph = np.zeros((new_k, self.N, self.N), dtype="int64")
         new_teg_durations = np.empty(new_k, dtype="int64")
         new_contacts = [[] for _ in range(new_k)]
 
         k_offset = 0
 
-        for k in range(cls.K):
-            if cls.state_durations[k] > constants.d_max:
-                large_duration = cls.state_durations[k]
-                kth_graph = cls.graphs[k, :, :]
-                kth_contacts = cls.contacts[k]
+        for k in range(self.K):
+            if self.state_durations[k] > constants.d_max:
+                large_duration = self.state_durations[k]
+                kth_graph = self.graphs[k, :, :]
+                kth_contacts = self.contacts[k]
 
                 while large_duration > constants.d_max:
                     new_teg_durations[k + k_offset] = constants.d_max
@@ -311,24 +291,118 @@ class TimeExpandedGraph:
 
                 k_offset -= 1
             else:
-                new_teg_graph[k + k_offset] = cls.graphs[k]
-                new_teg_durations[k + k_offset] = cls.state_durations[k]
-                new_contacts[k + k_offset] = cls.contacts[k]
+                new_teg_graph[k + k_offset] = self.graphs[k]
+                new_teg_durations[k + k_offset] = self.state_durations[k]
+                new_contacts[k + k_offset] = self.contacts[k]
 
-        print(
-            f"Finished graph fractionation, old k count: {cls.K}, new k count: {new_k}"
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("fractionate", k + 1, self.K)
+
+        self.graphs = new_teg_graph
+        self.state_durations = new_teg_durations
+        self.contacts = new_contacts
+        self.K = new_k
+
+        return self
+
+    def count_edges(self) -> int:
+        count = 0
+
+        for k in range(self.K):
+            for tx_idx in range(self.N):
+                for rx_idx in range(self.N):
+                    if self.graphs[k][tx_idx][rx_idx] >= 1:
+                        count += 1
+        return count
+
+    @classmethod
+    def dag_reduction(
+        cls, progress_callback: ProgressCallback | None = None
+    ) -> Self:
+        """
+        The directed-acyclic graph (DAG) topology reduction algorithm follows several rules and cases to remove cycles
+        and reduce the number of edges in the graph
+        Requirement 1: The edge is a part of one of the follow path types: S -> D (one hop) and S -> R -> D (two hops), then
+                    the specific edge types to be kept include: S -> D, S -> R, R -> D
+        Requirement 2: The source and relay nodes are both orbiting the same planet for any S -> R edge or if the relay node
+                    is orbiting the destination planet
+        """
+        reduced_graph = np.zeros((cls.K, cls.N, cls.N), dtype="int64")
+
+        for state in range(cls.K):
+            for tx_oi_idx in range(cls.N):
+                for rx_oi_idx in range(cls.N):
+                    if cls.graphs[state][tx_oi_idx][rx_oi_idx] >= 1:
+                        tx_node_id = cls.nodes[
+                            cls.optical_interfaces_to_node[tx_oi_idx]
+                        ].id
+                        rx_node_id = cls.nodes[
+                            cls.optical_interfaces_to_node[rx_oi_idx]
+                        ].id
+
+                        # Req. 1
+                        is_src_dst = (
+                            tx_node_id in SOURCE_NODES
+                            and rx_node_id in DESTINATION_NODES
+                        )
+                        is_src_rly = (
+                            tx_node_id in SOURCE_NODES
+                            and rx_node_id in RELAY_NODES
+                        )
+                        is_rly_dst = (
+                            tx_node_id in RELAY_NODES
+                            and rx_node_id in DESTINATION_NODES
+                        )
+
+                        # Req. 2
+                        are_nodes_same_planet = (
+                            NODE_TO_PLANET_MAP[tx_node_id]
+                            == NODE_TO_PLANET_MAP[rx_node_id]
+                        )
+                        is_rly_on_dst_planet = (
+                            NODE_TO_PLANET_MAP[rx_node_id] == EARTH
+                        )
+
+                        if (
+                            is_src_dst
+                            or (
+                                is_src_rly
+                                and (
+                                    are_nodes_same_planet
+                                    or is_rly_on_dst_planet
+                                )
+                            )
+                            or is_rly_dst
+                        ):
+                            reduced_graph[state][tx_oi_idx][rx_oi_idx] = (
+                                cls.graphs[state][tx_oi_idx][rx_oi_idx]
+                            )
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("dag_reduction", state + 1, cls.K)
+
+        reduced_teg: TimeExpandedGraph = cls(
+            graphs=reduced_graph,
+            contacts=cls.contacts,
+            state_durations=cls.state_durations,
+            K=cls.K,
+            N=cls.N,
+            nodes=cls.nodes,
+            node_map=cls.node_map,
+            W=cls.W,
+            pos=cls.pos,
+            optical_interfaces_to_node=cls.optical_interfaces_to_node,
+            node_to_optical_interfaces=cls.node_to_optical_interfaces,
+            effective_contact_durations=cls.effective_contact_durations,
         )
 
-        cls.graphs = new_teg_graph
-        cls.state_durations = new_teg_durations
-        cls.contacts = new_contacts
-        cls.K = new_k
-
-        return cls
+        return reduced_teg
 
 
 def convert_time_expanded_graph_to_contact_plan(
     teg: TimeExpandedGraph,
+    progress_callback: ProgressCallback | None = None,
 ) -> ContactPlan:
     contacts: list[Contact] = []
     # This matrix keeps track of active contacts where the value of the matrix = -1 if there is no active contact for
@@ -336,7 +410,7 @@ def convert_time_expanded_graph_to_contact_plan(
     # start time of that contact. This allows us to merge contacts that are active across multiple of the k states.
     active_contacts = np.full((teg.N, teg.N), fill_value=-1, dtype="int64")
 
-    for k in tqdm(range(teg.K)):
+    for k in range(teg.K):
         for tx_idx in range(teg.N):
             for rx_idx in range(teg.N):
                 should_start_contact = (
@@ -413,6 +487,10 @@ def convert_time_expanded_graph_to_contact_plan(
                             )
                         )
 
+        # For the percentage on running table
+        if progress_callback is not None:
+            progress_callback("export", k + 1, teg.K)
+
     return ContactPlan(sorted(contacts, key=lambda c: c.end_time))
 
 
@@ -422,98 +500,5 @@ def write_time_expanded_graph(
     file_type: FileType,
 ):
     path = get_experiment_file(experiment_name, file_type)
-    with open(path, "w") as f:
-        f.write(str(time_expanded_graph))
-
-
-def dag_reduction(teg: TimeExpandedGraph):
-    """
-    The directed-acyclic graph (DAG) topology reduction algorithm follows several rules and cases to remove cycles
-    and reduce the number of edges in the graph
-    Requirement 1: The edge is a part of one of the follow path types: S -> D (one hop) and S -> R -> D (two hops), then
-                   the specific edge types to be kept include: S -> D, S -> R, R -> D
-    Requirement 2: The source and relay nodes are both orbiting the same planet for any S -> R edge or if the relay node
-                   is orbiting the destination planet
-    """
-    reduced_graph = np.zeros((teg.K, teg.N, teg.N), dtype="int64")
-
-    print("Starting the DAG topology reduction algorithm")
-    for k in tqdm(range(teg.K)):
-        for tx_oi_idx in range(teg.N):
-            for rx_oi_idx in range(teg.N):
-                if teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
-                    tx_node_id = teg.nodes[
-                        teg.optical_interfaces_to_node[tx_oi_idx]
-                    ].id
-                    rx_node_id = teg.nodes[
-                        teg.optical_interfaces_to_node[rx_oi_idx]
-                    ].id
-
-                    # Req. 1
-                    is_src_dst = (
-                        tx_node_id in SOURCE_NODES
-                        and rx_node_id in DESTINATION_NODES
-                    )
-                    is_src_rly = (
-                        tx_node_id in SOURCE_NODES
-                        and rx_node_id in RELAY_NODES
-                    )
-                    is_rly_dst = (
-                        tx_node_id in RELAY_NODES
-                        and rx_node_id in DESTINATION_NODES
-                    )
-
-                    # Req. 2
-                    are_nodes_same_planet = (
-                        NODE_TO_PLANET_MAP[tx_node_id]
-                        == NODE_TO_PLANET_MAP[rx_node_id]
-                    )
-                    is_rly_on_dst_planet = (
-                        NODE_TO_PLANET_MAP[rx_node_id] == EARTH
-                    )
-
-                    if (
-                        is_src_dst
-                        or (
-                            is_src_rly
-                            and (are_nodes_same_planet or is_rly_on_dst_planet)
-                        )
-                        or is_rly_dst
-                    ):
-                        reduced_graph[k][tx_oi_idx][rx_oi_idx] = teg.graphs[k][
-                            tx_oi_idx
-                        ][rx_oi_idx]
-
-    reduced_teg = TimeExpandedGraph(
-        graphs=reduced_graph,
-        contacts=teg.contacts,
-        state_durations=teg.state_durations,
-        K=teg.K,
-        N=teg.N,
-        nodes=teg.nodes,
-        node_map=teg.node_map,
-        W=teg.W,
-        pos=teg.pos,
-        optical_interfaces_to_node=teg.optical_interfaces_to_node,
-        node_to_optical_interfaces=teg.node_to_optical_interfaces,
-        effective_contact_durations=teg.effective_contact_durations,
-    )
-
-    print(count_edges(teg), count_edges(reduced_teg))
-    print(
-        f"Percent of edges removed = {100 * (1 - count_edges(reduced_teg) / count_edges(teg)):.3f}%"
-    )
-
-    return reduced_teg
-
-
-def count_edges(teg):
-    count = 0
-
-    for k in range(teg.K):
-        for tx_idx in range(teg.N):
-            for rx_idx in range(teg.N):
-                if teg.graphs[k][tx_idx][rx_idx] >= 1:
-                    count += 1
-
-    return count
+    with open(path, "wb") as f:
+        pickle.dump(time_expanded_graph, f)

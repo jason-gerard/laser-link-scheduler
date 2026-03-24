@@ -6,6 +6,7 @@ from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
 from src.topology.contact_plan import Contact
+from src.utils import ProgressCallback
 
 
 class BaseScheduler:
@@ -77,4 +78,8 @@ class BaseScheduler:
     #       Target: `BaseScheduler.schedule(self) -> TimeExpandedGraph`, with `BaseScheduler` owning/initializing `self.teg`.
     #       Then update all scheduler implementations and call sites to use the new signature.
     @abstractmethod
-    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph: ...
+    def schedule(
+        self,
+        teg: TimeExpandedGraph,
+        progress_callback: ProgressCallback | None = None,
+    ) -> TimeExpandedGraph: ...

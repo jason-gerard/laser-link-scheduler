@@ -1,13 +1,17 @@
 import numpy as np
-from tqdm import tqdm
 from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
 from .base_scheduler import BaseScheduler
+from src.utils import ProgressCallback
 
 
 class RandomScheduler(BaseScheduler):
-    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
+    def schedule(
+        self,
+        teg: TimeExpandedGraph,
+        progress_callback: ProgressCallback | None = None,
+    ) -> TimeExpandedGraph:
         """
         Apply blossom algorithm with random weights
         """
@@ -26,7 +30,7 @@ class RandomScheduler(BaseScheduler):
         )
 
         for i in range(num_iters):
-            for k in tqdm(range(teg.K)):
+            for k in range(teg.K):
                 # Get an N x N matrix of weights randomly assigned between [0, 1], this will be used to compute the
                 # matching.
                 all_weights[k * i] = rng.integers(
@@ -44,6 +48,11 @@ class RandomScheduler(BaseScheduler):
                     matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map
                 )
                 all_scheduled_graphs[k * i] = L_k
+                # For the percentage on running table
+                if progress_callback is not None:
+                    progress_callback(
+                        "schedule", (i * teg.K) + k + 1, teg.K * num_iters
+                    )
 
         scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype="int64")
         weights = np.empty((teg.K, teg.N, teg.N), dtype="int64")

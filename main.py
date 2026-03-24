@@ -1,4 +1,7 @@
+import cProfile
+from pathlib import Path
 from timeit import default_timer as timer
+import copy
 import traceback
 import typer
 
@@ -26,7 +29,7 @@ from src.topology.contact_plan import (
     IONContactPlanParser,
     IPNDContactPlanParser,
 )
-from src.utils import FileType
+from src.utils import FileType, RunTablePrinter, make_fanout_progress_callback
 
 SCHEDULER: dict[str, BaseScheduler] = {
     "lls": LaserLinkScheduler(),
@@ -41,41 +44,63 @@ SCHEDULER: dict[str, BaseScheduler] = {
 }
 
 
+def run_with_optional_profile(
+    experiment_names: list[str],
+    scheduler_names: list[str],
+    profile_output: str | None,
+) -> None:
+    with RunTablePrinter(experiment_names, scheduler_names) as run_table:
+        if profile_output is None:
+            multi_experiment_driver(
+                experiment_names, scheduler_names, run_table
+            )
+            return
+
+        profile_path = Path(profile_output)
+        profile_path.parent.mkdir(parents=True, exist_ok=True)
+
+        profiler = cProfile.Profile()
+        profiler.enable()
+        try:
+            multi_experiment_driver(
+                experiment_names, scheduler_names, run_table
+            )
+        finally:
+            profiler.disable()
+            profiler.dump_stats(str(profile_path))
+
+        print(f"\nprofile_output={profile_path}")
+
+
 def experiment_driver(
-    experiment_name: str, scheduler_name: str, reporter: Reporter
-):
-    # Clear all caches
-    EFFECTIVE_CONTACT_TIME_CACHE.clear()
-    COORDINATE_CACHE.clear()
-    RETARGETING_DELAY_CACHE.clear()
-
+    experiment_name: str,
+    scheduler_name: str,
+    reporter: Reporter,
+    time_expanded_graph: TimeExpandedGraph,
+    run_table: RunTablePrinter,
+) -> dict[str, str | float | int]:
     start = timer()
-
-    # Read contact plan from disk
     contact_plan_parser = IONContactPlanParser()
-    contact_plan = contact_plan_parser.read(experiment_name)
-    print("Finished reading contact plan")
-
-    # Convert contact plan into a time expanded graph (TEG). From our testing on the Fair Contact Plan algorithm
-    # benefits from graph fractionation.
-    should_reduce = scheduler_name in ["lls_mip", "lls_lp"]
-    time_expanded_graph = TimeExpandedGraph.from_contact_plan(
-        contact_plan=contact_plan,
-        should_fractionate=True,
-        should_reduce=should_reduce,
-    )
-    write_time_expanded_graph(
-        experiment_name, time_expanded_graph, FileType.TEG
-    )
-    print("Finished converting contact plan to time expanded graph")
 
     try:
-        print("Starting contact scheduling")
         if scheduler_name not in SCHEDULER:
             raise ValueError(f"Unknown scheduler name: {scheduler_name}")
 
+        progress_callback = run_table.make_progress_callback(
+            experiment_name, scheduler_name
+        )
+        scheduler_input_teg = copy.deepcopy(time_expanded_graph)
+
+        teg = (
+            scheduler_input_teg.dag_reduction(progress_callback)
+            if scheduler_name in ["lls_lp", "lls_mip"]
+            else scheduler_input_teg
+        )
+        if scheduler_name not in ["lls_lp", "lls_mip"]:
+            progress_callback("schedule", 0, 1)
+
         scheduled_time_expanded_graph = SCHEDULER[scheduler_name].schedule(
-            time_expanded_graph
+            teg, progress_callback
         )
 
         write_time_expanded_graph(
@@ -83,52 +108,102 @@ def experiment_driver(
             scheduled_time_expanded_graph,
             FileType.TEG_SCHEDULED,
         )
-        print("Finished contact scheduling")
 
         # Convert the TEG back to a contact plan
         scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(
-            scheduled_time_expanded_graph
+            scheduled_time_expanded_graph,
+            progress_callback,
         )
         contact_plan_parser.write(
             experiment_name,
             scheduled_contact_plan,
             FileType.CONTACT_PLAN_SCHEDULED,
         )
-        print("Finished converting time expanded graph to contact plan")
 
         # Write contact plan to disk as IPN-D contact plan, so we can visualize the output
         ipnd_contact_plan_parser = IPNDContactPlanParser()
         ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
 
-        reporter.generate_report(
+        progress_callback("report", 1, 1)
+        run_data = reporter.generate_report(
             experiment_name,
             scheduler_name,
             timer() - start,
             scheduled_time_expanded_graph,
         )
+        return run_data
     except Exception as e:
-        print(
-            f"Execution of experiment: {experiment_name}, with scheduler: {scheduler_name} failed from {e}"
-        )
         traceback.print_exc()
         if scheduler_name == "lls_mip":
             raise e
+        return {
+            "progress": "failed",
+            "duration": timer() - start,
+            "network_capacity": 0,
+            "network_wasted_capacity": 0,
+            "wasted_buffer_capacity": 0,
+            "jains_fairness_index": 0.0,
+            "scheduled_delay": 0.0,
+        }
 
 
 def multi_experiment_driver(
-    experiment_names: list[str], scheduler_names: list[str]
+    experiment_names: list[str],
+    scheduler_names: list[str],
+    run_table: RunTablePrinter,
 ):
     reporter = Reporter(write_pkl=True)
 
     for experiment_name in experiment_names:
-        for scheduler_name in scheduler_names:
-            print(
-                f"Starting execution of experiment: {experiment_name}, with scheduler: {scheduler_name}"
-            )
-            experiment_driver(experiment_name, scheduler_name, reporter)
-            print("\n\n")
+        # Clear caches once before building the shared TEG for this experiment.
+        EFFECTIVE_CONTACT_TIME_CACHE.clear()
+        COORDINATE_CACHE.clear()
+        RETARGETING_DELAY_CACHE.clear()
 
-    reporter.write_report()
+        contact_plan_parser = IONContactPlanParser()
+        contact_plan = contact_plan_parser.read(experiment_name)
+
+        build_callbacks = []
+        # Build and write the input TEG.
+        for scheduler_name in scheduler_names:
+            run_table.update_progress(experiment_name, scheduler_name, "0%")
+            build_callbacks.append(
+                run_table.make_progress_callback(
+                    experiment_name, scheduler_name
+                )
+            )
+
+        build_progress_callback = make_fanout_progress_callback(
+            build_callbacks
+        )
+
+        time_expanded_graph = TimeExpandedGraph.from_contact_plan(
+            contact_plan=contact_plan,
+            should_fractionate=True,
+            progress_callback=build_progress_callback,
+        )
+        write_time_expanded_graph(
+            experiment_name, time_expanded_graph, FileType.TEG
+        )
+
+        for scheduler_name in scheduler_names:
+            # Reset caches before each scheduler run since scheduling/reporting uses global caches.
+            EFFECTIVE_CONTACT_TIME_CACHE.clear()
+            COORDINATE_CACHE.clear()
+            RETARGETING_DELAY_CACHE.clear()
+
+            run_table.mark_running(experiment_name, scheduler_name)
+            run_data = experiment_driver(
+                experiment_name,
+                scheduler_name,
+                reporter,
+                time_expanded_graph,
+                run_table,
+            )
+            run_table.update_result(experiment_name, scheduler_name, run_data)
+
+    report_id = reporter.write_report()
+    print(f"\nreport_id={report_id}")
 
 
 app = typer.Typer()
@@ -148,9 +223,16 @@ def main(
         "-s",
         help="Name of scheduler algorithm to use",
     ),
+    profile_output: str | None = typer.Option(
+        None,
+        "--profile-output",
+        help="Write cProfile stats to this .prof file.",
+    ),
 ):
     np.random.seed(42)
-    multi_experiment_driver(experiment_names, scheduler_names)
+    run_with_optional_profile(
+        experiment_names, scheduler_names, profile_output
+    )
 
 
 if __name__ == "__main__":

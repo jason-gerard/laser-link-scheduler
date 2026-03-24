@@ -1,6 +1,5 @@
 import networkx as nx
 import numpy as np
-from tqdm import tqdm
 
 from src import constants
 from src.time_expanded_graph.time_expanded_graph import (
@@ -13,6 +12,7 @@ from src.topology.weights import (
     disabled_contact_time,
     merge_many_node_capacities,
 )
+from src.utils import ProgressCallback
 
 
 class LaserLinkScheduler(BaseScheduler):
@@ -22,7 +22,11 @@ class LaserLinkScheduler(BaseScheduler):
             should_bypass_retargeting_time
         )
 
-    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
+    def schedule(
+        self,
+        teg: TimeExpandedGraph,
+        progress_callback: ProgressCallback | None = None,
+    ) -> TimeExpandedGraph:
         """
         This algorithm is a max-weight maximal matching, where it will iterate through each of the k graphs and
         compute the maximal matching. By maximizing the capacity model at each of the k graphs we will produce the
@@ -48,7 +52,7 @@ class LaserLinkScheduler(BaseScheduler):
         node_capacities = []
         W_dct = np.zeros((teg.N, teg.N), dtype="int64")
 
-        for k in tqdm(range(teg.K)):
+        for k in range(teg.K):
             # Compute the change in network capacity on an edge by edge basis using the previous states node
             # capacities and the possible choices or decisions of active edges for this current state. This is a
             # dynamic programming approach where we used the memoized values of the weights of the previous k states
@@ -102,6 +106,9 @@ class LaserLinkScheduler(BaseScheduler):
             W_dct += disabled_contact_time(
                 teg.graphs[k], L_k, teg.state_durations[k]
             )
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("schedule", k + 1, teg.K)
 
         return TimeExpandedGraph(
             graphs=scheduled_graphs,

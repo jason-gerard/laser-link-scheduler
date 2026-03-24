@@ -8,7 +8,7 @@ def scheduler_test_driver(experiment_name):
     contact_plan = contact_plan_parser.read(experiment_name)
 
     time_expanded_graph = TimeExpandedGraph.from_contact_plan(
-        contact_plan, should_fractionate=False, should_reduce=False
+        contact_plan, should_fractionate=False
     )
 
     split_time_expanded_graph = time_expanded_graph.fractionate_graph()

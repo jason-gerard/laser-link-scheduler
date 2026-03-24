@@ -24,7 +24,7 @@ from src.topology.contact_plan import (
     IONContactPlanParser,
     IPNDContactPlanParser,
 )
-from src.utils import FileType
+from src.utils import FileType, ProgressCallback
 
 
 MAX_TIME = 2.5 * 60 * 60  # seconds
@@ -210,12 +210,16 @@ class LLSModel(BaseScheduler):
 
             return is_tx_good and is_rx_good and is_tx2_good and is_rx2_good
 
-    def schedule(self, teg: TimeExpandedGraph):
+    def schedule(
+        self,
+        teg: TimeExpandedGraph,
+        progress_callback: ProgressCallback | None = None,
+    ):
         self.teg = teg
-        self._solve()
+        self._solve(progress_callback)
         return self.teg
 
-    def _solve(self):
+    def _solve(self, progress_callback: ProgressCallback | None = None):
         # The contact plan topology here should be in the form of a list of tuples (state idx, i, j)
         contact_topology = []
         for k in range(self.teg.K):
@@ -223,6 +227,9 @@ class LLSModel(BaseScheduler):
                 for rx_oi_idx in range(self.teg.N):
                     if self.teg.graphs[k][tx_oi_idx][rx_oi_idx] >= 1:
                         contact_topology.append((k, tx_oi_idx, rx_oi_idx))
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("schedule", k + 1, self.teg.K + 4)
 
         print(
             f"Creating binary variables for {len(contact_topology)} number of edges"
@@ -599,8 +606,7 @@ if __name__ == "__main__":
     initial_teg = TimeExpandedGraph.from_contact_plan(
         contact_plan,
         should_fractionate=True,
-        should_reduce=True,
-    )
+    ).dag_reduction()
 
     solver = LLSModel(is_mip=False)
     scheduled_teg = solver.schedule(initial_teg)

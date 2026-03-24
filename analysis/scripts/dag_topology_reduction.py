@@ -14,8 +14,6 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from src.time_expanded_graph.time_expanded_graph import (  # noqa: E402
-    count_edges,
-    dag_reduction,
     TimeExpandedGraph,
 )
 from src.topology.contact_plan import IONContactPlanParser  # noqa: E402
@@ -35,19 +33,19 @@ def count_reduced_edges(experiment_name):
     contact_plan = contact_plan_parser.read(experiment_name)
 
     teg = TimeExpandedGraph.from_contact_plan(
-        contact_plan, should_fractionate=False, should_reduce=False
+        contact_plan, should_fractionate=False
     )
-    teg_count = count_edges(teg)
+    teg_count = teg.count_edges()
 
     frac_teg = teg.fractionate_graph()
-    frac_teg_count = count_edges(frac_teg)
+    frac_teg_count = frac_teg.count_edges()
 
-    reduced_teg = dag_reduction(frac_teg)
-    reduced_teg_count = count_edges(reduced_teg)
+    reduced_teg = frac_teg.dag_reduction()
+    reduced_teg_count = reduced_teg.count_edges()
 
     print(teg_count, frac_teg_count, reduced_teg_count)
     print(
-        f"Percent of edges removed = {100 * (1 - count_edges(reduced_teg) / count_edges(frac_teg)):.3f}%"
+        f"Percent of edges removed = {100 * (1 - reduced_teg.count_edges() / frac_teg.count_edges()):.3f}%"
     )
 
     return teg_count, frac_teg_count, reduced_teg_count

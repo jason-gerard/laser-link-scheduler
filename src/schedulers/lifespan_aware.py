@@ -1,5 +1,4 @@
 import numpy as np
-from tqdm import tqdm
 
 from src import constants
 from src.time_expanded_graph.time_expanded_graph import (
@@ -13,6 +12,7 @@ from src.topology.weights import (
     compute_effective_contact_time,
 )
 from src.models import *
+from src.utils import ProgressCallback
 
 from functools import total_ordering
 from dataclasses import dataclass
@@ -136,7 +136,11 @@ class LifespanAware(BaseScheduler):
 
     #     return new_node_lifespan
 
-    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
+    def schedule(
+        self,
+        teg: TimeExpandedGraph,
+        progress_callback: ProgressCallback | None = None,
+    ) -> TimeExpandedGraph:
         """
         Placeholder for lifespan schedule algorithm
         """
@@ -149,7 +153,7 @@ class LifespanAware(BaseScheduler):
         )
         weights_dct = np.zeros((teg.N, teg.N), dtype="float32")
 
-        for state in tqdm(range(teg.K)):
+        for state in range(teg.K):
             #
             # Description here
             #
@@ -189,6 +193,9 @@ class LifespanAware(BaseScheduler):
             weights_dct += disabled_contact_time(
                 teg.graphs[state], adj_matrix, teg.state_durations[state]
             )
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("schedule", state + 1, teg.K)
 
         return TimeExpandedGraph(
             graphs=scheduled_graphs,

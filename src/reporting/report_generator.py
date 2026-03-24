@@ -31,9 +31,7 @@ class Reporter:
         scheduler_name: str,
         duration: float,
         teg: TimeExpandedGraph,
-    ):
-        print(f"Elapsed time: {duration:.4f} seconds")
-
+    ) -> dict[str, str | float | int]:
         self.time_expanded_graph_data.append(
             {
                 "name": f"{scheduler_name.replace('_', '-')}_{experiment_name}",
@@ -95,17 +93,18 @@ class Reporter:
         ]
         self.reports.append(row)
 
-        print(f"Scheduled network capacity: {network_capacity:,}")
-        print(
-            f"Scheduled network wasted capacity: {network_wasted_capacity:,}"
-        )
+        return {
+            "scheduler_name": scheduler_name,
+            "experiment_name": experiment_name,
+            "duration": duration,
+            "network_capacity": network_capacity,
+            "network_wasted_capacity": network_wasted_capacity,
+            "wasted_buffer_capacity": wasted_buffer_capacity,
+            "jains_fairness_index": jains_fairness_index,
+            "scheduled_delay": scheduled_delay,
+        }
 
-        print(f"Wasted buffer capacity: {wasted_buffer_capacity:,}")
-
-        print(f"Jain's fairness index: {jains_fairness_index}")
-        print(f"Average delay: {scheduled_delay}")
-
-    def write_report(self):
+    def write_report(self) -> int:
         # Create CSV of runtimes, capacity, and wasted capacity
         basic_report_headers = [
             "Algorithm",
@@ -119,7 +118,6 @@ class Reporter:
         ]
 
         report_id = int(time.time())
-        print(f"Writing report ID {report_id} to disk")
 
         os.makedirs(constants.REPORTS_ROOT, exist_ok=True)
 
@@ -137,7 +135,7 @@ class Reporter:
             writer.writerows(self.reports)
 
         if not self.write_pkl:
-            return
+            return report_id
 
         # Save each teg as a pkl file to the reports directory so that it can be used for analysis later
         for teg_data_dict in self.time_expanded_graph_data:
@@ -146,3 +144,5 @@ class Reporter:
             )
             with open(pkl_path, "wb") as f:
                 pickle.dump(teg_data_dict["teg"], f)
+
+        return report_id

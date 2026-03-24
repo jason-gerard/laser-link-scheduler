@@ -39,8 +39,8 @@ contact_plan_parser = IONContactPlanParser()
 contact_plan = contact_plan_parser.read(EXPERIMENT_NAME)
 
 time_expanded_graph = TimeExpandedGraph.from_contact_plan(
-    contact_plan=contact_plan, should_fractionate=True, should_reduce=True
-)
+    contact_plan=contact_plan, should_fractionate=True
+).dag_reduction()
 
 possible_graphs = []
 # Tested with max k at 7 states, anything past that takes too long to run

@@ -1,5 +1,4 @@
 import numpy as np
-from tqdm import tqdm
 
 from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
@@ -8,10 +7,15 @@ from .base_scheduler import BaseScheduler
 from src.topology.weights import (
     disabled_contact_time,
 )
+from src.utils import ProgressCallback
 
 
 class FairContactPlan(BaseScheduler):
-    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
+    def schedule(
+        self,
+        teg: TimeExpandedGraph,
+        progress_callback: ProgressCallback | None = None,
+    ) -> TimeExpandedGraph:
         """
         Max-weight maximal matching
         Inputs: contact topology [P] of size K x N x N
@@ -31,7 +35,7 @@ class FairContactPlan(BaseScheduler):
 
         W_disabled_contact_time = np.zeros((teg.N, teg.N), dtype="int64")
 
-        for k in tqdm(range(teg.K)):
+        for k in range(teg.K):
             # Set the weights matrix equal to the current disabled contact time matrix
             weights[k] = W_disabled_contact_time
 
@@ -49,6 +53,9 @@ class FairContactPlan(BaseScheduler):
             W_disabled_contact_time += disabled_contact_time(
                 teg.graphs[k], L_k, teg.state_durations[k]
             )
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("schedule", k + 1, teg.K)
 
         return TimeExpandedGraph(
             graphs=scheduled_graphs,

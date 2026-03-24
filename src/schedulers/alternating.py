@@ -1,14 +1,18 @@
 import numpy as np
-from tqdm import tqdm
 from src.constants import RELAY_NODES
 from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
 from .base_scheduler import BaseScheduler
+from src.utils import ProgressCallback
 
 
 class AlternatingScheduler(BaseScheduler):
-    def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
+    def schedule(
+        self,
+        teg: TimeExpandedGraph,
+        progress_callback: ProgressCallback | None = None,
+    ) -> TimeExpandedGraph:
         """
         The AlternatingScheduler is a naive algorithm that takes alternating turns between intra-constellation and
         inter-constellation transmissions. That is in the first state it will only schedule intra-constellation
@@ -21,7 +25,7 @@ class AlternatingScheduler(BaseScheduler):
         scheduled_contacts = []
         weights = np.zeros((teg.K, teg.N, teg.N), dtype="int64")
 
-        for k in tqdm(range(teg.K)):
+        for k in range(teg.K):
             # Set the weights for the maximal matching based on the alternating current state (even or odd) and based
             # on the transmission type (inter- or intra-constellation).
             for tx_idx in range(teg.N):
@@ -56,6 +60,9 @@ class AlternatingScheduler(BaseScheduler):
             )
             scheduled_graphs[k] = L_k
             scheduled_contacts.append(contacts)
+            # For the percentage on running table
+            if progress_callback is not None:
+                progress_callback("schedule", k + 1, teg.K)
 
         return TimeExpandedGraph(
             graphs=scheduled_graphs,

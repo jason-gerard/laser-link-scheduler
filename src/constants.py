@@ -142,7 +142,7 @@ def get_num_lasers(node_id: str):
     elif node_id in RELAY_NODES:
         # return 1
         return 2
-    elif node_id in DESTINATION_NODES:
+    else:  # node_id in DESTINATION_NODES
         return 1
         # return 2
 
