@@ -1,17 +1,22 @@
 import os
 from pathlib import Path
-import pickle
 import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import gaussian_kde
+import typer
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from analysis.scripts.utils import (  # noqa: E402
+    AnalysisRunTable,
+    load_report_tegs,
+)
+from src.constants import PLOTS_ROOT  # noqa: E402
 from src.models.pointing_delay import SLEW_RATE  # noqa: E402
 from src.time_expanded_graph.time_expanded_graph import (  # noqa: E402
     TimeExpandedGraph,
@@ -23,274 +28,293 @@ plt.rcParams.update({"font.size": 26})
 plt.rc("legend", fontsize=22)
 plt.rcParams.update({"font.family": "Times New Roman"})
 
-tegs = []
+app = typer.Typer()
 
-# report_id = 1748770993
-report_id = 1739570900
-# report_id = 1748302518
-# report_id = 1748302577
-file_names = [
-    "lls_gs_mars_earth_scenario_inc_64.pkl",
-    "lls_gs_mars_earth_scenario_inc_60.pkl",
-]
-# file_name = "lls_mip_gs_mars_earth_scenario_inc_reduced_4.pkl"
-# file_name = "lls_gs_mars_earth_scenario_inc_reduced_4.pkl"
-for file_name in file_names:
-    with open(f"reports/{report_id}/{file_name}", "rb") as f:
-        teg: TimeExpandedGraph = pickle.load(f)
-        tegs.append(teg)
 
-all_pointing_delays = []
-all_pointing_delays_with_node = []
-all_link_acq_delays = []
+def load_tegs(report_id: int) -> list[tuple[str, str, TimeExpandedGraph]]:
+    return load_report_tegs(report_id)
 
-for teg in tegs:
-    delays_by_node = {node: [] for node in teg.nodes}
 
-    for k in range(teg.K):
-        for tx_oi_idx in range(teg.N):
-            for rx_oi_idx in range(teg.N):
-                if teg.graphs[k][tx_oi_idx][rx_oi_idx] == 1:
-                    res = compute_all_delays(
-                        tx_oi_idx,
-                        rx_oi_idx,
-                        teg.graphs[:k],
-                        teg.state_durations[k],
-                        teg.pos,
-                        teg.optical_interfaces_to_node,
-                        teg.nodes,
-                        SLEW_RATE,
-                    )
-                    if res is None:
-                        continue
-                    else:
-                        link_acq_delay = res[0]
-                        pd1, idx1, idx2, idx1_rx = res[1]
-                        pd2, idx2, idx1, idx2_rx = res[2]
-                        pd1 += 2
-                        pd2 += 2
+def run_analysis(report_id: int) -> None:
+    tegs = load_tegs(report_id)
+    rows = [
+        {
+            "algorithm": algorithm,
+            "scenario": scenario,
+            "nodes": str(len(teg.node_map)),
+            "states": str(teg.K),
+            "samples": "-",
+            "progress": "-",
+        }
+        for algorithm, scenario, teg in tegs
+    ]
+    columns = [
+        ("algorithm", {"no_wrap": True}),
+        ("scenario", {"no_wrap": True}),
+        ("nodes", {"justify": "right", "no_wrap": True}),
+        ("states", {"justify": "right", "no_wrap": True}),
+        ("samples", {"justify": "right", "no_wrap": True}),
+        ("progress", {"no_wrap": True}),
+    ]
 
-                    tx_node = teg.nodes[
-                        teg.optical_interfaces_to_node[tx_oi_idx]
-                    ]
-                    rx_node = teg.nodes[
-                        teg.optical_interfaces_to_node[rx_oi_idx]
-                    ]
+    with AnalysisRunTable(columns, rows) as run_table:
+        for idx, (algorithm, scenario, teg) in enumerate(tegs):
+            run_table.mark_progress(idx, 0)
+            active_edges = np.argwhere(teg.graphs == 1)
+            total_edges = len(active_edges)
+            update_interval = max(1, total_edges // 100) if total_edges else 1
+            sample_count = 0
+            all_pointing_delays = []
+            all_pointing_delays_with_node = []
+            all_link_acq_delays = []
 
-                    # state duration, pointing delay, link acq delay
-                    delays_by_node[tx_node].append(
-                        (teg.state_durations[k], pd1, link_acq_delay)
-                    )
-                    delays_by_node[rx_node].append(
-                        (teg.state_durations[k], pd2, link_acq_delay)
-                    )
+            for edge_idx, (k, tx_oi_idx, rx_oi_idx) in enumerate(active_edges):
+                res = compute_all_delays(
+                    int(tx_oi_idx),
+                    int(rx_oi_idx),
+                    teg.graphs[:k],
+                    int(teg.state_durations[k]),
+                    teg.pos,
+                    teg.optical_interfaces_to_node,
+                    teg.nodes,
+                    SLEW_RATE,
+                )
+                if res is None:
+                    continue
 
-                    all_pointing_delays.append(pd1)
-                    all_pointing_delays.append(pd2)
-                    if (
-                        teg.nodes[idx1].startswith("2")
-                        and teg.nodes[idx2].startswith("2")
-                        and teg.nodes[idx1_rx].startswith("2")
-                    ):
-                        pass
-                    else:
-                        all_pointing_delays_with_node.append(
-                            (
-                                teg.nodes[idx1],
-                                teg.nodes[idx2],
-                                teg.nodes[idx1_rx],
-                                pd1,
-                            )
+                link_acq_delay = res[0]
+                pd1, idx1, idx2, idx1_rx = res[1]
+                pd2, idx2, idx1, idx2_rx = res[2]
+                idx1 = int(idx1)
+                idx2 = int(idx2)
+                idx1_rx = int(idx1_rx)
+                idx2_rx = int(idx2_rx)
+                pd1 += 2
+                pd2 += 2
+
+                idx1_node_id = teg.nodes[idx1].id
+                idx2_node_id = teg.nodes[idx2].id
+                idx1_rx_node_id = teg.nodes[idx1_rx].id
+                idx2_rx_node_id = teg.nodes[idx2_rx].id
+
+                all_pointing_delays.append(pd1)
+                all_pointing_delays.append(pd2)
+                all_link_acq_delays.append(link_acq_delay)
+                sample_count += 2
+
+                if not (
+                    idx1_node_id.startswith("2")
+                    and idx2_node_id.startswith("2")
+                    and idx1_rx_node_id.startswith("2")
+                ):
+                    all_pointing_delays_with_node.append(
+                        (
+                            idx1_node_id,
+                            idx2_node_id,
+                            idx1_rx_node_id,
+                            pd1,
                         )
-                    if (
-                        teg.nodes[idx1].startswith("2")
-                        and teg.nodes[idx2].startswith("2")
-                        and teg.nodes[idx2_rx].startswith("2")
-                    ):
-                        pass
-                    else:
-                        all_pointing_delays_with_node.append(
-                            (
-                                teg.nodes[idx2],
-                                teg.nodes[idx1],
-                                teg.nodes[idx2_rx],
-                                pd2,
-                            )
+                    )
+                if not (
+                    idx1_node_id.startswith("2")
+                    and idx2_node_id.startswith("2")
+                    and idx2_rx_node_id.startswith("2")
+                ):
+                    all_pointing_delays_with_node.append(
+                        (
+                            idx2_node_id,
+                            idx1_node_id,
+                            idx2_rx_node_id,
+                            pd2,
                         )
-                    all_link_acq_delays.append(link_acq_delay)
+                    )
 
-    network_total_time = 0
-    network_total_eff_time = 0
-    retargeting_duty_cycle = {}
-    for node, delays in delays_by_node.items():
-        total_time = 0
-        total_eff_time = 0
-        for state_duration, pointing_delay, link_acq_delay in delays:
-            total_time += state_duration
-            total_eff_time += state_duration - (
-                pointing_delay + link_acq_delay
+                if (
+                    edge_idx + 1
+                ) % update_interval == 0 or edge_idx == total_edges - 1:
+                    run_table.update(idx, "samples", str(sample_count))
+                    run_table.mark_progress(
+                        idx,
+                        int(((edge_idx + 1) / max(total_edges, 1)) * 100),
+                    )
+
+            run_table.update(idx, "samples", str(sample_count))
+            run_table.mark_progress(idx, 100)
+
+            all_pointing_delays_np = np.array(all_pointing_delays)
+            all_link_acq_delays_np = np.array(all_link_acq_delays)
+            all_pointing_delays_with_node = sorted(
+                all_pointing_delays_with_node, key=lambda x: x[-1]
             )
 
-            network_total_time += state_duration
-            network_total_eff_time += state_duration - (
-                pointing_delay + link_acq_delay
+            all_pointing_delays_np = all_pointing_delays_np[
+                all_pointing_delays_np > 0
+            ]
+            all_link_acq_delays_np = all_link_acq_delays_np[
+                all_link_acq_delays_np > 0
+            ]
+
+            if (
+                len(all_pointing_delays_np) == 0
+                or len(all_link_acq_delays_np) == 0
+            ):
+                continue
+
+            kde_pointing = gaussian_kde(all_pointing_delays_np)
+            kde_acquisition = gaussian_kde(all_link_acq_delays_np)
+
+            x_pointing = np.linspace(0, all_pointing_delays_np.max() + 5, 200)
+            x_acquisition = np.linspace(
+                0, all_link_acq_delays_np.max() + 20, 200
             )
 
-        # proportion of time spent transmitting vs total time
-        retargeting_duty_cycle[node] = total_eff_time / total_time
-        # print(node, total_time, total_eff_time)
+            pointing_bins = np.linspace(
+                2, all_pointing_delays_np.max() + 5, 40
+            )
+            acquisition_bins = np.linspace(
+                2, all_link_acq_delays_np.max() + 20, 40
+            )
 
-    # pprint.pprint(retargeting_duty_cycle)
+            plt.figure(figsize=(10, 6))
 
-    network_retargeting_duty_cycle = (
-        network_total_eff_time / network_total_time
-    )
-    print("network retargeting duty cycle", network_retargeting_duty_cycle)
+            ax = plt.gca()
+            ax.set_axisbelow(True)
 
-all_pointing_delays = np.array(all_pointing_delays)
-all_link_acq_delays = np.array(all_link_acq_delays)
+            plt.hist(
+                all_pointing_delays_np,
+                bins=pointing_bins,
+                density=True,
+                alpha=0.4,
+                color="blue",
+                label="Pointing Delay Histogram",
+            )
+            plt.hist(
+                all_link_acq_delays_np,
+                bins=acquisition_bins,
+                density=True,
+                alpha=0.4,
+                color="orange",
+                label="Acquisition Delay Histogram",
+            )
 
-all_pointing_delays_with_node = sorted(
-    all_pointing_delays_with_node, key=lambda x: x[-1]
-)
-# pprint.pprint(all_pointing_delays_with_node)
+            plt.plot(
+                x_pointing,
+                kde_pointing(x_pointing),
+                label="Pointing Delay PDF",
+                color="blue",
+            )
+            plt.plot(
+                x_acquisition,
+                kde_acquisition(x_acquisition),
+                label="Acquisition Delay PDF",
+                color="orange",
+            )
 
-all_pointing_delays = all_pointing_delays[all_pointing_delays > 0]
-all_link_acq_delays = all_link_acq_delays[all_link_acq_delays > 0]
+            plt.xlim(-0.25, 250)
+            plt.xticks(np.arange(0, 251, 25))
 
-kde_pointing = gaussian_kde(all_pointing_delays)
-kde_acquisition = gaussian_kde(all_link_acq_delays)
+            plt.ylim(0, 0.18)
+            plt.yticks(np.arange(0, 0.17, 0.02))
 
-# Create an x-axis range for each
-x_pointing = np.linspace(0, all_pointing_delays.max() + 5, 200)
-x_acquisition = np.linspace(0, all_link_acq_delays.max() + 20, 200)
+            plt.xlabel("Delay (seconds)")
+            plt.ylabel("Probability Density")
+            plt.grid(linestyle="-", color="0.95")
+            plt.legend()
 
-pointing_bins = np.linspace(2, all_pointing_delays.max() + 5, 40)
-acquisition_bins = np.linspace(2, all_link_acq_delays.max() + 20, 40)
+            bbox = dict(boxstyle="round", fc="0.9")
+            arrowprops = dict(
+                arrowstyle="->",
+                connectionstyle="angle,angleA=0,angleB=90,rad=10",
+            )
 
-plt.figure(figsize=(10, 6))
+            plt.annotate(
+                "IPN-to-IPN",
+                fontsize=20,
+                xy=(3.0, 0.135),
+                xytext=(4.0, 0.16),
+                textcoords="data",
+                bbox=bbox,
+                arrowprops=arrowprops,
+                ha="left",
+                va="bottom",
+            )
+            plt.annotate(
+                "Ground/LEO-to-IPN",
+                fontsize=20,
+                xy=(37, 0.02),
+                xytext=(50, 0.13),
+                textcoords="data",
+                bbox=bbox,
+                arrowprops=arrowprops,
+                ha="center",
+                va="bottom",
+            )
+            plt.annotate(
+                "LEO-to-LEO",
+                fontsize=20,
+                xy=(85, 0.015),
+                xytext=(85, 0.05),
+                textcoords="data",
+                bbox=bbox,
+                arrowprops=arrowprops,
+                ha="center",
+                va="bottom",
+            )
+            plt.annotate(
+                "LEO Acq",
+                fontsize=20,
+                xy=(48.0, 0.085),
+                xytext=(46.0, 0.1),
+                textcoords="data",
+                bbox=bbox,
+                arrowprops=arrowprops,
+                ha="left",
+                va="bottom",
+            )
+            plt.annotate(
+                "IPN Acq",
+                fontsize=20,
+                xy=(210.0, 0.012),
+                xytext=(210.0, 0.04),
+                textcoords="data",
+                bbox=bbox,
+                arrowprops=arrowprops,
+                ha="center",
+                va="bottom",
+            )
 
-ax = plt.gca()
-ax.set_axisbelow(True)
+            plt.tight_layout()
 
-plt.hist(
-    all_pointing_delays,
-    bins=pointing_bins,
-    density=True,
-    alpha=0.4,
-    color="blue",
-    label="Pointing Delay Histogram",
-)
-plt.hist(
-    all_link_acq_delays,
-    bins=acquisition_bins,
-    density=True,
-    alpha=0.4,
-    color="orange",
-    label="Acquisition Delay Histogram",
-)
+            plot_dir = os.path.join(PLOTS_ROOT, scenario, algorithm)
+            os.makedirs(plot_dir, exist_ok=True)
+            file_name = "retargeting_delay_pdf".replace(" ", "_").replace(
+                "/", "_"
+            )
+            plt.savefig(
+                os.path.join(plot_dir, f"{file_name}.pdf"),
+                format="pdf",
+                bbox_inches="tight",
+            )
+            plt.savefig(
+                os.path.join(plot_dir, f"{file_name}.png"),
+                format="png",
+                bbox_inches="tight",
+                dpi=300,
+            )
+            plt.close()
 
-plt.plot(
-    x_pointing,
-    kde_pointing(x_pointing),
-    label="Pointing Delay PDF",
-    color="blue",
-)
-plt.plot(
-    x_acquisition,
-    kde_acquisition(x_acquisition),
-    label="Acquisition Delay PDF",
-    color="orange",
-)
 
-plt.xlim(-0.25, 250)
-plt.xticks(np.arange(0, 251, 25))
+@app.command()
+def main(
+    report_id: int = typer.Option(
+        ...,
+        "--report-id",
+        "-r",
+        help="Report identifier used to read TEGs from reports/.",
+    ),
+) -> None:
+    run_analysis(report_id)
 
-plt.ylim(0, 0.18)
-plt.yticks(np.arange(0, 0.17, 0.02))
 
-# plt.title('Probability Distribution of Pointing and Acquisition Delays')
-plt.xlabel("Delay (seconds)")
-plt.ylabel("Probability Density")
-plt.grid(linestyle="-", color="0.95")
-plt.legend()
-
-bbox = dict(boxstyle="round", fc="0.9")
-arrowprops = dict(
-    arrowstyle="->", connectionstyle="angle,angleA=0,angleB=90,rad=10"
-)
-
-plt.annotate(
-    "IPN-to-IPN",
-    fontsize=20,
-    xy=(3.0, 0.135),
-    xytext=(4.0, 0.16),
-    textcoords="data",
-    bbox=bbox,
-    arrowprops=arrowprops,
-    ha="left",
-    va="bottom",
-)
-plt.annotate(
-    "Ground/LEO-to-IPN",
-    fontsize=20,
-    xy=(37, 0.02),
-    xytext=(50, 0.13),
-    textcoords="data",
-    bbox=bbox,
-    arrowprops=arrowprops,
-    ha="center",
-    va="bottom",
-)
-plt.annotate(
-    "LEO-to-LEO",
-    fontsize=20,
-    xy=(85, 0.015),
-    xytext=(85, 0.05),
-    textcoords="data",
-    bbox=bbox,
-    arrowprops=arrowprops,
-    ha="center",
-    va="bottom",
-)
-
-plt.annotate(
-    "LEO Acq",
-    fontsize=20,
-    xy=(48.0, 0.085),
-    xytext=(46.0, 0.1),
-    textcoords="data",
-    bbox=bbox,
-    arrowprops=arrowprops,
-    ha="left",
-    va="bottom",
-)
-
-plt.annotate(
-    "IPN Acq",
-    fontsize=20,
-    xy=(210.0, 0.012),
-    xytext=(210.0, 0.04),
-    textcoords="data",
-    bbox=bbox,
-    arrowprops=arrowprops,
-    ha="center",
-    va="bottom",
-)
-
-plt.tight_layout()
-
-file_name = "retargeting delay pdf".replace(" ", "_").replace("/", "_")
-plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"),
-    format="pdf",
-    bbox_inches="tight",
-)
-plt.savefig(
-    os.path.join("analysis", f"{file_name}.png"),
-    format="png",
-    bbox_inches="tight",
-    dpi=300,
-)
-
-plt.show()
+if __name__ == "__main__":
+    app()

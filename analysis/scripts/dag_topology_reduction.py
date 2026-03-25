@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import networkx as nx
 import numpy as np
+import typer
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -17,11 +18,32 @@ from src.time_expanded_graph.time_expanded_graph import (  # noqa: E402
     TimeExpandedGraph,
 )
 from src.topology.contact_plan import IONContactPlanParser  # noqa: E402
+from analysis.scripts.utils import AnalysisRunTable  # noqa: E402
 
 
 SHOW_FIGS = False
 
 EXPERIMENT_NAME = "mars_earth_xs_scenario"
+DEFAULT_EXPERIMENT_NAMES = [
+    "gs_mars_earth_scenario_inc_4",
+    "gs_mars_earth_scenario_inc_8",
+    "gs_mars_earth_scenario_inc_12",
+    "gs_mars_earth_scenario_inc_16",
+    "gs_mars_earth_scenario_inc_20",
+    "gs_mars_earth_scenario_inc_24",
+    "gs_mars_earth_scenario_inc_28",
+    "gs_mars_earth_scenario_inc_32",
+    "gs_mars_earth_scenario_inc_36",
+    "gs_mars_earth_scenario_inc_40",
+    "gs_mars_earth_scenario_inc_44",
+    "gs_mars_earth_scenario_inc_48",
+    "gs_mars_earth_scenario_inc_52",
+    "gs_mars_earth_scenario_inc_56",
+    "gs_mars_earth_scenario_inc_60",
+    "gs_mars_earth_scenario_inc_64",
+]
+
+app = typer.Typer()
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
@@ -79,55 +101,51 @@ def visualize(teg, name):
         A.draw(f"{name}.png", args="-Gnodesep=0.01 -Gfont_size=1", prog="dot")
 
 
-if __name__ == "__main__":
-    # EXPERIMENT_NAMES = [
-    #     "gs_mars_earth_xs_scenario",
-    #     "gs_mars_earth_s_scenario",
-    #     "gs_mars_earth_m_scenario",
-    #     "gs_mars_earth_l_scenario",
-    #     "gs_mars_earth_xl_scenario",
-    # ]
-    #
-    # x = [
-    #     "X-Small",
-    #     "Small",
-    #     "Medium",
-    #     "Large",
-    #     "X-Large",
-    # ]
-
-    EXPERIMENT_NAMES = [
-        "gs_mars_earth_scenario_inc_4",
-        "gs_mars_earth_scenario_inc_8",
-        "gs_mars_earth_scenario_inc_12",
-        "gs_mars_earth_scenario_inc_16",
-        "gs_mars_earth_scenario_inc_20",
-        "gs_mars_earth_scenario_inc_24",
-        "gs_mars_earth_scenario_inc_28",
-        "gs_mars_earth_scenario_inc_32",
-        "gs_mars_earth_scenario_inc_36",
-        "gs_mars_earth_scenario_inc_40",
-        "gs_mars_earth_scenario_inc_44",
-        "gs_mars_earth_scenario_inc_48",
-        "gs_mars_earth_scenario_inc_52",
-        "gs_mars_earth_scenario_inc_56",
-        "gs_mars_earth_scenario_inc_60",
-        "gs_mars_earth_scenario_inc_64",
-    ]
-
-    x = [int(name.split("_")[-1]) for name in EXPERIMENT_NAMES]
+@app.command()
+def main(
+    experiment_names: list[str] = typer.Option(
+        DEFAULT_EXPERIMENT_NAMES,
+        "--experiment-name",
+        "-e",
+        help="Experiment name to analyze. Pass multiple times for multiple experiments.",
+    ),
+) -> None:
+    x = [int(name.split("_")[-1]) for name in experiment_names]
 
     teg_counts = []
     frac_teg_counts = []
     reduced_teg_counts = []
-    for name in EXPERIMENT_NAMES:
-        print(name)
-        teg_count, frac_teg_count, reduced_teg_count = count_reduced_edges(
-            name
-        )
-        teg_counts.append(teg_count)
-        frac_teg_counts.append(frac_teg_count)
-        reduced_teg_counts.append(reduced_teg_count)
+    rows = [
+        {
+            "experiment": name,
+            "teg": "-",
+            "fractionated": "-",
+            "reduced": "-",
+            "progress": "-",
+        }
+        for name in experiment_names
+    ]
+    columns = [
+        ("experiment", {"no_wrap": True}),
+        ("teg", {"justify": "right", "no_wrap": True}),
+        ("fractionated", {"justify": "right", "no_wrap": True}),
+        ("reduced", {"justify": "right", "no_wrap": True}),
+        ("progress", {"no_wrap": True}),
+    ]
+
+    with AnalysisRunTable(columns, rows) as run_table:
+        for idx, name in enumerate(experiment_names):
+            run_table.mark_progress(idx, 0)
+            teg_count, frac_teg_count, reduced_teg_count = count_reduced_edges(
+                name
+            )
+            teg_counts.append(teg_count)
+            frac_teg_counts.append(frac_teg_count)
+            reduced_teg_counts.append(reduced_teg_count)
+            run_table.update(idx, "teg", str(teg_count))
+            run_table.update(idx, "fractionated", str(frac_teg_count))
+            run_table.update(idx, "reduced", str(reduced_teg_count))
+            run_table.mark_progress(idx, 100)
 
     fig = plt.figure(figsize=(8, 4))
     ax1 = fig.add_subplot()
@@ -188,3 +206,7 @@ if __name__ == "__main__":
         bbox_inches="tight",
         dpi=300,
     )
+
+
+if __name__ == "__main__":
+    app()

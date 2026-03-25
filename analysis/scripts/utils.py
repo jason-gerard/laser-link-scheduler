@@ -2,16 +2,22 @@ import math
 import os
 from pathlib import Path
 import pickle
-import re
 import sys
 from typing import Any
 import numpy as np
 import pandas as pd
+from rich.live import Live
+from rich.table import Table
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
-from src.constants import OPTConfig, MLConfig, DESTINATION_NODES
+from src.constants import (
+    OPTConfig,
+    MLConfig,
+    DESTINATION_NODES,
+    REPORTS_ROOT,
+)
 from src.models import (
     mission_lifetime,
     generating_power,
@@ -22,6 +28,90 @@ from src.models import (
 )
 from src.topology.weights import compute_effective_contact_time
 from src.time_expanded_graph import TimeExpandedGraph
+
+
+class AnalysisRunTable:
+    def __init__(
+        self,
+        columns: list[tuple[str, dict[str, Any] | None]],
+        rows: list[dict[str, str]],
+        refresh_per_second: int = 8,
+    ) -> None:
+        self.columns = columns
+        self.rows = rows
+        self.refresh_per_second = refresh_per_second
+        self.live: Live | None = None
+
+    def build_table(self) -> Table:
+        table = Table(expand=False)
+        for name, options in self.columns:
+            table.add_column(name, **(options or {}))
+        for row in self.rows:
+            table.add_row(
+                *[row.get(column_name, "") for column_name, _ in self.columns]
+            )
+        return table
+
+    def __enter__(self) -> "AnalysisRunTable":
+        self.live = Live(
+            self.build_table(),
+            refresh_per_second=self.refresh_per_second,
+            transient=False,
+        )
+        self.live.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        if self.live is not None:
+            self.live.__exit__(exc_type, exc, tb)
+            self.live = None
+
+    def update(self, row_idx: int, key: str, value: str) -> None:
+        self.rows[row_idx][key] = value
+        if self.live is not None:
+            self.live.update(self.build_table(), refresh=True)
+
+    def mark_progress(self, row_idx: int, progress: int) -> None:
+        self.update(row_idx, "progress", f"{progress}%")
+
+
+def normalize_algorithm_name(name: str) -> str:
+    return name.replace("-", "_")
+
+
+def load_report_tegs(
+    report_id: int,
+    allowed_algorithms: list[str] | None = None,
+) -> list[tuple[str, str, TimeExpandedGraph]]:
+    tegs = []
+    report_dir = os.path.join(REPORTS_ROOT, str(report_id))
+    normalized_allowed_algorithms = (
+        {normalize_algorithm_name(name) for name in allowed_algorithms}
+        if allowed_algorithms is not None
+        else None
+    )
+
+    for file_name in os.listdir(report_dir):
+        if not file_name.endswith(".pkl"):
+            continue
+
+        stem = file_name.split(".")[0]
+        parts = stem.split("_")
+        algorithm = parts[0]
+        scenario = "_".join(parts[1:])
+
+        if (
+            normalized_allowed_algorithms is not None
+            and normalize_algorithm_name(algorithm)
+            not in normalized_allowed_algorithms
+        ):
+            continue
+
+        with open(os.path.join(report_dir, file_name), "rb") as f:
+            teg: TimeExpandedGraph = pickle.load(f)
+        tegs.append((algorithm, scenario, teg))
+
+    return tegs
 
 
 def compute_state_metrics_aggregated(

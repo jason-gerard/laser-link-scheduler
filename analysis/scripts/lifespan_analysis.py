@@ -1,25 +1,25 @@
 import math
 import os
 from pathlib import Path
-import pickle
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import typer
-from rich import print
-from rich.live import Live
-from rich.table import Table
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from analysis.scripts.utils import compute_state_metrics_aggregated
+from analysis.scripts.utils import (
+    AnalysisRunTable,
+    compute_state_metrics_aggregated,
+    load_report_tegs,
+)
 from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
-from src.constants import DESTINATION_NODES, REPORTS_ROOT, PLOTS_ROOT
+from src.constants import DESTINATION_NODES, PLOTS_ROOT
 from src.topology.weights import EFFECTIVE_CONTACT_TIME_CACHE, COORDINATE_CACHE
 
 plt.rcParams.update({"font.size": 18})
@@ -37,25 +37,10 @@ app = typer.Typer()
 
 
 def load_tegs(report_id: int) -> list[tuple[str, str, TimeExpandedGraph]]:
-    tegs = []
-    report_dir = os.path.join(REPORTS_ROOT, str(report_id))
-
-    for file_name in os.listdir(report_dir):
-        if not file_name.endswith(".pkl"):
-            continue
-
-        file_path = os.path.join(report_dir, file_name)
-        match = file_name.split(".")[0].split("_")
-        algorithm = match[0]
-        scenario = "_".join(match[1:])
-        if algorithm not in [alg[0] for alg in algorithms]:
-            continue
-
-        with open(file_path, "rb") as f:
-            teg: TimeExpandedGraph = pickle.load(f)
-        tegs.append((algorithm, scenario, teg))
-
-    return tegs
+    return load_report_tegs(
+        report_id,
+        allowed_algorithms=[alg[0] for alg in algorithms],
+    )
 
 
 def run_analysis(report_id: int) -> None:
@@ -71,27 +56,17 @@ def run_analysis(report_id: int) -> None:
         for algorithm, scenario, teg in tegs
     ]
 
-    def build_table() -> Table:
-        table = Table(expand=False)
-        table.add_column("algorithm", no_wrap=True)
-        table.add_column("scenario", no_wrap=True)
-        table.add_column("nodes", justify="right", no_wrap=True)
-        table.add_column("states", justify="right", no_wrap=True)
-        table.add_column("progress", no_wrap=True)
-        for row in rows:
-            table.add_row(
-                row["algorithm"],
-                row["scenario"],
-                row["nodes"],
-                row["states"],
-                row["progress"],
-            )
-        return table
+    columns = [
+        ("algorithm", {"no_wrap": True}),
+        ("scenario", {"no_wrap": True}),
+        ("nodes", {"justify": "right", "no_wrap": True}),
+        ("states", {"justify": "right", "no_wrap": True}),
+        ("progress", {"no_wrap": True}),
+    ]
 
-    with Live(build_table(), refresh_per_second=8, transient=False) as live:
+    with AnalysisRunTable(columns, rows) as run_table:
         for idx, (algorithm, scenario, teg) in enumerate(tegs):
-            rows[idx]["progress"] = "0%"
-            live.update(build_table(), refresh=True)
+            run_table.mark_progress(idx, 0)
 
             EFFECTIVE_CONTACT_TIME_CACHE.clear()
             COORDINATE_CACHE.clear()
@@ -112,10 +87,10 @@ def run_analysis(report_id: int) -> None:
                 accumulated_time += teg.state_durations[state]
 
                 if (state + 1) % update_interval == 0 or state == teg.K - 1:
-                    rows[idx]["progress"] = (
-                        f"{int(((state + 1) / teg.K) * 100)}%"
+                    run_table.mark_progress(
+                        idx,
+                        int(((state + 1) / teg.K) * 100),
                     )
-                    live.update(build_table(), refresh=True)
 
             total_metrics_df = [
                 state_df.groupby("tx_node_id", as_index=False).agg(
@@ -167,8 +142,7 @@ def run_analysis(report_id: int) -> None:
             )
             plt.close()
 
-            rows[idx]["progress"] = "100%"
-            live.update(build_table(), refresh=True)
+            run_table.mark_progress(idx, 100)
         # If we want to localize the results in the report instance.
         # plt.savefig(
         #     f"{PLOTS_ROOT}/{report_id}/energy_metrics_{algorithm}_{scenario}.png"

@@ -1,18 +1,22 @@
 import math
 import os
 from pathlib import Path
-import pickle
-import re
 import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
+import typer
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from analysis.scripts.utils import (  # noqa: E402
+    AnalysisRunTable,
+    load_report_tegs,
+)
+from src.constants import PLOTS_ROOT  # noqa: E402
 from src.time_expanded_graph.time_expanded_graph import (  # noqa: E402
     TimeExpandedGraph,
 )
@@ -23,178 +27,151 @@ plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
 plt.rcParams.update({"font.family": "Times New Roman"})
 
-algorithms = ["lls", "lls_pat_unaware", "lls_mip", "fcp"]
+ALGORITHMS = ["lls", "lls_pat_unaware", "lls_mip", "fcp"]
 
-report_id = 1748949730
-tegs = []
+app = typer.Typer()
 
-pattern = re.compile(r"^([a-zA-Z_]+)_gs_.*?_(\d+)\.pkl$")
 
-report_dir = os.path.join("reports", str(report_id))
-for file_name in os.listdir(report_dir):
-    if file_name.endswith(".pkl"):
-        file_path = os.path.join(report_dir, file_name)
+def load_tegs(report_id: int) -> list[tuple[str, str, TimeExpandedGraph]]:
+    return load_report_tegs(report_id, allowed_algorithms=ALGORITHMS)
 
-        match = pattern.match(file_name)
-        if match is None:
-            continue
-        algorithm = match.group(1)
-        number = int(match.group(2))
 
-        if algorithm not in algorithms:
-            continue
-
-        with open(file_path, "rb") as f:
-            teg: TimeExpandedGraph = pickle.load(f)
-            tegs.append((algorithm, number, teg))
-
-all_pointing_delays = []
-all_link_acq_delays = []
-
-retargeting_duty_cycles = []
-
-for algorithm, node_count, teg in tegs:
-    print(f"Processing {algorithm} node count {node_count}")
-    delays_by_node = {node: [] for node in teg.nodes}
-
-    for k in range(teg.K):
-        for tx_oi_idx in range(teg.N):
-            for rx_oi_idx in range(teg.N):
-                if teg.graphs[k][tx_oi_idx][rx_oi_idx] == 1:
-                    pointing_delay, link_acq_delay = compute_delays(
-                        tx_oi_idx,
-                        rx_oi_idx,
-                        teg.graphs[:k],
-                        teg.state_durations[k],
-                        teg.pos,
-                        teg.optical_interfaces_to_node,
-                        teg.nodes,
-                    )
-
-                    tx_node = teg.nodes[
-                        teg.optical_interfaces_to_node[tx_oi_idx]
-                    ]
-                    rx_node = teg.nodes[
-                        teg.optical_interfaces_to_node[rx_oi_idx]
-                    ]
-
-                    # state duration, pointing delay, link acq delay
-                    delays_by_node[tx_node].append(
-                        (
-                            teg.state_durations[k],
-                            pointing_delay,
-                            link_acq_delay,
-                        )
-                    )
-                    delays_by_node[rx_node].append(
-                        (
-                            teg.state_durations[k],
-                            pointing_delay,
-                            link_acq_delay,
-                        )
-                    )
-
-                    all_pointing_delays.append(pointing_delay)
-                    all_link_acq_delays.append(link_acq_delay)
-
-    network_total_time = 0
-    network_total_eff_time = 0
-    retargeting_duty_cycle = {}
-    for node, delays in delays_by_node.items():
-        total_time = 0
-        total_eff_time = 0
-        for state_duration, pointing_delay, link_acq_delay in delays:
-            total_time += state_duration
-            total_eff_time += state_duration - (
-                pointing_delay + link_acq_delay
-            )
-
-            network_total_time += state_duration
-            network_total_eff_time += state_duration - (
-                pointing_delay + link_acq_delay
-            )
-
-        # proportion of time spent transmitting vs total time
-        retargeting_duty_cycle[node] = total_eff_time / total_time
-        # print(node, total_time, total_eff_time)
-
-    # pprint.pprint(retargeting_duty_cycle)
-
-    network_retargeting_duty_cycle = (
-        network_total_eff_time / network_total_time
-    )
-    print("network retargeting duty cycle", network_retargeting_duty_cycle)
-    retargeting_duty_cycles.append(
-        (algorithm, node_count, network_retargeting_duty_cycle)
-    )
-
-algorithms = [
-    ("lls", "LLS_Greedy"),
-    ("lls_pat_unaware", "LLS_Greedy (ZRK)"),
-    ("lls_mip", "LLS_MIP"),
-    ("fcp", "FCP"),
-]
-
-# X-axis ticks
-x = sorted(
-    list(set([node_count for _, node_count, _ in retargeting_duty_cycles]))
-)
-
-# Plot setup
-fig = plt.figure()
-ax = fig.add_subplot(111)
-
-# Plot for each algorithm
-for algorithm, display_name in algorithms:
-    y = [
-        duty
-        for (alg, node_count, duty) in retargeting_duty_cycles
-        if alg == algorithm
+def run_analysis(report_id: int) -> None:
+    tegs = load_tegs(report_id)
+    rows = [
+        {
+            "algorithm": algorithm,
+            "scenario": scenario,
+            "nodes": str(len(teg.node_map)),
+            "states": str(teg.K),
+            "duty_cycle": "-",
+            "progress": "-",
+        }
+        for algorithm, scenario, teg in tegs
     ]
-    x_vals = [
-        node_count
-        for (alg, node_count, duty) in retargeting_duty_cycles
-        if alg == algorithm
+    columns = [
+        ("algorithm", {"no_wrap": True}),
+        ("scenario", {"no_wrap": True}),
+        ("nodes", {"justify": "right", "no_wrap": True}),
+        ("states", {"justify": "right", "no_wrap": True}),
+        ("duty_cycle", {"justify": "right", "no_wrap": True}),
+        ("progress", {"no_wrap": True}),
     ]
 
-    # Sort by x for proper line plotting
-    sorted_pairs = sorted(zip(x_vals, y))
-    x_sorted, y_sorted = zip(*sorted_pairs) if sorted_pairs else ([], [])
+    with AnalysisRunTable(columns, rows) as run_table:
+        for idx, (algorithm, scenario, teg) in enumerate(tegs):
+            run_table.mark_progress(idx, 0)
+            delays_by_node = {node: [] for node in teg.nodes}
+            active_edges = np.argwhere(teg.graphs == 1)
+            total_edges = len(active_edges)
+            update_interval = max(1, total_edges // 100) if total_edges else 1
 
-    if algorithm == "lls_mip":
-        plt.plot(
-            x_sorted,
-            y_sorted,
-            linestyle="dotted",
-            label=display_name,
-            linewidth=3.5,
-        )
-    else:
-        plt.plot(x_sorted, y_sorted, label=display_name, linewidth=2.5)
+            for edge_idx, (k, tx_oi_idx, rx_oi_idx) in enumerate(active_edges):
+                pointing_delay, link_acq_delay = compute_delays(
+                    int(tx_oi_idx),
+                    int(rx_oi_idx),
+                    teg.graphs[:k],
+                    int(teg.state_durations[k]),
+                    teg.pos,
+                    teg.optical_interfaces_to_node,
+                    teg.nodes,
+                )
 
-# Labels and formatting
-plt.ylabel("Retargeting Duty Cycle [%]")
-plt.xlabel("Source/Relay Node Count")
-plt.ylim(0.6, 1.0)
-plt.yticks(np.arange(0.6, 1.01, 0.05))
-plt.grid(linestyle="-", color="0.95")
-plt.legend(loc="lower right")
+                tx_node = teg.nodes[
+                    teg.optical_interfaces_to_node[int(tx_oi_idx)]
+                ]
+                rx_node = teg.nodes[
+                    teg.optical_interfaces_to_node[int(rx_oi_idx)]
+                ]
+                edge_data = (
+                    int(teg.state_durations[k]),
+                    pointing_delay,
+                    link_acq_delay,
+                )
+                delays_by_node[tx_node].append(edge_data)
+                delays_by_node[rx_node].append(edge_data)
 
-# Custom X-axis ticks and labels
-ax.set_xticks([i for i in x if i % 8 == 0])
-ax.set_xticklabels([f"{i}/{math.ceil(i / 16)}" for i in x if i % 8 == 0])
+                if (
+                    edge_idx + 1
+                ) % update_interval == 0 or edge_idx == total_edges - 1:
+                    run_table.mark_progress(
+                        idx,
+                        int(((edge_idx + 1) / max(total_edges, 1)) * 100),
+                    )
 
-# Save the figure
-file_name = "network_retargeting_duty_cycle"
-os.makedirs("analysis", exist_ok=True)
-plt.savefig(
-    os.path.join("analysis", f"{file_name}.pdf"),
-    format="pdf",
-    bbox_inches="tight",
-)
-plt.savefig(
-    os.path.join("analysis", f"{file_name}.png"),
-    format="png",
-    bbox_inches="tight",
-    dpi=300,
-)
+            network_total_time = 0.0
+            network_total_eff_time = 0.0
+            for node_delays in delays_by_node.values():
+                total_time = 0.0
+                total_eff_time = 0.0
+                for (
+                    state_duration,
+                    pointing_delay,
+                    link_acq_delay,
+                ) in node_delays:
+                    total_time += state_duration
+                    total_eff_time += state_duration - (
+                        pointing_delay + link_acq_delay
+                    )
+                    network_total_time += state_duration
+                    network_total_eff_time += state_duration - (
+                        pointing_delay + link_acq_delay
+                    )
+
+                if total_time == 0:
+                    continue
+
+            network_retargeting_duty_cycle = (
+                network_total_eff_time / network_total_time
+                if network_total_time
+                else 0.0
+            )
+            run_table.update(
+                idx,
+                "duty_cycle",
+                f"{network_retargeting_duty_cycle:.4f}",
+            )
+            run_table.mark_progress(idx, 100)
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.bar(
+                [algorithm],
+                [network_retargeting_duty_cycle],
+                width=0.6,
+            )
+            plt.ylabel("Retargeting Duty Cycle [%]")
+            plt.ylim(0.0, 1.0)
+            plt.grid(linestyle="-", color="0.95", axis="y")
+            plt.tight_layout()
+
+            plot_dir = os.path.join(PLOTS_ROOT, scenario, algorithm)
+            os.makedirs(plot_dir, exist_ok=True)
+            file_name = "network_retargeting_duty_cycle"
+            plt.savefig(
+                os.path.join(plot_dir, f"{file_name}.pdf"),
+                format="pdf",
+                bbox_inches="tight",
+            )
+            plt.savefig(
+                os.path.join(plot_dir, f"{file_name}.png"),
+                format="png",
+                bbox_inches="tight",
+                dpi=300,
+            )
+            plt.close(fig)
+
+
+@app.command()
+def main(
+    report_id: int = typer.Option(
+        ...,
+        "--report-id",
+        "-r",
+        help="Report identifier used to read TEGs from reports/.",
+    ),
+) -> None:
+    run_analysis(report_id)
+
+
+if __name__ == "__main__":
+    app()
