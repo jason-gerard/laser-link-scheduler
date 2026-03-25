@@ -184,7 +184,7 @@ def run_analysis(report_id: int) -> None:
                 all_pointing_delays_np,
                 bins=pointing_bins,
                 density=True,
-                alpha=0.4,
+                ALPHA=0.4,
                 color="blue",
                 label="Pointing Delay Histogram",
             )
@@ -192,7 +192,7 @@ def run_analysis(report_id: int) -> None:
                 all_link_acq_delays_np,
                 bins=acquisition_bins,
                 density=True,
-                alpha=0.4,
+                ALPHA=0.4,
                 color="orange",
                 label="Acquisition Delay Histogram",
             )

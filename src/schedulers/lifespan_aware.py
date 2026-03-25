@@ -1,6 +1,13 @@
 import numpy as np
 
-from src import constants
+from src.constants import (
+    MLConfig,
+    OPTConfig,
+    ALPHA,
+    DESTINATION_NODES,
+    RELAY_NODES,
+    SOURCE_NODES,
+)
 from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
     Node,
@@ -16,9 +23,6 @@ from src.utils import ProgressCallback
 
 from functools import total_ordering
 from dataclasses import dataclass
-
-MLcfg = constants.MLConfig
-OPTcfg = constants.OPTConfig
 
 
 @dataclass
@@ -48,12 +52,12 @@ class LifespanAware(BaseScheduler):
         self, node_id: str, max_state_duration: int
     ) -> NodeLifespan:
         # TODO: Implement with bit_rate() from models, to obtain a dinamic bit_rate
-        # node_bit_rate = OPTcfg.BIT_RATE
+        # node_bit_rate = OPTConfig.BIT_RATE
 
-        initial_power = MLcfg.get_initial_power(node_id)
-        decay_constant = MLcfg.DECAY_RATE
+        initial_power = MLConfig.get_initial_power(node_id)
+        decay_constant = MLConfig.DECAY_RATE
         minimum_power = transmission_energy(
-            OPTcfg.AVG_TRANSMISSION_POWER, max_state_duration
+            OPTConfig.AVG_TRANSMISSION_POWER, max_state_duration
         )
 
         return NodeLifespan(
@@ -76,49 +80,56 @@ class LifespanAware(BaseScheduler):
         state: int,
         previous_schedule_contact_topology: np.ndarray,
         teg: TimeExpandedGraph,
+        contact_topology_k: np.ndarray,
         node_lifespans: NetworkLifespan,
+        accumulated_time: int,
+        should_bypass_retargeting_time: bool,
     ) -> np.ndarray:
         weight = np.zeros((teg.N, teg.N), dtype="float32")
 
-        for tx_oi_idx in range(teg.N):
-            for rx_oi_idx in range(teg.N):
-                # Skip if not contact
-                if not teg.graphs[state][tx_oi_idx][rx_oi_idx]:
-                    continue
+        state_duration = teg.state_durations[state]
+        from_time = accumulated_time
+        to_time = accumulated_time + state_duration
 
-                # TODO: Change to make it more efficient.
-                tx_node_lifespan = node_lifespans[
-                    teg.nodes[teg.optical_interfaces_to_node[tx_oi_idx]].id
-                ]
-                rx_node_lifespan = node_lifespans[
-                    teg.nodes[teg.optical_interfaces_to_node[rx_oi_idx]].id
-                ]
-                # TODO: Adapt to use the node unique bit rate.
-                #       This change implies changes on lib's arquitecture
-                bit_rate = OPTcfg.BIT_RATE
+        oi_to_node_idx = np.array(
+            [teg.optical_interfaces_to_node[i] for i in range(teg.N)],
+            dtype=int,
+        )
+        oi_node_ids = np.array(
+            [teg.nodes[node_idx].id for node_idx in oi_to_node_idx],
+            dtype=str,
+        )
 
-                # TODO: consider the real
-                #       In this first approach we'll bypass the retargeting time
-                #       (effective_contact_duration = state_duration)
-                effective_contact_duration = compute_effective_contact_time(
-                    tx_oi_idx,
-                    rx_oi_idx,
-                    previous_schedule_contact_topology,
-                    teg.state_durations[state],
-                    teg.pos,
-                    teg.optical_interfaces_to_node,
-                    teg.nodes,
-                    should_bypass_retargeting_time=True,
-                )
+        # TODO: add battery model
+        initial_powers = MLConfig.get_initial_powers(oi_node_ids)
+        generated_per_oi = generated_energy(
+            from_time=from_time,
+            to_time=to_time,
+            initial_power=initial_powers,
+            decay_constant=MLConfig.DECAY_RATE,
+        )
 
-                # Edge's weight define as minimum lifespan between nodes
-                weight[tx_oi_idx][rx_oi_idx] = min(
-                    tx_node_lifespan, rx_node_lifespan
-                )
+        active_tx, active_rx = np.where(contact_topology_k >= 1)
+        for tx_oi_idx, rx_oi_idx in zip(active_tx, active_rx):
+            consumed_edge = transmission_energy(
+                power=OPTConfig.PEAK_TRANSMISSION_POWER,
+                duration=compute_effective_contact_time(
+                    oi_idx1=tx_oi_idx,
+                    oi_idx2=rx_oi_idx,
+                    scheduled_contact_topology=previous_schedule_contact_topology,
+                    state_duration=state_duration,
+                    positions=teg.pos,
+                    optical_interfaces_to_node=teg.optical_interfaces_to_node,
+                    nodes=teg.nodes,
+                    should_bypass_retargeting_time=should_bypass_retargeting_time,
+                ),
+            )
+            min_generated_edge = min(
+                generated_per_oi[tx_oi_idx],
+                generated_per_oi[rx_oi_idx],
+            )
+            weight[tx_oi_idx, rx_oi_idx] = min_generated_edge - consumed_edge
 
-                # TODO: Consider the maximum between the minimun power usage within the two satellites
-                #       As a checker, if the weight is lower the is set as 0.
-                #       We use here the eff_contact_duration and bit_rate, and anything else.
         return weight
 
     # def _update_node_lifespans(
@@ -152,19 +163,23 @@ class LifespanAware(BaseScheduler):
             teg.nodes, teg.max_state_duration
         )
         weights_dct = np.zeros((teg.N, teg.N), dtype="float32")
-
+        accumulated_time = 0
         for state in range(teg.K):
-            #
-            # Description here
-            #
-            weights_delta_lifespan = self._weight_node_lifespans(
-                state, scheduled_graphs[:state], teg, node_lifespans
+            weights_lifespan = self._weight_node_lifespans(
+                state,
+                scheduled_graphs[:state],
+                teg,
+                teg.graphs[state],
+                node_lifespans,
+                accumulated_time,
+                False,
             )
+            accumulated_time += teg.state_durations[state]
 
             # Compute the weight of each edge by doing a weighted sum of the lifespan and fairness metrics
-            weights[state] = (
-                (1 - constants.alpha) * weights_delta_lifespan
-            ) + (constants.alpha * weights_dct)
+            weights[state] = ((1 - ALPHA) * weights_lifespan) + (
+                ALPHA * weights_dct
+            )
 
             # Compute max weight maximal matching using the blossom algorithm
             matched_edges = self._blossom(teg.graphs[state], weights[state])

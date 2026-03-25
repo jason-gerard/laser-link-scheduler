@@ -73,8 +73,8 @@ class LaserLinkScheduler(BaseScheduler):
             )
 
             # Compute the weight of each edge by doing a weighted sum of the capacity and fairness metrics
-            weights[k] = ((1 - constants.alpha) * W_delta_cap) + (
-                constants.alpha * W_dct
+            weights[k] = ((1 - constants.ALPHA) * W_delta_cap) + (
+                constants.ALPHA * W_dct
             )
 
             # Compute max weight maximal matching using the blossom algorithm

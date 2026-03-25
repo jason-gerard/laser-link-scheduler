@@ -91,7 +91,7 @@ def animate(i):
             "-",
             color="blue",
             linewidth=30,
-            alpha=0.25,
+            ALPHA=0.25,
             solid_capstyle="round",
             zorder=1,
         )

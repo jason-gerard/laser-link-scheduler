@@ -20,7 +20,7 @@ class BaseScheduler:
 
         # Create list of edges, represented by three-tuples of (tx_idx, rx_idx, weight),
         # based on the contact topology P_k and computed weights based on
-        # delta_capacity + alpha * delta_time.
+        # delta_capacity + ALPHA * delta_time.
         #
         # Because the contact topology is symmetric, we can omit the bottom triangle.
         # When we compute the weight matrix it is not symmetric, because we compute the

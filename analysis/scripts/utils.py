@@ -147,9 +147,9 @@ def compute_state_metrics_aggregated(
     graph = np.asarray(teg.graphs[state])
     consumed_per_tx = np.zeros(len(valid_tx_indices), dtype=float)
 
-    active_tx_local, rx_indices = np.where(graph[valid_tx_indices] == 1)
+    active_tx, active_rx = np.where(graph[valid_tx_indices] == 1)
 
-    for local_tx_pos, rx_oi_idx in zip(active_tx_local, rx_indices):
+    for local_tx_pos, rx_oi_idx in zip(active_tx, active_rx):
         tx_oi_idx = valid_tx_indices[local_tx_pos]
         consumed_per_tx[local_tx_pos] += transmission_energy(
             power=OPTConfig.PEAK_TRANSMISSION_POWER,

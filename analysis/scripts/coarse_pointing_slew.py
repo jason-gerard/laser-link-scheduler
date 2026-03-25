@@ -26,7 +26,7 @@ start_circle = Circle(
     (start_az, start_el),
     fou_radius,
     color="blue",
-    alpha=0.2,
+    ALPHA=0.2,
     label="Current link terminal FOU",
 )
 ax.add_patch(start_circle)
@@ -46,7 +46,7 @@ target_circle = Circle(
     (target_az, target_el),
     fou_radius,
     color="red",
-    alpha=0.2,
+    ALPHA=0.2,
     label="Next link terminal FOU",
 )
 ax.add_patch(target_circle)
@@ -146,7 +146,7 @@ ax.legend(
     ncol=3,
 )
 
-ax.grid(True, linestyle="--", alpha=0.6)
+ax.grid(True, linestyle="--", ALPHA=0.6)
 
 # Axis limits
 ax.set_xlim(-10, 60)

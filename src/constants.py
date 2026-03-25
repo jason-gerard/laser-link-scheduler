@@ -28,15 +28,15 @@ d_max = 600
 default_a = 1
 
 # TODO: change descrition for general propourse.
-alpha = 0.99
+ALPHA = 0.99
 """
-    Alpha is a weighting factor that scales how much impact fairness has on the algorithm. If alpha is low it will only
-    be used for tie breaking when multiple options have the same change in capacity. If alpha is high then increasing
+    ALPHA is a weighting factor that scales how much impact fairness has on the algorithm. If ALPHA is low it will only
+    be used for tie breaking when multiple options have the same change in capacity. If ALPHA is high then increasing
     fairness will be used over increasing capacity in some cases i.e. if a node has little impact on capacity but has
     not been given an opportunity to transmit
-    alpha must be set greater than or equal to 0 and less than or equal to 1, i.e. [0, 1]
-    if alpha = 1 then only consider fairness
-    if alpha = 0 then only consider capacity
+    ALPHA must be set greater than or equal to 0 and less than or equal to 1, i.e. [0, 1]
+    if ALPHA = 1 then only consider fairness
+    if ALPHA = 0 then only consider capacity
 """
 
 
@@ -140,8 +140,8 @@ def get_num_lasers(node_id: str):
     if node_id in SOURCE_NODES:
         return 1
     elif node_id in RELAY_NODES:
-        # return 1
-        return 2
+        return 1
+        # return 2
     else:  # node_id in DESTINATION_NODES
         return 1
         # return 2
