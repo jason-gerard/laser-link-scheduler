@@ -2,6 +2,7 @@ from collections.abc import Callable
 from enum import StrEnum, auto
 import os
 
+from rich.console import Console
 from rich.live import Live
 from rich.table import Table
 
@@ -45,12 +46,18 @@ class RunTablePrinter:
     }
 
     def __init__(
-        self, experiment_names: list[str], scheduler_names: list[str]
+        self,
+        experiment_names: list[str],
+        scheduler_names: list[str],
+        enable_live: bool = True,
     ) -> None:
         self.experiment_names = experiment_names
         self.scheduler_names = scheduler_names
+        self.enable_live = enable_live
         self.rows: list[dict[str, str | float | int]] = []
         self.row_index: dict[tuple[str, str], int] = {}
+        self.console = Console()
+        self.live: Live | None = None
 
         for experiment_name in experiment_names:
             for scheduler_name in scheduler_names:
@@ -71,20 +78,25 @@ class RunTablePrinter:
                     }
                 )
 
-        self.live = Live(
-            self._build_table(),
-            refresh_per_second=10,
-            transient=False,
-            redirect_stdout=True,
-            redirect_stderr=True,
-        )
+        if self.enable_live:
+            self.live = Live(
+                self._build_table(),
+                refresh_per_second=10,
+                transient=False,
+                redirect_stdout=True,
+                redirect_stderr=True,
+            )
 
     def __enter__(self) -> "RunTablePrinter":
-        self.live.__enter__()
+        if self.live is not None:
+            self.live.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
-        self.live.__exit__(exc_type, exc_value, traceback)
+        if self.live is not None:
+            self.live.__exit__(exc_type, exc_value, traceback)
+        else:
+            self.console.print(self._build_table())
 
     def mark_running(self, experiment_name: str, scheduler_name: str) -> None:
         self._update_row(experiment_name, scheduler_name, {})
@@ -132,7 +144,8 @@ class RunTablePrinter:
     ) -> None:
         row_idx = self.row_index[(experiment_name, scheduler_name)]
         self.rows[row_idx] = {**self.rows[row_idx], **row_data}
-        self.live.update(self._build_table(), refresh=True)
+        if self.live is not None:
+            self.live.update(self._build_table(), refresh=True)
 
     def _build_table(self) -> Table:
         table = Table()

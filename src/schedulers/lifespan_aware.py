@@ -81,7 +81,6 @@ class LifespanAware(BaseScheduler):
         previous_schedule_contact_topology: np.ndarray,
         teg: TimeExpandedGraph,
         contact_topology_k: np.ndarray,
-        node_lifespans: NetworkLifespan,
         accumulated_time: int,
         should_bypass_retargeting_time: bool,
     ) -> np.ndarray:
@@ -170,12 +169,10 @@ class LifespanAware(BaseScheduler):
                 scheduled_graphs[:state],
                 teg,
                 teg.graphs[state],
-                node_lifespans,
                 accumulated_time,
                 False,
             )
             accumulated_time += teg.state_durations[state]
-
             # Compute the weight of each edge by doing a weighted sum of the lifespan and fairness metrics
             weights[state] = ((1 - ALPHA) * weights_lifespan) + (
                 ALPHA * weights_dct

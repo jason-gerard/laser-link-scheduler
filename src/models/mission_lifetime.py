@@ -49,7 +49,7 @@ def mission_lifetime(P0: float, decay_constant: float, P_min: float) -> float:
         return 0.0
 
     lifetime = (1 / decay_constant) * np.log(P0 / P_min)
-    return lifetime  # Year to seconds
+    return lifetime
 
 
 def generating_power(

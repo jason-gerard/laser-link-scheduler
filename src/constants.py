@@ -151,34 +151,27 @@ class MLConfig:
     """
     MISSION LIFETIME
     -----
-    We took as reference the NASA New Horizons spacecraft RTG:
-
-        'Besides its suite of scientific instruments, New Horizons carries a cylindrical
-        radioisotope thermoelectric generator (a spare from the Cassini mission)
-        that provided about 250 W of power at launch (decaying to 200 W by the
-        time of the Pluto encounter).' (11kg of plutonium oxide fuel)
-
-        'https://science.nasa.gov/mission/new-horizons/#:~:text=Besides,encounter%29%2E'
+    We took as reference the NASA New Horizons spacecraft RTG (GPHS-RTG):
 
         The minimum it is set at 69.9 W to function until the Low-Power Helio Science
 
         'https://www.jhuapl.edu/sites/default/files/2024-09/37-01-Hersman.pdf'
 
         The approximate rate of decay in power output is currently about 1.6% per year.
-
+        Unless otherwise stated, the average thermal output of a single General Purpose Heat
+        Source (GPHS) module is assumed to be 250 watts thermal (Wt) at beginning of life
+        (BOL). The Department of Energy (DOE) estimates a potential variance of ± 6 watts
+        electrical (We) (~2.4%).
         'https://ntrs.nasa.gov/api/citations/20160001769/downloads/20160001769.pdf'
-
-                λ = 0.016
 
     """
 
+    BASELINE_POWER_FOR_BASIC_OPERATION = 70
     SOURCE_NODE_INITIAL_POWER = 250.0  # Watts
     RELAY_NODE_INITIAL_POWER = 250.0  # Watts
     GS_NODE_INITIAL_POWER = float("inf")
-    # TODO: Change it to 1.6% per year to match the decay of the New Horizons RTG,
-    #       but for now we set it to 0.016e-3 per second to match the units of the calculations.
-    DECAY_RATE = (
-        0.016e-3  # per year, converted to per second for the calculations
+    DECAY_RATE = (  # 1.6% per year to seconds
+        0.016 / (365.25 * 24 * 60 * 60)
     )
 
     @classmethod

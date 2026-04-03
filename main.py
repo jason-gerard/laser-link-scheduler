@@ -193,9 +193,18 @@ def main(
         "-s",
         help="Name of scheduler algorithm to use",
     ),
+    plain_progress: bool = typer.Option(
+        False,
+        "--plain-progress",
+        help="Disable the live run table. Useful when debugging with pdb/ipdb.",
+    ),
 ):
     np.random.seed(42)
-    with RunTablePrinter(experiment_names, scheduler_names) as run_table:
+    with RunTablePrinter(
+        experiment_names,
+        scheduler_names,
+        enable_live=not plain_progress,
+    ) as run_table:
         multi_experiment_driver(experiment_names, scheduler_names, run_table)
 
 

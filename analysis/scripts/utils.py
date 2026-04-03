@@ -3,9 +3,11 @@ import os
 from pathlib import Path
 import pickle
 import sys
+from collections.abc import Callable
 from typing import Any
 import numpy as np
 import pandas as pd
+from rich.console import Console
 from rich.live import Live
 from rich.table import Table
 
@@ -20,6 +22,7 @@ from src.constants import (
 )
 from src.models import (
     mission_lifetime,
+    survivability,
     generating_power,
     transmission_energy,
     transmission_duration,
@@ -36,10 +39,13 @@ class AnalysisRunTable:
         columns: list[tuple[str, dict[str, Any] | None]],
         rows: list[dict[str, str]],
         refresh_per_second: int = 8,
+        enable_live: bool = True,
     ) -> None:
         self.columns = columns
         self.rows = rows
         self.refresh_per_second = refresh_per_second
+        self.enable_live = enable_live
+        self.console = Console()
         self.live: Live | None = None
 
     def build_table(self) -> Table:
@@ -53,18 +59,21 @@ class AnalysisRunTable:
         return table
 
     def __enter__(self) -> "AnalysisRunTable":
-        self.live = Live(
-            self.build_table(),
-            refresh_per_second=self.refresh_per_second,
-            transient=False,
-        )
-        self.live.__enter__()
+        if self.enable_live:
+            self.live = Live(
+                self.build_table(),
+                refresh_per_second=self.refresh_per_second,
+                transient=False,
+            )
+            self.live.__enter__()
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
         if self.live is not None:
             self.live.__exit__(exc_type, exc, tb)
             self.live = None
+        else:
+            self.console.print(self.build_table())
 
     def update(self, row_idx: int, key: str, value: str) -> None:
         self.rows[row_idx][key] = value
@@ -151,7 +160,7 @@ def compute_state_metrics_aggregated(
 
     for local_tx_pos, rx_oi_idx in zip(active_tx, active_rx):
         tx_oi_idx = valid_tx_indices[local_tx_pos]
-        consumed_per_tx[local_tx_pos] += transmission_energy(
+        transmission_energy_consumed = transmission_energy(
             power=OPTConfig.PEAK_TRANSMISSION_POWER,
             duration=compute_effective_contact_time(
                 oi_idx1=tx_oi_idx,
@@ -164,6 +173,12 @@ def compute_state_metrics_aggregated(
                 should_bypass_retargeting_time=should_bypass_retargeting_time,
             ),
         )
+        baseline_energy_consumed = (
+            MLConfig.BASELINE_POWER_FOR_BASIC_OPERATION * state_duration
+        )
+        consumed_per_tx[local_tx_pos] += (
+            transmission_energy_consumed + baseline_energy_consumed
+        )
 
     return pd.DataFrame(
         {
@@ -174,3 +189,168 @@ def compute_state_metrics_aggregated(
             "consumed_energy": consumed_per_tx,
         }
     )
+
+
+def estimate_lifetime_from_average_load(
+    node_id: str,
+    average_power_load: float,
+) -> float:
+    if node_id in DESTINATION_NODES:
+        return float("inf")
+    if average_power_load <= 0:
+        return float("inf")
+
+    initial_power = MLConfig.get_initial_power(node_id)
+    return float(
+        mission_lifetime(
+            P0=initial_power,
+            decay_constant=MLConfig.DECAY_RATE,
+            P_min=average_power_load
+            + MLConfig.BASELINE_POWER_FOR_BASIC_OPERATION,
+        )
+    )
+
+
+def compute_lifetime_metrics(
+    teg: TimeExpandedGraph,
+    should_bypass_retargeting_time: bool,
+    progress_callback: Callable[[int, int], None] | None = None,
+) -> pd.DataFrame:
+    mission_duration = float(np.sum(teg.state_durations))
+    accumulated_time = 0.0
+    state_metrics: list[pd.DataFrame] = []
+
+    for state in range(teg.K):
+        state_df = compute_state_metrics_aggregated(
+            teg=teg,
+            state=state,
+            accumulated_time=accumulated_time,
+            should_bypass_retargeting_time=should_bypass_retargeting_time,
+        )
+        aggregated_state_df = state_df.groupby(
+            "tx_node_id", as_index=False
+        ).agg(
+            generated_energy=("generated_energy", "first"),
+            consumed_energy=("consumed_energy", "sum"),
+        )
+        aggregated_state_df["state_index"] = state
+        state_metrics.append(aggregated_state_df)
+        accumulated_time += float(teg.state_durations[state])
+
+        if progress_callback is not None:
+            progress_callback(state + 1, teg.K)
+
+    if not state_metrics:
+        return pd.DataFrame(
+            columns=pd.Index(
+                [
+                    "node_id",
+                    "initial_power",
+                    "mission_duration",
+                    "total_generated_energy",
+                    "total_consumed_energy",
+                    "net_energy",
+                    "average_power_load",
+                    "final_generated_power",
+                    "estimated_lifetime",
+                    "estimated_lifetime_years",
+                    "depleted_within_horizon",
+                ]
+            )
+        )
+
+    total_df = pd.concat(state_metrics, ignore_index=True)
+    total_df = total_df.groupby("tx_node_id", as_index=False).agg(
+        total_generated_energy=("generated_energy", "sum"),
+        total_consumed_energy=("consumed_energy", "sum"),
+    )
+    total_df = total_df.rename(columns={"tx_node_id": "node_id"})
+    total_df["initial_power"] = total_df["node_id"].map(
+        MLConfig.get_initial_power
+    )
+    total_df["mission_duration"] = mission_duration
+    total_df["net_energy"] = (
+        total_df["total_generated_energy"] - total_df["total_consumed_energy"]
+    )
+    total_df["average_power_load"] = np.where(
+        mission_duration > 0,
+        total_df["total_consumed_energy"] / mission_duration,
+        0.0,
+    )
+    total_df["final_generated_power"] = total_df["initial_power"] * np.exp(
+        -MLConfig.DECAY_RATE * mission_duration
+    )
+    total_df["estimated_lifetime"] = total_df.apply(
+        lambda row: estimate_lifetime_from_average_load(
+            str(row["node_id"]),
+            float(row["average_power_load"]),
+        ),
+        axis=1,
+    )
+
+    total_df["estimated_lifetime_years"] = total_df["estimated_lifetime"] / (
+        356.25 * 24 * 60 * 60
+    )
+    total_df["depleted_within_horizon"] = np.isfinite(
+        total_df["estimated_lifetime"]
+    ) & (total_df["estimated_lifetime"] <= mission_duration)
+
+    return total_df.sort_values("node_id").reset_index(drop=True)
+
+
+def summarize_lifetime_metrics(
+    metrics_df: pd.DataFrame,
+) -> dict[str, float | int]:
+    finite_lifetimes = metrics_df.loc[
+        np.isfinite(metrics_df["estimated_lifetime"]), "estimated_lifetime"
+    ]
+    finite_lifetimes_years = metrics_df.loc[
+        np.isfinite(metrics_df["estimated_lifetime_years"]),
+        "estimated_lifetime_years",
+    ]
+    mission_duration = (
+        float(metrics_df["mission_duration"].iloc[0])
+        if not metrics_df.empty
+        else 0.0
+    )
+
+    return {
+        "spacecraft_count": int(len(metrics_df)),
+        "mission_duration": mission_duration,
+        "total_generated_energy": float(
+            metrics_df["total_generated_energy"].sum()
+        ),
+        "total_consumed_energy": float(
+            metrics_df["total_consumed_energy"].sum()
+        ),
+        "min_estimated_lifetime": float(
+            finite_lifetimes.min() if not finite_lifetimes.empty else np.inf
+        ),
+        "min_estimated_lifetime_years": float(
+            finite_lifetimes_years.min()
+            if not finite_lifetimes_years.empty
+            else np.inf
+        ),
+        "mean_estimated_lifetime": float(
+            finite_lifetimes.mean() if not finite_lifetimes.empty else np.inf
+        ),
+        "mean_estimated_lifetime_years": float(
+            finite_lifetimes_years.mean()
+            if not finite_lifetimes_years.empty
+            else np.inf
+        ),
+        "median_estimated_lifetime": float(
+            finite_lifetimes.median() if not finite_lifetimes.empty else np.inf
+        ),
+        "median_estimated_lifetime_years": float(
+            finite_lifetimes_years.median()
+            if not finite_lifetimes_years.empty
+            else np.inf
+        ),
+        "depleted_spacecraft_within_horizon": int(
+            metrics_df["depleted_within_horizon"].sum()
+        ),
+        "non_depleting_spacecraft": int(
+            (~np.isfinite(metrics_df["estimated_lifetime"])).sum()
+        ),
+    }

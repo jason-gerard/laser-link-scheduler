@@ -122,25 +122,59 @@ def run_analysis(report_id: int) -> None:
 
             plot_dir = os.path.join(PLOTS_ROOT, scenario, algorithm)
             os.makedirs(plot_dir, exist_ok=True)
-
-            total_state_metrics.plot(
-                y=[
-                    "total_generated",
-                    "total_consumed",
-                    "total_additional_energy",
-                ],
-                kind="line",
-                title=f"Energy Metrics for {algorithm} with {scenario} nodes",
+            fig, (ax1, ax2) = plt.subplots(
+                2,
+                1,
+                figsize=(10, 7),
+                sharex=True,
+                gridspec_kw={"height_ratios": [3, 1]},
             )
-            plt.xlabel("State Index")
-            plt.ylabel("Energy (J)")
-            plt.grid()
-            plt.legend()
+
+            x = total_state_metrics.index.to_numpy()
+            ax1.plot(
+                x,
+                total_state_metrics["total_generated"],
+                label="Total generated",
+                linewidth=2,
+            )
+            ax1.plot(
+                x,
+                total_state_metrics["total_consumed"],
+                label="Total consumed",
+                linewidth=2,
+            )
+            ax1.plot(
+                x,
+                total_state_metrics["total_additional_energy"],
+                label="Total additional energy",
+                linewidth=2,
+            )
+            ax1.set_xlabel("State Index")
+            ax1.set_ylabel("Energy (J)")
+            ax1.set_title(
+                f"Energy Metrics for {algorithm} with {scenario} nodes"
+            )
+            ax1.grid()
+            ax2.plot(
+                x,
+                total_state_metrics["total_time"],
+                color="tab:purple",
+                linestyle="-",
+                linewidth=2,
+                label="State duration",
+            )
+            ax2.set_ylabel("Duration [s]")
+            ax2.set_xlabel("State Index")
+            ax2.grid()
+
+            ax1.legend(loc="upper right")
+            ax2.legend(loc="upper right")
+
             plt.tight_layout()
             plt.savefig(
                 f"{PLOTS_ROOT}/{scenario}/{algorithm}/energy_metrics.png"
             )
-            plt.close()
+            plt.close(fig)
 
             run_table.mark_progress(idx, 100)
         # If we want to localize the results in the report instance.

@@ -16,7 +16,7 @@ from analysis.scripts.utils import (  # noqa: E402
     AnalysisRunTable,
     load_report_tegs,
 )
-from src.constants import PLOTS_ROOT  # noqa: E402
+from src.constants import PLOTS_ROOT, RELAY_NODES  # noqa: E402
 from src.models.pointing_delay import SLEW_RATE  # noqa: E402
 from src.time_expanded_graph.time_expanded_graph import (  # noqa: E402
     TimeExpandedGraph,
@@ -103,9 +103,9 @@ def run_analysis(report_id: int) -> None:
                 sample_count += 2
 
                 if not (
-                    idx1_node_id.startswith("2")
-                    and idx2_node_id.startswith("2")
-                    and idx1_rx_node_id.startswith("2")
+                    idx1_node_id in RELAY_NODES
+                    and idx2_node_id in RELAY_NODES
+                    and idx1_rx_node_id in RELAY_NODES
                 ):
                     all_pointing_delays_with_node.append(
                         (
@@ -116,9 +116,9 @@ def run_analysis(report_id: int) -> None:
                         )
                     )
                 if not (
-                    idx1_node_id.startswith("2")
-                    and idx2_node_id.startswith("2")
-                    and idx2_rx_node_id.startswith("2")
+                    idx1_node_id in RELAY_NODES
+                    and idx2_node_id in RELAY_NODES
+                    and idx2_rx_node_id in RELAY_NODES
                 ):
                     all_pointing_delays_with_node.append(
                         (
