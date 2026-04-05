@@ -10,6 +10,9 @@ from src.utils import ProgressCallback
 
 
 class BaseScheduler:
+    def __init__(self, should_bypass_retargeting_time=False):
+        self.should_bypass_retargeting_time = should_bypass_retargeting_time
+
     def _blossom(self, P_k: np.ndarray, W_k: np.ndarray) -> set:
         """
         The blossom algorithm assumes undirected edges meaning that we cannot have A -> B without B -> A. Logically this

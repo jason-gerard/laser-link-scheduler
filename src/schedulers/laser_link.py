@@ -17,10 +17,7 @@ from src.utils import ProgressCallback
 
 class LaserLinkScheduler(BaseScheduler):
     def __init__(self, should_bypass_retargeting_time=False):
-        super().__init__()
-        self.should_bypass_retargeting_time: bool = (
-            should_bypass_retargeting_time
-        )
+        super().__init__(should_bypass_retargeting_time)
 
     def schedule(
         self,

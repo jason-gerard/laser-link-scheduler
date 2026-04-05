@@ -27,20 +27,24 @@ plt.rc("legend", fontsize=14)
 plt.rcParams.update({"font.family": "Times New Roman"})
 
 PILOT_SCENARIOS = [
+    "gs_mars_earth_scenario_inc_4",
     "gs_mars_earth_scenario_inc_16",
     "gs_mars_earth_scenario_inc_32",
     "gs_mars_earth_scenario_inc_48",
 ]
 VARIANT_ORDER = [
-    "lifespan_aware_v0",
-    "lifespan_aware_v1",
-    "lifespan_aware_v2",
+    "energy_aware",
+    "lls",
+    "fcp",
+    "lls_pat_unaware",
+    "energy_aware_pat_unaware",
 ]
 VARIANT_LABELS = {
-    "lifespan_aware": "lifespan_aware_v0",
-    "lifespan_aware_v0": "lifespan_aware_v0",
-    "lifespan_aware_v1": "lifespan_aware_v1",
-    "lifespan_aware_v2": "lifespan_aware_v2",
+    "energy_aware": "energy_aware",
+    "lls": "lls",
+    "fcp": "fcp",
+    "lls_pat_unaware": "lls_pat_unaware",
+    "energy_aware_pat_unaware": "energy_aware_pat_unaware",
 }
 
 app = typer.Typer()
@@ -267,8 +271,6 @@ def run_analysis(report_id: int, plain_progress: bool = False) -> None:
             should_bypass_retargeting_time = (
                 normalize_algorithm_name(algorithm) == "lls_pat_unaware"
             )
-            EFFECTIVE_CONTACT_TIME_CACHE.clear()
-            COORDINATE_CACHE.clear()
             metrics_df = compute_lifetime_metrics(
                 teg=teg,
                 should_bypass_retargeting_time=should_bypass_retargeting_time,

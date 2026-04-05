@@ -28,7 +28,7 @@ d_max = 600
 default_a = 1
 
 # TODO: change descrition for general propourse.
-ALPHA = 0.99
+ALPHA = 0.80
 """
     ALPHA is a weighting factor that scales how much impact fairness has on the algorithm. If ALPHA is low it will only
     be used for tie breaking when multiple options have the same change in capacity. If ALPHA is high then increasing
@@ -173,6 +173,9 @@ class MLConfig:
     DECAY_RATE = (  # 1.6% per year to seconds
         0.016 / (365.25 * 24 * 60 * 60)
     )
+    RELAY_NODE_INITIAL_BATTERY = 100.0  # Watt-hours
+    SOURCE_NODE_INITIAL_BATTERY = 100.0  # Watt-hours
+    GS_NODE_INITIAL_BATTERY = float("inf")
 
     @classmethod
     def get_initial_power(cls, node_id: str):
@@ -199,6 +202,32 @@ class MLConfig:
                 cls.SOURCE_NODE_INITIAL_POWER,
             ],
             default=cls.GS_NODE_INITIAL_POWER,
+        )
+
+    @classmethod
+    def get_initial_battery(cls, node_id: str):
+        return (
+            cls.RELAY_NODE_INITIAL_BATTERY
+            if node_id in RELAY_NODES
+            else cls.SOURCE_NODE_INITIAL_BATTERY
+            if node_id in SOURCE_NODES
+            else cls.GS_NODE_INITIAL_BATTERY
+        )
+
+    @classmethod
+    def get_initial_batteries(cls, node_ids: np.ndarray) -> np.ndarray:
+        node_ids = np.asarray(node_ids)
+
+        return np.select(
+            [
+                np.isin(node_ids, RELAY_NODES),
+                np.isin(node_ids, SOURCE_NODES),
+            ],
+            [
+                cls.RELAY_NODE_INITIAL_BATTERY,
+                cls.SOURCE_NODE_INITIAL_BATTERY,
+            ],
+            default=cls.GS_NODE_INITIAL_BATTERY,
         )
 
 

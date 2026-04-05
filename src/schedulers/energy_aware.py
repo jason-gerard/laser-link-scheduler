@@ -10,6 +10,7 @@ from src.time_expanded_graph.time_expanded_graph import (
     Node,
 )
 from .base_scheduler import BaseScheduler
+
 from src.topology.weights import (
     disabled_contact_time,
     compute_effective_contact_time,
@@ -17,68 +18,18 @@ from src.topology.weights import (
 from src.models import *
 from src.utils import ProgressCallback
 
-from functools import total_ordering
-from dataclasses import dataclass
 
+class EnergyAware(BaseScheduler):
+    def __init__(self, should_bypass_retargeting_time=False):
+        super().__init__(should_bypass_retargeting_time)
 
-@dataclass
-@total_ordering
-class NodeLifespan:
-    id: str
-    mission_lifespan: float
-
-    def __eq__(self, value):
-        if not isinstance(value, NodeLifespan):
-            return self.mission_lifespan == value
-        return self.mission_lifespan == value.mission_lifespan
-
-    def __lt__(self, value):
-        if not isinstance(value, NodeLifespan):
-            return self.mission_lifespan < value
-        return self.mission_lifespan < value.mission_lifespan
-
-
-# Map each node lifespan
-# NOTE: Review if it's worth it.
-NetworkLifespan = dict[str, NodeLifespan]
-
-
-class LifespanAware(BaseScheduler):
-    def _get_node_lifespan(
-        self, node_id: str, max_state_duration: int
-    ) -> NodeLifespan:
-        # TODO: Implement with bit_rate() from models, to obtain a dinamic bit_rate
-        # node_bit_rate = OPTConfig.BIT_RATE
-
-        initial_power = MLConfig.get_initial_power(node_id)
-        decay_constant = MLConfig.DECAY_RATE
-        minimum_power = transmission_energy(
-            OPTConfig.AVG_TRANSMISSION_POWER, max_state_duration
-        )
-
-        return NodeLifespan(
-            id=node_id,
-            mission_lifespan=mission_lifetime(
-                initial_power, decay_constant, minimum_power
-            ),
-        )
-
-    def _get_network_lifespan(
-        self, nodes: list[Node], max_state_duration: int
-    ) -> NetworkLifespan:
-        return {
-            node.id: self._get_node_lifespan(node.id, max_state_duration)
-            for node in nodes
-        }
-
-    def _weight_node_lifespans(
+    def _weight_node_energy(
         self,
         state: int,
         previous_schedule_contact_topology: np.ndarray,
         teg: TimeExpandedGraph,
         contact_topology_k: np.ndarray,
         accumulated_time: int,
-        should_bypass_retargeting_time: bool,
     ) -> np.ndarray:
         weight = np.zeros((teg.N, teg.N), dtype="float32")
 
@@ -95,7 +46,6 @@ class LifespanAware(BaseScheduler):
             dtype=str,
         )
 
-        # TODO: add battery model
         initial_powers = MLConfig.get_initial_powers(oi_node_ids)
         generated_per_oi = generated_energy(
             from_time=from_time,
@@ -116,7 +66,7 @@ class LifespanAware(BaseScheduler):
                     positions=teg.pos,
                     optical_interfaces_to_node=teg.optical_interfaces_to_node,
                     nodes=teg.nodes,
-                    should_bypass_retargeting_time=should_bypass_retargeting_time,
+                    should_bypass_retargeting_time=self.should_bypass_retargeting_time,
                 ),
             )
             min_generated_edge = min(
@@ -127,50 +77,36 @@ class LifespanAware(BaseScheduler):
 
         return weight
 
-    # def _update_node_lifespans(
-    #     self,
-    #     state: int,
-    #     L_k: np.ndarray,
-    #     state_duration: int,
-    #     nodes: list[Node],
-    #     scheduled_graphs: np.ndarray,
-    #     weights_delta_lfspn: np.ndarray,
-    # ) -> list[NodeLifespan]:
-    #     new_node_lifespan: list[NodeLifespan] = []
-
-    #     # For each contact calculate the energy transmition consumption
-
-    #     return new_node_lifespan
-
     def schedule(
         self,
         teg: TimeExpandedGraph,
         progress_callback: ProgressCallback | None = None,
     ) -> TimeExpandedGraph:
         """
-        Placeholder for lifespan schedule algorithm
+        Placeholder for energy schedule algorithm
         """
-        scheduled_graphs = np.empty((teg.K, teg.N, teg.N), dtype="int64")
-        scheduled_contacts = []
-        weights = np.empty((teg.K, teg.N, teg.N), dtype="float32")
+        n = teg.N
+        k = teg.K
+        generated_energy = np.zeros((k, n, n), dtype="float32")
+        consumed_energy = np.zeros((k, n, n), dtype="float32")
 
-        node_lifespans: NetworkLifespan = self._get_network_lifespan(
-            teg.nodes, teg.max_state_duration
-        )
-        weights_dct = np.zeros((teg.N, teg.N), dtype="float32")
+        scheduled_graphs = np.empty((k, n, n), dtype="int64")
+        scheduled_contacts = []
+        weights = np.empty((k, n, n), dtype="float32")
+
+        weights_dct = np.zeros((n, n), dtype="float32")
         accumulated_time = 0
-        for state in range(teg.K):
-            weights_lifespan = self._weight_node_lifespans(
+        for state in range(k):
+            weights_energy = self._weight_node_energy(
                 state,
                 scheduled_graphs[:state],
                 teg,
                 teg.graphs[state],
                 accumulated_time,
-                False,
             )
             accumulated_time += teg.state_durations[state]
             # Compute the weight of each edge by doing a weighted sum of the lifespan and fairness metrics
-            weights[state] = ((1 - ALPHA) * weights_lifespan) + (
+            weights[state] = ((1 - ALPHA) * weights_energy) + (
                 ALPHA * weights_dct
             )
 
@@ -187,30 +123,20 @@ class LifespanAware(BaseScheduler):
             scheduled_graphs[state] = adj_matrix
             scheduled_contacts.append(contacts)
 
-            # TODO: Make the function haha
-            # Update node_lifespan list with node lifespans from current state contact plan and merge them together
-            # node_lifespans = self._update_node_lifespans(
-            #     adj_matrix,
-            #     teg.state_durations[state],
-            #     teg.nodes,
-            #     scheduled_graphs[:state],
-            #     weights_delta_lifespan,
-            # )
-
             # Update the matrix containing the disabled contact time for current state
             weights_dct += disabled_contact_time(
                 teg.graphs[state], adj_matrix, teg.state_durations[state]
             )
             # For the percentage on running table
             if progress_callback is not None:
-                progress_callback("schedule", state + 1, teg.K)
+                progress_callback("schedule", state + 1, k)
 
         return TimeExpandedGraph(
             graphs=scheduled_graphs,
             contacts=scheduled_contacts,
             state_durations=teg.state_durations,
-            K=teg.K,
-            N=teg.N,
+            K=k,
+            N=n,
             nodes=teg.nodes,
             node_map=teg.node_map,
             W=weights,

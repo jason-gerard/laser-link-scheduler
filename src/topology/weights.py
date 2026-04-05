@@ -137,31 +137,27 @@ def disabled_contact_time(
     for an edge i,j, or the sum of the duration that edge i,j could have been enabled but was not due to previous
     contact plan selections.
     """
+    # There are two ways to decide to increment the disabled contact time.
+    #
+    # The first method would be to increment the DCT if the link (edge) existed in the contact topology but was
+    # not selected in the contact plan
+    #
+    # mask = (contact_topology_k >= 1) & (contact_plan_k == 0)
+    # disabled_contact_times = np.where(mask, state_duration, 0).
+    #
+    # The second method is to increment any contact that was not in the contact plan regardless if it was a
+    # feasible contact in the original contact topology.
+    #
+    disabled_contact_times = np.where(
+        contact_plan_k == 0, state_duration, 0
+    ).astype(np.int64)
+    #
+    # After some testing it seems that the second method produces the same or higher capacity for both LLS and
+    # FCP due to a higher prioritization of links which are scarce in the initial contact topology. This way
+    # when they do show up in the contact topology there is a much higher chance for it to be selected. Since
+    # these links are often intra-constellation or interplanetary links, it improves the capacity of the network
 
-    num_nodes = len(contact_topology_k)
-    disabled_contact_times = np.zeros((num_nodes, num_nodes), dtype="int64")
-
-    for tx_idx in range(num_nodes):
-        for rx_idx in range(num_nodes):
-            # There are two ways to decide to increment the disabled contact time.
-            #
-            # The first method would be to increment the DCT if the link (edge) existed in the contact topology but was
-            # not selected in the contact plan
-            # if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:
-            #
-            # The second method is to increment any contact that was not in the contact plan regardless if it was a
-            # feasible contact in the original contact topology.
-            # if contact_plan_k[tx_idx][rx_idx] == 0:
-            #
-            # After some testing it seems that the second method produces the same or higher capacity for both LLS and
-            # FCP due to a higher prioritization of links which are scarce in the initial contact topology. This way
-            # when they do show up in the contact topology there is a much higher chance for it to be selected. Since
-            # these links are often intra-constellation or interplanetary links, it improves the capacity of the network
-            if contact_plan_k[tx_idx][rx_idx] == 0:
-                # Increment the disabled contact time by the state duration i.e. the amount of time it was turned
-                # off
-                disabled_contact_times[tx_idx][rx_idx] = state_duration
-
+    # Increment the disabled contact time by the state duration i.e. the amount of time it was turned off
     return disabled_contact_times
 
 
@@ -564,6 +560,9 @@ def compute_effective_contact_time(
 
     # For the first state we can always assume the lasers are pre-targeted
     if curr_k == 0:
+        # If there is any value in the cache being the first state, is because there was not been cleared before this run
+        EFFECTIVE_CONTACT_TIME_CACHE.clear()
+        COORDINATE_CACHE.clear()
         return state_duration
 
     if (

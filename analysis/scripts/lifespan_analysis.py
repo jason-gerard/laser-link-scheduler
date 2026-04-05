@@ -68,9 +68,6 @@ def run_analysis(report_id: int) -> None:
         for idx, (algorithm, scenario, teg) in enumerate(tegs):
             run_table.mark_progress(idx, 0)
 
-            EFFECTIVE_CONTACT_TIME_CACHE.clear()
-            COORDINATE_CACHE.clear()
-
             should_bypass_retargeting_time = algorithm == "lls-pat-unaware"
             state_metrics_list = []
             accumulated_time = 0.0

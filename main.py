@@ -12,34 +12,13 @@ from src.time_expanded_graph.time_expanded_graph import (
 )
 from src.models.pointing_delay import RETARGETING_DELAY_CACHE
 from src.reporting.report_generator import Reporter
-from src.schedulers import (
-    BaseScheduler,
-    LaserLinkScheduler,
-    LLSModel,
-    PathSchedulerModel,
-    RandomScheduler,
-    AlternatingScheduler,
-    FairContactPlan,
-    LifespanAware,
-)
+from src.schedulers import SCHEDULER_REGISTER
 from src.topology.weights import EFFECTIVE_CONTACT_TIME_CACHE, COORDINATE_CACHE
 from src.topology.contact_plan import (
     IONContactPlanParser,
     IPNDContactPlanParser,
 )
 from src.utils import FileType, RunTablePrinter, make_fanout_progress_callback
-
-SCHEDULER: dict[str, BaseScheduler] = {
-    "lls": LaserLinkScheduler(),
-    "lls_pat_unaware": LaserLinkScheduler(should_bypass_retargeting_time=True),
-    "lls_mip": LLSModel(is_mip=True),
-    "lls_lp": LLSModel(is_mip=False),
-    "lls_path": PathSchedulerModel(),
-    "fcp": FairContactPlan(),
-    "random": RandomScheduler(),
-    "alternating": AlternatingScheduler(),
-    "lifespan_aware": LifespanAware(),
-}
 
 
 def experiment_driver(
@@ -53,7 +32,7 @@ def experiment_driver(
     contact_plan_parser = IONContactPlanParser()
 
     try:
-        if scheduler_name not in SCHEDULER:
+        if scheduler_name not in SCHEDULER_REGISTER:
             raise ValueError(f"Unknown scheduler name: {scheduler_name}")
 
         progress_callback = run_table.make_progress_callback(
@@ -69,9 +48,9 @@ def experiment_driver(
         if scheduler_name not in ["lls_lp", "lls_mip"]:
             progress_callback("schedule", 0, 1)
 
-        scheduled_time_expanded_graph = SCHEDULER[scheduler_name].schedule(
-            teg, progress_callback
-        )
+        scheduled_time_expanded_graph = SCHEDULER_REGISTER[
+            scheduler_name
+        ].schedule(teg, progress_callback)
 
         write_time_expanded_graph(
             experiment_name,
@@ -126,8 +105,6 @@ def multi_experiment_driver(
 
     for experiment_name in experiment_names:
         # Clear caches once before building the shared TEG for this experiment.
-        EFFECTIVE_CONTACT_TIME_CACHE.clear()
-        COORDINATE_CACHE.clear()
         RETARGETING_DELAY_CACHE.clear()
 
         contact_plan_parser = IONContactPlanParser()
@@ -158,8 +135,6 @@ def multi_experiment_driver(
 
         for scheduler_name in scheduler_names:
             # Reset caches before each scheduler run since scheduling/reporting uses global caches.
-            EFFECTIVE_CONTACT_TIME_CACHE.clear()
-            COORDINATE_CACHE.clear()
             RETARGETING_DELAY_CACHE.clear()
 
             run_table.mark_running(experiment_name, scheduler_name)
