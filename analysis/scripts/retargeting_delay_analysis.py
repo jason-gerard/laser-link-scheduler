@@ -27,13 +27,11 @@ plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
 plt.rcParams.update({"font.family": "Times New Roman"})
 
-ALGORITHMS = ["lls", "lls_pat_unaware", "lls_mip", "fcp"]
-
 app = typer.Typer()
 
 
 def load_tegs(report_id: int) -> list[tuple[str, str, TimeExpandedGraph]]:
-    return load_report_tegs(report_id, allowed_algorithms=ALGORITHMS)
+    return sorted(load_report_tegs(report_id))
 
 
 def run_analysis(report_id: int) -> None:

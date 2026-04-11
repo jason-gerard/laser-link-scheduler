@@ -9,6 +9,7 @@ from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
     convert_time_expanded_graph_to_contact_plan,
     write_time_expanded_graph,
+    get_time_expanded_graph,
 )
 from src.models.pointing_delay import RETARGETING_DELAY_CACHE
 from src.reporting.report_generator import Reporter
@@ -52,26 +53,26 @@ def experiment_driver(
             scheduler_name
         ].schedule(teg, progress_callback)
 
-        write_time_expanded_graph(
-            experiment_name,
-            scheduled_time_expanded_graph,
-            FileType.TEG_SCHEDULED,
-        )
+        # We deactivate this for now, I don't have interest in visualize the CT. With the reports is enough.
+        if False:
+            # Convert the TEG back to a contact plan
+            scheduled_contact_plan = (
+                convert_time_expanded_graph_to_contact_plan(
+                    scheduled_time_expanded_graph,
+                    progress_callback,
+                )
+            )
+            contact_plan_parser.write(
+                experiment_name,
+                scheduled_contact_plan,
+                FileType.CONTACT_PLAN_SCHEDULED,
+            )
 
-        # Convert the TEG back to a contact plan
-        scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(
-            scheduled_time_expanded_graph,
-            progress_callback,
-        )
-        contact_plan_parser.write(
-            experiment_name,
-            scheduled_contact_plan,
-            FileType.CONTACT_PLAN_SCHEDULED,
-        )
-
-        # Write contact plan to disk as IPN-D contact plan, so we can visualize the output
-        ipnd_contact_plan_parser = IPNDContactPlanParser()
-        ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
+            # Write contact plan to disk as IPN-D contact plan, so we can visualize the output
+            ipnd_contact_plan_parser = IPNDContactPlanParser()
+            ipnd_contact_plan_parser.write(
+                experiment_name, scheduled_contact_plan
+            )
 
         progress_callback("report", 1, 1)
         run_data = reporter.generate_report(
@@ -104,14 +105,8 @@ def multi_experiment_driver(
     reporter = Reporter(write_pkl=True)
 
     for experiment_name in experiment_names:
-        # Clear caches once before building the shared TEG for this experiment.
-        RETARGETING_DELAY_CACHE.clear()
-
-        contact_plan_parser = IONContactPlanParser()
-        contact_plan = contact_plan_parser.read(experiment_name)
-
+        # Run table progress setup.
         build_callbacks = []
-        # Build and write the input TEG.
         for scheduler_name in scheduler_names:
             run_table.update_progress(experiment_name, scheduler_name, "0%")
             build_callbacks.append(
@@ -119,25 +114,39 @@ def multi_experiment_driver(
                     experiment_name, scheduler_name
                 )
             )
-
         build_progress_callback = make_fanout_progress_callback(
             build_callbacks
         )
 
-        time_expanded_graph = TimeExpandedGraph.from_contact_plan(
-            contact_plan=contact_plan,
-            should_fractionate=True,
-            progress_callback=build_progress_callback,
-        )
-        write_time_expanded_graph(
-            experiment_name, time_expanded_graph, FileType.TEG
-        )
+        # Build TEG.
+
+        # Before build check if the TEG was already built and cached, to avoid rebuilding the TEG every time.
+        try:
+            time_expanded_graph = get_time_expanded_graph(
+                experiment_name, FileType.TEG
+            )
+        except FileNotFoundError:
+            contact_plan_parser = IONContactPlanParser()
+            contact_plan = contact_plan_parser.read(experiment_name)
+            time_expanded_graph = TimeExpandedGraph.from_contact_plan(
+                contact_plan=contact_plan,
+                should_fractionate=True,
+                progress_callback=build_progress_callback,
+            )
+            write_time_expanded_graph(
+                experiment_name, time_expanded_graph, FileType.TEG
+            )
+        else:
+            _ = [
+                run_table.update_progress(
+                    experiment_name, scheduler_name, "40%"
+                )
+                for scheduler_name in scheduler_names
+            ]
 
         for scheduler_name in scheduler_names:
             # Reset caches before each scheduler run since scheduling/reporting uses global caches.
             RETARGETING_DELAY_CACHE.clear()
-
-            run_table.mark_running(experiment_name, scheduler_name)
             run_data = experiment_driver(
                 experiment_name,
                 scheduler_name,
@@ -170,7 +179,7 @@ def main(
     ),
     plain_progress: bool = typer.Option(
         False,
-        "--plain-progress",
+        "--debug",
         help="Disable the live run table. Useful when debugging with pdb/ipdb.",
     ),
 ):

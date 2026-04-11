@@ -98,9 +98,6 @@ class RunTablePrinter:
         else:
             self.console.print(self._build_table())
 
-    def mark_running(self, experiment_name: str, scheduler_name: str) -> None:
-        self._update_row(experiment_name, scheduler_name, {})
-
     def make_progress_callback(
         self, experiment_name: str, scheduler_name: str
     ) -> ProgressCallback:

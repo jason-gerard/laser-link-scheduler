@@ -72,26 +72,19 @@ def _save_node_lifetime_plot(
     mission_duration_years = float(
         sorted_df["mission_duration"].iloc[0] / (356.25 * 24 * 60 * 60)
     )
-    max_finite_lifetime = (
-        float(finite_lifetimes.max()) if not finite_lifetimes.empty else 0.0
-    )
-    clip_value = max(max_finite_lifetime, mission_duration_years) * 1.05
-    if clip_value <= 0:
-        clip_value = 1.0
 
     plot_values = sorted_df["estimated_lifetime_years"].where(
         np.isfinite(sorted_df["estimated_lifetime_years"]),
-        clip_value,
+        0,
     )
     colors = np.where(
         np.isfinite(sorted_df["estimated_lifetime_years"]),
         "tab:blue",
         "tab:green",
     )
-    average_power_load = (
-        sorted_df["average_power_load"]
-        + MLConfig.BASELINE_POWER_FOR_BASIC_OPERATION
-    )
+    average_power_load = sorted_df[
+        "average_power_load"
+    ] + MLConfig.get_baseline_powers(sorted_df["node_id"])
     final_generated_power = sorted_df["final_generated_power"]
     x_positions = np.arange(len(sorted_df))
 
@@ -133,17 +126,6 @@ def _save_node_lifetime_plot(
     )
     ax2.set_ylabel("Power [W]")
 
-    if (~np.isfinite(sorted_df["estimated_lifetime_years"])).any():
-        ax.text(
-            0.99,
-            0.98,
-            "Green bars indicate non-depleting spacecraft",
-            transform=ax.transAxes,
-            ha="right",
-            va="top",
-            fontsize=12,
-            bbox=dict(boxstyle="round", fc="0.95"),
-        )
     handles, labels = ax.get_legend_handles_labels()
     handles2, labels2 = ax2.get_legend_handles_labels()
     ax.legend(handles + handles2, labels + labels2, loc="upper left")
@@ -340,7 +322,7 @@ def main(
     ),
     plain_progress: bool = typer.Option(
         False,
-        "--plain-progress",
+        "--debug",
         help="Disable the live run table. Useful when debugging with pdb/ipdb.",
     ),
 ) -> None:

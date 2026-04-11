@@ -31,10 +31,12 @@ class BaseScheduler:
         # will consider both directions of the edge. To account for this, we sum the
         # weights in either direction to obtain the total weight for that undirected edge.
 
+        # Remove directionality
         sym_weights = W_k + W_k.T
-        valid_mask = np.triu(P_k >= 1, k=1) & (sym_weights >= 0)
+        # Consider only available contacts and edges with positive weight.
+        positive_weights_mask = np.triu(P_k >= 1, k=1) & (sym_weights >= 0)
 
-        tx_idx, rx_idx = np.where(valid_mask)
+        tx_idx, rx_idx = np.where(positive_weights_mask)
         edges = list(zip(tx_idx, rx_idx, sym_weights[tx_idx, rx_idx]))
 
         # Create graph containing edges from P_k

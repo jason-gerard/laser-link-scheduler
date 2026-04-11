@@ -28,7 +28,7 @@ d_max = 600
 default_a = 1
 
 # TODO: change descrition for general propourse.
-ALPHA = 0.80
+ALPHA = 0.0
 """
     ALPHA is a weighting factor that scales how much impact fairness has on the algorithm. If ALPHA is low it will only
     be used for tie breaking when multiple options have the same change in capacity. If ALPHA is high then increasing
@@ -166,16 +166,48 @@ class MLConfig:
 
     """
 
-    BASELINE_POWER_FOR_BASIC_OPERATION = 70
-    SOURCE_NODE_INITIAL_POWER = 250.0  # Watts
-    RELAY_NODE_INITIAL_POWER = 250.0  # Watts
+    SOURCE_BASELINE_POWER_FOR_BASIC_OPERATION = 69.9  # Watts
+    RELAY_BASELINE_POWER_FOR_BASIC_OPERATION = 69.9  # Watts
+    GS_BASELINE_POWER_FOR_BASIC_OPERATION = 0.0  # Watts
+
+    SOURCE_NODE_INITIAL_POWER = 70.0  # Watts
+    RELAY_NODE_INITIAL_POWER = 70.0  # Watts
     GS_NODE_INITIAL_POWER = float("inf")
+
     DECAY_RATE = (  # 1.6% per year to seconds
         0.016 / (365.25 * 24 * 60 * 60)
     )
-    RELAY_NODE_INITIAL_BATTERY = 100.0  # Watt-hours
-    SOURCE_NODE_INITIAL_BATTERY = 100.0  # Watt-hours
+
+    RELAY_NODE_INITIAL_BATTERY = 1000.0  # Watt-hours
+    SOURCE_NODE_INITIAL_BATTERY = 1000.0  # Watt-hours
     GS_NODE_INITIAL_BATTERY = float("inf")
+
+    @classmethod
+    def get_baseline_power(cls, node_id: str):
+        # Obtain the baseline power for basic operations
+        return (
+            cls.RELAY_BASELINE_POWER_FOR_BASIC_OPERATION
+            if node_id in RELAY_NODES
+            else cls.SOURCE_BASELINE_POWER_FOR_BASIC_OPERATION
+            if node_id in SOURCE_NODES
+            else cls.GS_BASELINE_POWER_FOR_BASIC_OPERATION
+        )
+
+    @classmethod
+    def get_baseline_powers(cls, node_ids: np.ndarray) -> np.ndarray:
+        node_ids = np.asarray(node_ids)
+
+        return np.select(
+            [
+                np.isin(node_ids, RELAY_NODES),
+                np.isin(node_ids, SOURCE_NODES),
+            ],
+            [
+                cls.RELAY_BASELINE_POWER_FOR_BASIC_OPERATION,
+                cls.SOURCE_BASELINE_POWER_FOR_BASIC_OPERATION,
+            ],
+            default=cls.GS_BASELINE_POWER_FOR_BASIC_OPERATION,
+        )
 
     @classmethod
     def get_initial_power(cls, node_id: str):

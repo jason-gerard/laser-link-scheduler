@@ -499,6 +499,15 @@ def write_time_expanded_graph(
     time_expanded_graph: TimeExpandedGraph,
     file_type: FileType,
 ):
-    path = get_experiment_file(experiment_name, file_type)
+    path = get_experiment_file(experiment_name, file_type) + ".pkl"
     with open(path, "wb") as f:
         pickle.dump(time_expanded_graph, f)
+
+
+def get_time_expanded_graph(
+    experiment_name: str,
+    file_type: FileType,
+) -> TimeExpandedGraph:
+    path = get_experiment_file(experiment_name, file_type) + ".pkl"
+    with open(path, "rb") as f:
+        return pickle.load(f)

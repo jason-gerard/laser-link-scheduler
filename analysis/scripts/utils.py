@@ -155,9 +155,11 @@ def compute_state_metrics_aggregated(
 
     graph = np.asarray(teg.graphs[state])
     consumed_per_tx = np.zeros(len(valid_tx_indices), dtype=float)
+    baseline_energy = (
+        MLConfig.get_baseline_powers(valid_tx_node_ids) * state_duration
+    )
 
     active_tx, active_rx = np.where(graph[valid_tx_indices] == 1)
-
     for local_tx_pos, rx_oi_idx in zip(active_tx, active_rx):
         tx_oi_idx = valid_tx_indices[local_tx_pos]
         transmission_energy_consumed = transmission_energy(
@@ -173,11 +175,8 @@ def compute_state_metrics_aggregated(
                 should_bypass_retargeting_time=should_bypass_retargeting_time,
             ),
         )
-        baseline_energy_consumed = (
-            MLConfig.BASELINE_POWER_FOR_BASIC_OPERATION * state_duration
-        )
         consumed_per_tx[local_tx_pos] += (
-            transmission_energy_consumed + baseline_energy_consumed
+            transmission_energy_consumed + baseline_energy[local_tx_pos]
         )
 
     return pd.DataFrame(
@@ -201,12 +200,12 @@ def estimate_lifetime_from_average_load(
         return float("inf")
 
     initial_power = MLConfig.get_initial_power(node_id)
+    baseline_power = MLConfig.get_baseline_power(node_id)
     return float(
         mission_lifetime(
             P0=initial_power,
             decay_constant=MLConfig.DECAY_RATE,
-            P_min=average_power_load
-            + MLConfig.BASELINE_POWER_FOR_BASIC_OPERATION,
+            P_min=average_power_load + baseline_power,
         )
     )
 
@@ -294,6 +293,12 @@ def compute_lifetime_metrics(
     total_df["depleted_within_horizon"] = np.isfinite(
         total_df["estimated_lifetime"]
     ) & (total_df["estimated_lifetime"] <= mission_duration)
+    total_df.loc[total_df["depleted_within_horizon"], "estimated_lifetime"] = (
+        0.0
+    )
+    total_df.loc[
+        total_df["depleted_within_horizon"], "estimated_lifetime_years"
+    ] = 0.0
 
     return total_df.sort_values("node_id").reset_index(drop=True)
 

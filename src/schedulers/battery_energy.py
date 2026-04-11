@@ -5,10 +5,7 @@ from src.constants import (
     OPTConfig,
     ALPHA,
 )
-from src.time_expanded_graph.time_expanded_graph import (
-    TimeExpandedGraph,
-    Node,
-)
+from src.time_expanded_graph.time_expanded_graph import TimeExpandedGraph, Node
 from .base_scheduler import BaseScheduler
 
 from src.topology.weights import (
@@ -24,30 +21,98 @@ class BatteryEnergy(BaseScheduler):
         super().__init__(should_bypass_retargeting_time)
         self.battery_states: np.ndarray | None = None
 
-    def _weight_node_battery(
+    def _project_generated_energy(
         self,
-        state: int,
-        previous_schedule_contact_topology: np.ndarray,
-        teg: TimeExpandedGraph,
-        contact_topology_k: np.ndarray,
-        accumulated_time: int,
-        battery_states: np.ndarray,
+        from_time: int,
+        to_time: int,
         initial_powers: np.ndarray,
-    ) -> np.ndarray:
-        state_duration = teg.state_durations[state]
-        from_time = accumulated_time
-        to_time = accumulated_time + state_duration
-
-        weight_battery = np.zeros((teg.N, teg.N), dtype="float32")
-        generated_per_oi = generated_energy(
+    ) -> tuple[np.ndarray, np.ndarray]:
+        rtg_generated_energy = generated_energy(
             from_time=from_time,
             to_time=to_time,
             initial_power=initial_powers,
             decay_constant=MLConfig.DECAY_RATE,
         )
+        # NOTE: Implement the solar generation model later. For now the
+        # battery model is pure RTG, so the battery is not recharged yet.
+        solar_generated_energy = np.zeros_like(rtg_generated_energy)
+        return rtg_generated_energy, solar_generated_energy
+
+    def _weight_node_battery(
+        self,
+        n,
+        state_duration: int,
+        previous_schedule_contact_topology: np.ndarray,
+        positions: np.ndarray,
+        optical_interfaces_to_node: dict[int, int],
+        nodes: list[Node],
+        contact_topology_k: np.ndarray,
+        generated_energy: tuple[np.ndarray, np.ndarray],
+        battery_states: np.ndarray,
+        oi_to_node_idx: np.ndarray,
+        baseline_energy: np.ndarray,
+    ) -> np.ndarray:
+        weight_battery = np.zeros((n, n), dtype="float32")
 
         active_tx, active_rx = np.where(contact_topology_k >= 1)
         for tx_oi_idx, rx_oi_idx in zip(active_tx, active_rx):
+            tx_node_idx = oi_to_node_idx[tx_oi_idx]
+            rx_node_idx = oi_to_node_idx[rx_oi_idx]
+            consumed_edge = transmission_energy(
+                power=OPTConfig.PEAK_TRANSMISSION_POWER,
+                duration=compute_effective_contact_time(
+                    oi_idx1=tx_oi_idx,
+                    oi_idx2=rx_oi_idx,
+                    scheduled_contact_topology=previous_schedule_contact_topology,
+                    state_duration=state_duration,
+                    positions=positions,
+                    optical_interfaces_to_node=optical_interfaces_to_node,
+                    nodes=nodes,
+                    should_bypass_retargeting_time=self.should_bypass_retargeting_time,
+                ),
+            )
+            # Still knowing that the battery recharge only with solar energy, we compute the difference considering the rtg energy
+            # for admiting a difference between those nodes that can provide enought energy during the state and those who not.
+            tx_projected_battery = (
+                battery_states[tx_node_idx]
+                + generated_energy[0][tx_node_idx]
+                + generated_energy[1][tx_node_idx]
+                - consumed_edge
+                - baseline_energy[tx_node_idx]
+            )
+            rx_projected_battery = (
+                battery_states[rx_node_idx]
+                + generated_energy[0][rx_node_idx]
+                + generated_energy[1][rx_node_idx]
+                - consumed_edge
+                - baseline_energy[rx_node_idx]
+            )
+            weight_battery[tx_oi_idx, rx_oi_idx] = min(
+                tx_projected_battery,
+                rx_projected_battery,
+            )
+
+        return weight_battery
+
+    def _update_battery_states(
+        self,
+        state: int,
+        teg: TimeExpandedGraph,
+        adj_matrix: np.ndarray,
+        previous_schedule_contact_topology: np.ndarray,
+        battery_states: np.ndarray,
+        generated_energy: tuple[np.ndarray, np.ndarray],
+        baseline_energy: np.ndarray,
+        oi_to_node_idx: np.ndarray,
+        battery_max_capacity: np.ndarray,
+    ) -> np.ndarray:
+        total_generated_energy = generated_energy[0] + generated_energy[1]
+        next_battery_states = battery_states
+        state_duration = teg.state_durations[state]
+
+        active_tx, active_rx = np.where(adj_matrix >= 1)
+        for tx_oi_idx, rx_oi_idx in zip(active_tx, active_rx):
+            tx_node_idx = oi_to_node_idx[tx_oi_idx]
             consumed_edge = transmission_energy(
                 power=OPTConfig.PEAK_TRANSMISSION_POWER,
                 duration=compute_effective_contact_time(
@@ -61,33 +126,27 @@ class BatteryEnergy(BaseScheduler):
                     should_bypass_retargeting_time=self.should_bypass_retargeting_time,
                 ),
             )
-            min_generated_edge = min(
-                generated_per_oi[tx_oi_idx],
-                generated_per_oi[rx_oi_idx],
+            delta_energy = total_generated_energy[tx_node_idx] - (
+                consumed_edge + baseline_energy[tx_node_idx]
             )
-            delta_energy = min_generated_edge - consumed_edge
-
-            weight_battery[tx_oi_idx, rx_oi_idx] = min(
-                battery_states[tx_oi_idx], battery_states[rx_oi_idx]
-            )
-            # There are two ways to do it:
-            #
-            # Modify the weight only if the delta_energy is below 0.
-            # That modelate the discharge of the battery
+            __import__("ipdb").set_trace()
             if delta_energy < 0:
-                weight_battery[tx_oi_idx, rx_oi_idx] += delta_energy
+                # If need battery, substract from it
+                next_battery_states[tx_node_idx] += delta_energy
+            else:
+                # Store remaining solar energy
+                next_battery_states[tx_node_idx] += min(
+                    delta_energy, generated_energy[0][tx_node_idx]
+                )
 
-            # Modify the weight allways
-            # This provoque more difference bewteen those nodes that not provide enoght energy to supply the consumption and
-            # those who can provide energy. In the other case the weight only depends by the battery here we add the energy in the game
-            # weight_battery[tx_oi_idx, rx_oi_idx] += delta_energy
-
-        return weight_battery
-
-    # def _update_battery_states(
-    #     battery_states: np.ndarray,
-    #     adj_matrix: np.ndarray,
-    # ) -> np.ndarray: ...
+        # Fix battery values to be within the (0, max_capacity) interval.
+        finite_mask = np.isfinite(next_battery_states)
+        next_battery_states[finite_mask] = np.clip(
+            next_battery_states[finite_mask],
+            0.0,
+            battery_max_capacity[finite_mask],
+        )
+        return next_battery_states
 
     def schedule(
         self,
@@ -97,36 +156,60 @@ class BatteryEnergy(BaseScheduler):
         """
         Placeholder for battery energy schedule algorithm
         """
-        scheduled_graphs = np.empty((teg.K, teg.N, teg.N), dtype="int64")
+        n = teg.N
+        k = teg.K
+        scheduled_graphs = np.empty((k, n, n), dtype="int64")
         scheduled_contacts = []
-        weights = np.empty((teg.K, teg.N, teg.N), dtype="float32")
+        weights = np.empty((k, n, n), dtype="float32")
 
-        weights_dct = np.zeros((teg.N, teg.N), dtype="float32")
-        accumulated_time = 0
+        weights_dct = np.zeros((n, n), dtype="float32")
+        accumulated_time: int = 0
 
         oi_to_node_idx = np.array(
-            [teg.optical_interfaces_to_node[i] for i in range(teg.N)],
+            [teg.optical_interfaces_to_node[i] for i in range(n)],
             dtype=int,
         )
-        oi_node_ids = np.array(
-            [teg.nodes[node_idx].id for node_idx in oi_to_node_idx],
+        node_ids = np.array(
+            [node.id for node in teg.nodes],
             dtype=str,
         )
 
-        battery_states = MLConfig.get_initial_batteries(oi_node_ids)
-        initial_powers = MLConfig.get_initial_powers(oi_node_ids)
+        initial_powers = MLConfig.get_initial_powers(node_ids).astype(
+            "float64"
+        )
+        baseline_powers = MLConfig.get_baseline_powers(node_ids).astype(
+            "float64"
+        )
+        battery_max_capacity = MLConfig.get_initial_batteries(node_ids).astype(
+            "float64"
+        )
+        battery_states = battery_max_capacity
+        for state in range(k):
+            # Time restrictions for current state
+            state_duration = teg.state_durations[state]
+            from_time = accumulated_time
+            to_time = accumulated_time + state_duration
 
-        for state in range(teg.K):
-            weights_battery = self._weight_node_battery(
-                state,
-                scheduled_graphs[:state],
-                teg,
-                teg.graphs[state],
-                accumulated_time,
-                battery_states,
+            baseline_energy = baseline_powers * state_duration
+            generated_energy = self._project_generated_energy(
+                from_time,
+                to_time,
                 initial_powers,
             )
-            accumulated_time += teg.state_durations[state]
+            weights_battery = self._weight_node_battery(
+                n,
+                state_duration,
+                scheduled_graphs[:state],
+                teg.pos,
+                teg.optical_interfaces_to_node,
+                teg.nodes,
+                teg.graphs[state],
+                generated_energy,
+                battery_states,
+                oi_to_node_idx,
+                baseline_energy,
+            )
+            accumulated_time += state_duration
             # Compute the weight of each edge by doing a weighted sum of the lifespan and fairness metrics
             weights[state] = ((1 - ALPHA) * weights_battery) + (
                 ALPHA * weights_dct
@@ -144,12 +227,18 @@ class BatteryEnergy(BaseScheduler):
             )
             scheduled_graphs[state] = adj_matrix
             scheduled_contacts.append(contacts)
-
             # Update the battery states
-            # battery_states = self._update_battery_states(
-            #     battery_states,
-            #     adj_matrix,
-            # )
+            battery_states = self._update_battery_states(
+                state,
+                teg,
+                adj_matrix,
+                scheduled_graphs[:state],
+                battery_states,
+                generated_energy,
+                baseline_energy,
+                oi_to_node_idx,
+                battery_max_capacity,
+            )
 
             # Update the matrix containing the disabled contact time for current state
             weights_dct += disabled_contact_time(
@@ -158,7 +247,9 @@ class BatteryEnergy(BaseScheduler):
 
             # For the percentage on running table
             if progress_callback is not None:
-                progress_callback("schedule", state + 1, teg.K)
+                progress_callback("schedule", state + 1, k)
+
+        self.battery_states = battery_states
 
         return TimeExpandedGraph(
             graphs=scheduled_graphs,

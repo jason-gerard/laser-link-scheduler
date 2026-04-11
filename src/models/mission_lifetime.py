@@ -66,7 +66,7 @@ def generating_power(
         P0 is the initial power, and λ is the decay constant.
     """
 
-    return initial_power * np.exp(decay_constant * time)
+    return initial_power * np.exp(-decay_constant * time)
 
 
 def generated_energy(

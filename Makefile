@@ -33,7 +33,7 @@ setup: # Install dependencies and prepare the repo (uv sync)
 # =================================================================================
 format: # Formats code
 	@echo "Formatting Python code with uv..."
-	uv run ruff format
+	@uv run ruff format .
 	@echo "Code formatted."
 
 check-format: # Checks code format

@@ -6,6 +6,7 @@ from .random_scheduler import RandomScheduler
 from .path_solver import PathSchedulerModel
 from .milp_lls import LLSModel
 from .energy_aware import EnergyAware
+from .battery_energy import BatteryEnergy
 from .lifespan_aware import LifespanAware
 from .brute_force import BruteForceScheduler
 
@@ -17,6 +18,7 @@ __all__ = [
     "BruteForceScheduler",
     "FairContactPlan",
     "EnergyAware",
+    "BatteryEnergy",
     "LifespanAware",
     "PathSchedulerModel",
     "LLSModel",
@@ -33,6 +35,10 @@ SCHEDULER_REGISTER: dict[str, BaseScheduler] = {
     "alternating": AlternatingScheduler(),
     "energy_aware": EnergyAware(),
     "energy_aware_pat_unaware": EnergyAware(
+        should_bypass_retargeting_time=True
+    ),
+    "battery_energy": BatteryEnergy(),
+    "battery_energy_pat_unaware": BatteryEnergy(
         should_bypass_retargeting_time=True
     ),
     "lifespan_aware": LifespanAware(),
