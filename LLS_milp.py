@@ -12,7 +12,7 @@ from time_expanded_graph import convert_contact_plan_to_time_expanded_graph, Tim
 from utils import FileType
 
 # MAX_TIME = 2.5 * 60 * 60  # seconds
-MAX_TIME = 30 * 60  # seconds
+MAX_TIME = 120 * 60  # seconds
 MAX_EDGES_PER_LASER = 1
 EPSILON = 0.9
 
@@ -215,7 +215,21 @@ class LLSModel:
 
         if self.use_gurobi:
             print("Starting solve using gurobi...")
-            self.flow_model.solve(pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01))
+            # self.flow_model.solve(pulp.GUROBI_CMD(timeLimit=MAX_TIME, gapRel=0.01))
+            gurobi_options = [
+                ("Method", 1),            # Use Dual Simplex (uses significantly less RAM than Barrier)
+                ("NodefileStart", 0.5),   # Start writing to disk after 0.5 GB of RAM is used
+                ("Threads", 2),           # Limit threads to reduce memory overhead per thread
+                ("Presolve", 2),          # Aggressive presolve to shrink the 1.1M rows further
+                ("PreSparsify", 1),       # Extra effort to reduce non-zeros before solving
+            ]
+
+            # Apply the options to the solver call
+            self.flow_model.solve(pulp.GUROBI_CMD(
+                timeLimit=MAX_TIME, 
+                gapRel=0.01, 
+                options=gurobi_options
+            ))
         else:
             print("Starting solve using cbc...")
             self.flow_model.solve(pulp.PULP_CBC_CMD(timeLimit=MAX_TIME))

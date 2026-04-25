@@ -40,16 +40,16 @@ x = sorted(list(set(scenarios)))
 algorithms = [
     ("lls", "LLS_Greedy"),
     ("lls_pat_unaware", "LLS_Greedy (ZRK)"),
-    # ("lls_mip", "LLS_MIP"),
+    ("lls_mip", "LLS_MIP"),
     ("fcp", "FCP"),
 ]
 
 metrics = [
     ("Capacity", "petabits/day", 0, 40, 5),
-    ("Capacity by node", "terabits/day", 0, 400, 100),
+    ("Capacity by node", "terabits/day", 0, 500, 100),
     ("Wasted capacity", "petabits/day", 5, 40, 5),
     ("Wasted buffer", "petabits/day", 5, 40, 5),
-    ("Scheduled delay", "hours", 0, 25, 5),
+    ("Scheduled delay", "hours", 0, 20, 4),
     ("Jain's fairness index", "", 0.5, 1.0, 0.1),
     ("Execution duration", "seconds", 0.1, 100000, 30),
 ]
@@ -57,6 +57,7 @@ metrics = [
 OUTPUT_DIR = "sparse_optical_earth_network_scenario_analysis"
 
 for metric, unit, y_min, y_max, y_step in metrics:
+    print(f"Processing metric {metric}")
     fig, ax = plt.subplots()
 
     for algorithm, display_name in algorithms:
@@ -77,7 +78,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     else:
         ax.set_ylabel(label)
 
-    ax.set_xlabel("LEO node counts")
+    ax.set_xlabel("LEO node count")
     ax.legend()
 
     ax.grid(linestyle='-', color='0.95')
@@ -99,10 +100,38 @@ for metric, unit, y_min, y_max, y_step in metrics:
     #     "192/15/10",
     #     "264/18/12",
     # ])
+
+    ax.legend(
+        loc='upper center',
+        bbox_to_anchor=(0.5, -0.2),
+        ncol=2
+    )
+
+    bbox = dict(boxstyle="round", fc="0.9")
+    arrowprops = dict(
+        arrowstyle="->",
+        connectionstyle="angle,angleA=0,angleB=90,rad=10")
+
+    plt.axvline(
+        x=64.0,
+        color='black',
+        linestyle='dashed',
+        linewidth=2,
+        # zorder=0,
+    )
+    plt.text(
+        110.0,
+        y_max * 0.8 if metric != "Execution duration" else y_max * 0.5,
+        "MILP model\nintractable",
+        fontsize=16,
+        ha='center',
+        va='top',
+        bbox=bbox
+    )
     
     file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "").replace("'", "")
     
-    plt.tight_layout()
+    # plt.tight_layout()
 
     plt.savefig(
         os.path.join("analysis", OUTPUT_DIR, f"{file_name}.pdf"),

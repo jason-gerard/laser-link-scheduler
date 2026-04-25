@@ -53,8 +53,8 @@ metrics = [
     ("Wasted capacity", "terabits/day", 10, 70, 10),
     ("Wasted buffer", "terabits/day", 5, 40, 5),
     ("Scheduled delay", "hours", 0, 25, 5),
-    ("Jain's fairness index", "", 0.7, 1.0, 0.1),
-    ("Execution duration", "seconds", 0.01, 100000, 30),
+    ("Jain's fairness index", "", 0.85, 1.0, 0.05),
+    ("Execution duration", "seconds", 0.01, 10000, 30),
 ]
 
 OGS_BIT_RATE_TB = 50 / 1000 / 1000
@@ -100,7 +100,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
         plt.ylabel(f"Delay [{unit}]")
     else:
         plt.ylabel(label)
-    plt.xlabel("Source/relay node counts")
+    plt.xlabel("Source/relay node count")
     plt.legend()
 
     plt.grid(linestyle='-', color='0.95')
@@ -116,6 +116,12 @@ for metric, unit, y_min, y_max, y_step in metrics:
 
     ax.set_xticks([i for i in x if i % 8 == 0])
     ax.set_xticklabels([f"{i}/{math.ceil(i/8)}" for i in x if i % 8 == 0])
+
+    ax.legend(
+        loc='upper center',
+        bbox_to_anchor=(0.5, -0.2),
+        ncol=2
+    )
     
     file_name = label.replace(" ", "_").replace("/", "_").replace("[", "").replace("]", "").replace("'", "")
     plt.savefig(

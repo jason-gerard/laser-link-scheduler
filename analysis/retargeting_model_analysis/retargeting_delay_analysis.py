@@ -32,16 +32,18 @@ algorithms = [
     ("fcp", "FCP"),
 ]
 
-report_id = 1770632046
-OUTPUT_DIR = "mars_relay_earth_scenario_analysis"
+report_id = 1774132452
+# OUTPUT_DIR = "mars_relay_earth_scenario_analysis"
 # OUTPUT_DIR = "mars_earth_relay_scenario_analysis"
 # OUTPUT_DIR = "mars_earth_dte_scenario_analysis"
+OUTPUT_DIR = "sparse_optical_earth_network_scenario_analysis"
 
 tegs = []
 
-pattern = re.compile(r"^([a-zA-Z_]+)_mars_.*?_(\d+)\.pkl$")
+# pattern = re.compile(r"^([a-zA-Z_]+)_mars_.*?_(\d+)\.pkl$")
 # pattern = re.compile(r"^([a-zA-Z_]+)_gs_.*?_(\d+)\.pkl$")
 # pattern = re.compile(r"^([a-zA-Z_]+)_dte_.*?_(\d+)\.pkl$")
+pattern = re.compile(r"^([a-zA-Z_]+)_sparse_.*?_(\d+)\.pkl$")
 
 report_dir = os.path.join("reports", str(report_id))
 for file_name in os.listdir(report_dir):
@@ -149,19 +151,51 @@ for algorithm, display_name in algorithms:
     plt.plot(x_sorted, y_sorted, label=display_name, linewidth=2.5)
 
 # Labels and formatting
-plt.ylabel("Network Duty Cycle [%]")
-plt.xlabel("Source/Relay Node Count")
+plt.ylabel("Optical link duty cycle [%]")
+# plt.xlabel("Source/relay node count")
+# plt.xlabel("Source/OGS node count")
+plt.xlabel("LEO node count")
 plt.ylim(60, 100)
 plt.yticks(np.arange(60, 101, 5))
 plt.grid(linestyle='-', color='0.95')
 plt.legend(loc="lower right")
 
 # Custom X-axis ticks and labels
-ax.set_xticks([i for i in x if i % 16 == 0])
+# ax.set_xticks([i for i in x if i % 16 == 0])
 # ax.set_xticks([i for i in x if i % 8 == 0])
-ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
+# ax.set_xticklabels([f"{i}/{3 * math.ceil(i/16)}" for i in x if i % 16 == 0])
 # ax.set_xticklabels([f"{i}/{math.ceil(i/8)}" for i in x if i % 8 == 0])
 # ax.set_xticklabels([f"{i}/{math.ceil(i/16)}" for i in x if i % 16 == 0])
+ax.set_xticks([32, 64, 128, 192, 264])
+
+ax.legend(
+    loc='upper center',
+    bbox_to_anchor=(0.5, -0.2),
+    ncol=2
+)
+
+bbox = dict(boxstyle="round", fc="0.9")
+arrowprops = dict(
+    arrowstyle="->",
+    connectionstyle="angle,angleA=0,angleB=90,rad=10")
+
+plt.axvline(
+    x=64.0,
+    color='black',
+    linestyle='dashed',
+    linewidth=2,
+    # zorder=0,
+)
+plt.text(
+    110.0,
+    90,
+    "MILP model\nintractable",
+    fontsize=16,
+    ha='center',
+    va='top',
+    bbox=bbox
+)
+    
 
 # Save the figure
 file_name = "network_retargeting_duty_cycle"

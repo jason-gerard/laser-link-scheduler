@@ -131,9 +131,8 @@ ax.set_xlim(xmin - pad, xmax + pad)
 plt.grid(linestyle='-', color='0.95')
 ax.legend(
     loc="upper center",
-    bbox_to_anchor=(0.5, -0.25),
+    bbox_to_anchor=(0.5, -0.3),
     ncol=5,
-    frameon=False
 )
 
 # Save the figure
@@ -181,9 +180,8 @@ ax.set_xlim(xmin - pad, xmax + pad)
 plt.grid(linestyle='-', color='0.95')
 ax.legend(
     loc="upper center",
-    bbox_to_anchor=(0.5, -0.25),
+    bbox_to_anchor=(0.5, -0.3),
     ncol=5,
-    frameon=False
 )
 
 # Save the figure
@@ -234,9 +232,8 @@ ax.set_xlim(xmin - pad, xmax + pad)
 plt.grid(linestyle='-', color='0.95')
 ax.legend(
     loc="upper center",
-    bbox_to_anchor=(0.5, -0.25),
+    bbox_to_anchor=(0.5, -0.3),
     ncol=3,
-    frameon=False
 )
 
 # Save the figure
