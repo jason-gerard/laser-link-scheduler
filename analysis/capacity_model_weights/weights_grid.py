@@ -10,15 +10,19 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 
-sys.path.append(os.path.join(os.path.dirname(sys.path[0])))
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]), ".."))
 from time_expanded_graph import TimeExpandedGraph
 
 # weights[k] = W_delta_cap + W_dct
 # if contact_topology_k[tx_idx][rx_idx] >= 1 and contact_plan_k[tx_idx][rx_idx] == 0:
 
-plt.rcParams.update({'font.size': 18})
-plt.rc('legend', fontsize=14)
+plt.rcParams.update({'font.size': 22})
+plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
+
+mpl.rcParams['pdf.fonttype'] = 3
+mpl.rcParams['ps.fonttype'] = 3
+plt.rcParams.update({'pdf.fonttype': 3})
 
 report_id = 1724036744
 file_name = "lls_mars_earth_simple_scenario.pkl"

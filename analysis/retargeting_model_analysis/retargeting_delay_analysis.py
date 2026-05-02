@@ -18,9 +18,9 @@ plt.rcParams.update({'font.size': 22})
 plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
-mpl.rcParams['pdf.fonttype'] = 42
-mpl.rcParams['ps.fonttype'] = 42
-plt.rcParams.update({'pdf.fonttype': 42})
+mpl.rcParams['pdf.fonttype'] = 3
+mpl.rcParams['ps.fonttype'] = 3
+plt.rcParams.update({'pdf.fonttype': 3})
 
 algorithms = [
     # ("otls", "OTLS_Greedy"),

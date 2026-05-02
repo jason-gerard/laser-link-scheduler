@@ -11,9 +11,9 @@ plt.rcParams.update({'font.size': 22})
 plt.rc('legend', fontsize=16)
 plt.rcParams.update({'font.family': 'Times New Roman'})
 
-mpl.rcParams['pdf.fonttype'] = 42
-mpl.rcParams['ps.fonttype'] = 42
-plt.rcParams.update({'pdf.fonttype': 42})
+mpl.rcParams['pdf.fonttype'] = 3
+mpl.rcParams['ps.fonttype'] = 3
+plt.rcParams.update({'pdf.fonttype': 3})
 
 report_id = 1770756880
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
