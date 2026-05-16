@@ -124,8 +124,8 @@ NODE_TO_PLANET_MAP = {
 #     **{node_id: MARS for node_id in RELAY_NODES},
 # }
 
-SOURCE_NODE_BIT_RATE = 187  # DSOC Psyche @ 100 million km 50 mbps
-# SOURCE_NODE_BIT_RATE = 1000  # DSOC Psyche @ 33 million km 267 mbps
+# SOURCE_NODE_BIT_RATE = 187  # DSOC Psyche @ 100 million km 50 mbps
+SOURCE_NODE_BIT_RATE = 1000  # DSOC Psyche @ 33 million km 267 mbps
 RELAY_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
 GS_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
 BIT_RATES = {

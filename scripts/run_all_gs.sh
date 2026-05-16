@@ -12,4 +12,7 @@ uv run main.py \
     -s  lls             \
     -s  lls_pat_unaware \
     -s  lls_mip         \
-    -s  lls_lp
+    -s  lls_lp          \
+    -s  energy_aware    \
+    -s  battery_energy  \
+    -s  lifespan_aware

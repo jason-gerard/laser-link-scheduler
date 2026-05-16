@@ -17,9 +17,8 @@ uv run main.py \
     -e  gs_mars_earth_scenario_inc_reduced_56   \
     -e  gs_mars_earth_scenario_inc_reduced_60   \
     -e  gs_mars_earth_scenario_inc_reduced_64   \
-    -s  fcp             \
-    -s  random          \
-    -s  alternating     \
     -s  lls             \
     -s  lls_pat_unaware \
-    -s  lls_mip
+    -s  energy_aware    \
+    -s  battery_energy  \
+    -s  lifespan_aware  \

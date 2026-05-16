@@ -288,7 +288,7 @@ def compute_lifetime_metrics(
     )
 
     total_df["estimated_lifetime_years"] = total_df["estimated_lifetime"] / (
-        356.25 * 24 * 60 * 60
+        365.25 * 24 * 60 * 60
     )
     total_df["depleted_within_horizon"] = np.isfinite(
         total_df["estimated_lifetime"]

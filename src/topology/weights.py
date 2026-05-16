@@ -67,11 +67,7 @@ def delta_capacity(
     """
     num_nodes = len(contact_topology_k)
 
-    # Compute network capacity with current node_capacities list
-    node_capacity_map = build_node_capacity_map(node_capacities)
-    network_current_capacity = compute_capacity(
-        list(node_capacity_map.values())
-    )
+    network_current_capacity = compute_capacity(node_capacities)
 
     delta_capacities = np.zeros((num_nodes, num_nodes), dtype="int64")
 
@@ -97,30 +93,15 @@ def delta_capacity(
         # None i.e. there was no new capacity then we can just leave the delta as 0, otherwise compute
         # the new total capacity then the new delta
         if single_edge_node_capacity is not None:
-            current_node_capacity = node_capacity_map.get(
-                single_edge_node_capacity.id
+            # Merge it with the node_capacities list and compute the network capacity with the new list
+            new_node_capacities = merge_many_node_capacities(
+                node_capacities + [single_edge_node_capacity]
             )
-            current_contribution = (
-                min(
-                    current_node_capacity.capacity_in,
-                    current_node_capacity.capacity_out,
-                )
-                if current_node_capacity is not None
-                else 0
-            )
+            new_capacity = compute_capacity(new_node_capacities)
 
-            new_capacity_in = single_edge_node_capacity.capacity_in
-            new_capacity_out = single_edge_node_capacity.capacity_out
-            if current_node_capacity is not None:
-                new_capacity_in += current_node_capacity.capacity_in
-                new_capacity_out += current_node_capacity.capacity_out
-
-            new_contribution = min(new_capacity_in, new_capacity_out)
+            # Take the difference and that is the new weight
             delta_capacities[tx_idx][rx_idx] = (
-                network_current_capacity
-                - current_contribution
-                + new_contribution
-                - network_current_capacity
+                new_capacity - network_current_capacity
             )
 
     return delta_capacities

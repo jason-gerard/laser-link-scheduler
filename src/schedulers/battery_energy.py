@@ -19,7 +19,6 @@ from src.utils import ProgressCallback
 class BatteryEnergy(BaseScheduler):
     def __init__(self, should_bypass_retargeting_time=False):
         super().__init__(should_bypass_retargeting_time)
-        self.battery_states: np.ndarray | None = None
 
     def _project_generated_energy(
         self,
@@ -59,7 +58,7 @@ class BatteryEnergy(BaseScheduler):
             tx_node_idx = oi_to_node_idx[tx_oi_idx]
             rx_node_idx = oi_to_node_idx[rx_oi_idx]
             consumed_edge = transmission_energy(
-                power=OPTConfig.PEAK_TRANSMISSION_POWER,
+                power=OPTConfig.AVG_TRANSMISSION_POWER,
                 duration=compute_effective_contact_time(
                     oi_idx1=tx_oi_idx,
                     oi_idx2=rx_oi_idx,
@@ -107,14 +106,14 @@ class BatteryEnergy(BaseScheduler):
         battery_max_capacity: np.ndarray,
     ) -> np.ndarray:
         total_generated_energy = generated_energy[0] + generated_energy[1]
-        next_battery_states = battery_states
+        next_battery_states = battery_states.copy()
         state_duration = teg.state_durations[state]
 
         active_tx, active_rx = np.where(adj_matrix >= 1)
         for tx_oi_idx, rx_oi_idx in zip(active_tx, active_rx):
             tx_node_idx = oi_to_node_idx[tx_oi_idx]
             consumed_edge = transmission_energy(
-                power=OPTConfig.PEAK_TRANSMISSION_POWER,
+                power=OPTConfig.AVG_TRANSMISSION_POWER,
                 duration=compute_effective_contact_time(
                     oi_idx1=tx_oi_idx,
                     oi_idx2=rx_oi_idx,
@@ -129,7 +128,6 @@ class BatteryEnergy(BaseScheduler):
             delta_energy = total_generated_energy[tx_node_idx] - (
                 consumed_edge + baseline_energy[tx_node_idx]
             )
-            __import__("ipdb").set_trace()
             if delta_energy < 0:
                 # If need battery, substract from it
                 next_battery_states[tx_node_idx] += delta_energy
@@ -180,10 +178,10 @@ class BatteryEnergy(BaseScheduler):
         baseline_powers = MLConfig.get_baseline_powers(node_ids).astype(
             "float64"
         )
-        battery_max_capacity = MLConfig.get_initial_batteries(node_ids).astype(
-            "float64"
+        battery_max_capacity = (
+            MLConfig.get_initial_batteries(node_ids).astype("float64") * 3600.0
         )
-        battery_states = battery_max_capacity
+        battery_states = battery_max_capacity.copy()
         for state in range(k):
             # Time restrictions for current state
             state_duration = teg.state_durations[state]
@@ -248,8 +246,6 @@ class BatteryEnergy(BaseScheduler):
             # For the percentage on running table
             if progress_callback is not None:
                 progress_callback("schedule", state + 1, k)
-
-        self.battery_states = battery_states
 
         return TimeExpandedGraph(
             graphs=scheduled_graphs,

@@ -1,6 +1,7 @@
 import csv
 import math
 import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +11,22 @@ plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
 plt.rcParams.update({"font.family": "Times New Roman"})
 
-report_id = 1748949730
+# Unit conversion: internal capacity unit → terabits
+# Internal bit-rate unit = 267,000 bps (267 kbps).
+# capacity [internal] * 267_000 / 1e12 = capacity [terabits]
+_BITS_PER_INTERNAL_UNIT = 267_000
+_BITS_PER_TERABIT = 1_000_000_000_000
+
+
+def to_terabits(raw: float) -> float:
+    return raw * _BITS_PER_INTERNAL_UNIT / _BITS_PER_TERABIT
+
+
+if len(sys.argv) < 2:
+    print("Usage: python visualize_metrics_incremental_runs.py <report_id>")
+    sys.exit(1)
+
+report_id = int(sys.argv[1])
 path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [
@@ -23,102 +39,65 @@ for run in report:
     num_nodes = int(run["Scenario"].split("_")[-1])
     scenarios.append(num_nodes)
 
-    run["Capacity by node"] = (
-        float(run["Capacity"])
-        * 267_000
-        * 4
-        / 1000
-        / 1000
-        / 1000
-        / 1000
-        / num_nodes
-    )  # this has to come before capacity calculation
-    run["Capacity"] = (
-        float(run["Capacity"]) * 267_000 * 4 / 1000 / 1000 / 1000 / 1000
-    )
-    run["Wasted capacity"] = (
-        float(run["Wasted capacity"]) * 267_000 * 4 / 1000 / 1000 / 1000 / 1000
-    )
-    run["Wasted buffer capacity"] = (
+    # "Capacity by node" must be computed before overwriting "Capacity"
+    run["Capacity by node"] = to_terabits(float(run["Capacity"])) / num_nodes
+    run["Capacity"] = to_terabits(float(run["Capacity"]))
+    run["Wasted capacity"] = to_terabits(float(run["Wasted capacity"]))
+    run["Wasted buffer capacity"] = to_terabits(
         float(run["Wasted buffer capacity"])
-        * 267_000
-        / 1000
-        / 1000
-        / 1000
-        / 1000
     )
-    run["Scheduled delay"] = float(run["Scheduled delay"]) / 60 / 60
+    run["Scheduled delay"] = float(run["Scheduled delay"]) / 3600  # s → hours
     run["Jain's fairness index"] = float(run["Jain's fairness index"])
     run["Execution duration"] = float(run["Execution duration"])
 
 x = sorted(list(set(scenarios)))
 
-# pprint.pprint(report)
-
+# Algorithms: baselines from MobiHoc 2025 + energy/lifetime-aware contributions
 algorithms = [
-    ("lls", "LLS_Greedy"),
-    ("lls_pat_unaware", "LLS_Greedy (ZRK)"),
-    # ("lls_lp", "LLS_LP"),
-    ("lls_mip", "LLS_MIP"),
-    ("fcp", "FCP"),
-    # ("random", "Random"),
-    # ("alternating", "Alternating"),
+    # Baselines
+    ("lls", "LLS_Greedy", "solid", 2.5, None),
+    ("lls_pat_unaware", "LLS_Greedy (ZRK)", "dashed", 2.5, None),
+    ("fcp", "FCP", "solid", 2.5, None),
+    # Contributions
+    ("energy_aware", "Energy-Aware", "solid", 2.5, None),
+    ("battery_energy", "Battery-Aware", "dashed", 2.5, None),
+    ("lifespan_aware", "Lifespan-Aware", "dotted", 2.5, None),
 ]
 
 metrics = [
-    ("Capacity", "terabits/day", 5, 40, 5),
-    ("Capacity by node", "terabits/day", 0.5, 4, 0.5),
-    ("Wasted capacity", "terabits/day", 10, 70, 10),
-    ("Wasted buffer capacity", "terabits/day", 5, 40, 5),
+    ("Capacity", "terabits/day", 0, 40, 5),
+    ("Capacity by node", "terabits/day", 0, 4, 0.5),
+    ("Wasted capacity", "terabits/day", 0, 70, 10),
+    ("Wasted buffer capacity", "terabits/day", 0, 40, 5),
     ("Scheduled delay", "hours", 0, 6, 1),
-    ("Jain's fairness index", "", 0.5, 1.0, 0.2),
-    ("Execution duration", "seconds", 0.01, 100000, 30),
+    ("Jain's fairness index", "", 0.5, 1.0, 0.1),
+    ("Execution duration", "seconds", 0.01, 1e5, 30),
 ]
+
+# DTE capacity baseline: 3 ground stations × 86400 s/day × source bit rate (1000 internal units = 267 Mbps)
+_DTE_CAPACITY_TB = (
+    3 * 86400 * 1000 * _BITS_PER_INTERNAL_UNIT / _BITS_PER_TERABIT
+)
 
 for metric, unit, y_min, y_max, y_step in metrics:
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    for algorithm, display_name in algorithms:
+    for algorithm, display_name, linestyle, linewidth, color in algorithms:
         y = [run[metric] for run in report if run["Algorithm"] == algorithm]
-
-        if algorithm == "lls_lp":
-            plt.plot(
-                x[: len(y)],
-                y,
-                linestyle="dashed",
-                label=display_name,
-                linewidth=3.5,
-            )
-        elif algorithm == "lls_mip":
-            plt.plot(
-                x[: len(y)],
-                y,
-                linestyle="dotted",
-                label=display_name,
-                linewidth=3.5,
-            )
-        else:
-            plt.plot(x[: len(y)], y, label=display_name, linewidth=2.5)
+        if not y:
+            continue
+        kwargs = dict(
+            label=display_name, linewidth=linewidth, linestyle=linestyle
+        )
+        if color:
+            kwargs["color"] = color
+        plt.plot(x[: len(y)], y, **kwargs)
 
     if metric == "Capacity":
-        # bbox = dict(boxstyle="round", fc="0.9")
-        # arrowprops = dict(
-        #     arrowstyle="->",
-        #     connectionstyle="angle,angleA=0,angleB=90,rad=10")
-        # ax.annotate("LLS_MIP intractable\nbeyond this point", fontsize=13, xy=(48, 30),
-        #             # xytext=(-102, 24), textcoords='offset points',
-        #             xytext=(-51, -150), textcoords='offset points',
-        #             bbox=bbox, arrowprops=arrowprops)
-
-        # num_gs * duration * deep space data rate
-        y = [
-            3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000
-            for _ in range(len(x))
-        ]
         plt.plot(
             x,
-            y,
+            [_DTE_CAPACITY_TB] * len(x),
             label="DTE Capacity",
             linewidth=2.5,
             color="gold",
@@ -126,14 +105,9 @@ for metric, unit, y_min, y_max, y_step in metrics:
         )
 
     if metric == "Capacity by node":
-        # num_gs * duration * deep space data rate
-        y = [
-            3 * 86400 * 187 * 267_000 / 1000 / 1000 / 1000 / 1000 / x
-            for x in x
-        ]
         plt.plot(
             x,
-            y,
+            [_DTE_CAPACITY_TB / n for n in x],
             label="DTE Capacity",
             linewidth=2.5,
             color="gold",
@@ -141,13 +115,9 @@ for metric, unit, y_min, y_max, y_step in metrics:
         )
 
     label = f"{metric} [{unit}]" if unit else metric
-    if metric == "Scheduled delay":
-        plt.ylabel(f"Delay [{unit}]")
-    else:
-        plt.ylabel(label)
+    plt.ylabel(f"Delay [{unit}]" if metric == "Scheduled delay" else label)
     plt.xlabel("Source/relay node counts")
     plt.legend()
-
     plt.grid(linestyle="-", color="0.95")
 
     if metric == "Execution duration":
@@ -176,4 +146,4 @@ for metric, unit, y_min, y_max, y_step in metrics:
         bbox_inches="tight",
         dpi=300,
     )
-    # plt.show()
+    plt.close(fig)

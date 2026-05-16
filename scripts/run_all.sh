@@ -15,9 +15,12 @@ uv run main.py \
     -e  dte_mars_earth_scenario_inc_56  \
     -e  dte_mars_earth_scenario_inc_60  \
     -e  dte_mars_earth_scenario_inc_64  \
-    -s  fcp \
-    -s  lls \
+    -s  fcp             \
+    -s  lls             \
     -s  lls_pat_unaware \
+    -s  energy_aware    \
+    -s  battery_energy  \
+    -s  lifespan_aware
     # -s  lls_mip         \
     # -s  lls_lp
 
@@ -28,9 +31,12 @@ uv run main.py \
     -e  gs_mars_earth_scenario_16  \
     -e  gs_mars_earth_scenario_20  \
     -e  gs_mars_earth_scenario_24  \
-    -s  fcp \
-    -s  lls \
-    -s  lls_pat_unaware 
+    -s  fcp             \
+    -s  lls             \
+    -s  lls_pat_unaware \
+    -s  energy_aware    \
+    -s  battery_energy  \
+    -s  lifespan_aware
     # -s  lls_mip         \
     # -s  lls_lp
 
@@ -50,9 +56,12 @@ uv run main.py \
     -e  gs_mars_earth_scenario_inc_56  \
     -e  gs_mars_earth_scenario_inc_60  \
     -e  gs_mars_earth_scenario_inc_64  \
-    -s  fcp \
-    -s  lls \
-    -s  lls_pat_unaware
+    -s  fcp             \
+    -s  lls             \
+    -s  lls_pat_unaware \
+    -s  energy_aware    \
+    -s  battery_energy  \
+    -s  lifespan_aware
     # -s  lls_mip         \
     # -s  lls_lp
 
@@ -73,9 +82,12 @@ uv run main.py \
     -e  gs_mars_earth_scenario_inc_reduced_56  \
     -e  gs_mars_earth_scenario_inc_reduced_60  \
     -e  gs_mars_earth_scenario_inc_reduced_64  \
-    -s  fcp \
-    -s  lls \
-    -s  lls_pat_unaware
+    -s  fcp             \
+    -s  lls             \
+    -s  lls_pat_unaware \
+    -s  energy_aware    \
+    -s  battery_energy  \
+    -s  lifespan_aware
     # -s  lls_mip         \
     # -s  lls_lp
 

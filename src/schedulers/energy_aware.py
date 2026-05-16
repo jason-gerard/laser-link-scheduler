@@ -39,7 +39,7 @@ class EnergyAware(BaseScheduler):
         active_tx, active_rx = np.where(contacts_for_current_state >= 1)
         for tx_oi_idx, rx_oi_idx in zip(active_tx, active_rx):
             consumed_edge = transmission_energy(
-                power=OPTConfig.PEAK_TRANSMISSION_POWER,
+                power=OPTConfig.AVG_TRANSMISSION_POWER,
                 duration=compute_effective_contact_time(
                     oi_idx1=tx_oi_idx,
                     oi_idx2=rx_oi_idx,
@@ -116,7 +116,6 @@ class EnergyAware(BaseScheduler):
                 generated_per_oi,
             )
             accumulated_time += state_duration
-
             # Compute the weight of each edge by doing a weighted sum of the lifespan and fairness metrics
             weights[state] = ((1 - ALPHA) * weights_energy) + (
                 ALPHA * weights_dct
