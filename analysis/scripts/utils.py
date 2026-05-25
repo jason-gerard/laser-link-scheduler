@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 from src.constants import (
-    OPTConfig,
+    OCTConfig,
     MLConfig,
     DESTINATION_NODES,
     REPORTS_ROOT,
@@ -163,7 +163,7 @@ def compute_state_metrics_aggregated(
     for local_tx_pos, rx_oi_idx in zip(active_tx, active_rx):
         tx_oi_idx = valid_tx_indices[local_tx_pos]
         transmission_energy_consumed = transmission_energy(
-            power=OPTConfig.PEAK_TRANSMISSION_POWER,
+            power=OCTConfig.PEAK_TRANSMISSION_POWER,
             duration=compute_effective_contact_time(
                 oi_idx1=tx_oi_idx,
                 oi_idx2=rx_oi_idx,

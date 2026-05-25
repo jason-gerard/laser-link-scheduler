@@ -2,7 +2,7 @@ import numpy as np
 
 from src.constants import (
     MLConfig,
-    OPTConfig,
+    OCTConfig,
     ALPHA,
 )
 from src.time_expanded_graph.time_expanded_graph import (
@@ -39,7 +39,7 @@ class EnergyAware(BaseScheduler):
         active_tx, active_rx = np.where(contacts_for_current_state >= 1)
         for tx_oi_idx, rx_oi_idx in zip(active_tx, active_rx):
             consumed_edge = transmission_energy(
-                power=OPTConfig.AVG_TRANSMISSION_POWER,
+                power=OCTConfig.AVG_TRANSMISSION_POWER,
                 duration=compute_effective_contact_time(
                     oi_idx1=tx_oi_idx,
                     oi_idx2=rx_oi_idx,

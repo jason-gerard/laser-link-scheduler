@@ -263,9 +263,9 @@ class MLConfig:
         )
 
 
-class OPTConfig:
+class OCTConfig:
     """
-    OPTICAL COMUNICATION TERMINAL
+    OCTICAL COMUNICATION TERMINAL
     ------------
     The optical communication terminal (OCT) energy consumption is defined across three
     states: idle, acquisition (PAT), and transmission.
