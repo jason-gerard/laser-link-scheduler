@@ -20,8 +20,7 @@ from analysis.scripts.utils import (
 from src.time_expanded_graph.time_expanded_graph import (
     TimeExpandedGraph,
 )
-from src.constants import DESTINATION_NODES, PLOTS_ROOT
-from src.topology.weights import EFFECTIVE_CONTACT_TIME_CACHE, COORDINATE_CACHE
+from src.constants import PLOTS_ROOT
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)

@@ -6,6 +6,17 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.constants import REPORTS_ROOT, PLOTS_ROOT
+
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from src.constants import REPO_ROOT, REPORTS_ROOT, PLOTS_ROOT
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
@@ -27,7 +38,7 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 report_id = int(sys.argv[1])
-path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
+path = os.path.join(REPORTS_ROOT, str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [
         {k: v for k, v in row.items()}
@@ -52,7 +63,7 @@ for run in report:
 
 x = sorted(list(set(scenarios)))
 
-# Algorithms: baselines from MobiHoc 2025 + energy/lifetime-aware contributions
+# Algorithms: baselines + energy/lifetime-aware contributions
 algorithms = [
     # Baselines
     ("lls", "LLS_Greedy", "solid", 2.5, None),
@@ -136,7 +147,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
 
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(
-        os.path.join("analysis", f"{file_name}.pdf"),
+        os.path.join(PLOTS_ROOT, f"{file_name}.pdf"),
         format="pdf",
         bbox_inches="tight",
     )

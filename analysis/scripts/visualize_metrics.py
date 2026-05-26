@@ -3,14 +3,28 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
 
 plt.rcParams.update({"font.size": 18})
 plt.rc("legend", fontsize=14)
 plt.rcParams.update({"font.family": "Times New Roman"})
 
-report_id = 1739218035
-path = os.path.join("reports", str(report_id), f"{report_id}_report.csv")
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.constants import REPORTS_ROOT, PLOTS_ROOT
+
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from src.constants import REPO_ROOT, REPORTS_ROOT, PLOTS_ROOT
+
+report_id = 1778950079
+
+path = os.path.join(REPORTS_ROOT, str(report_id), f"{report_id}_report.csv")
 with open(path, "r") as f:
     report = [
         {k: v for k, v in row.items()}
@@ -70,6 +84,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     ax = fig.add_subplot(111)
 
     for algorithm, display_name in algorithms:
+        __import__("ipdb").set_trace()
         y = [run[metric] for run in report if run["Algorithm"] == algorithm]
 
         plt.plot(x[: len(y)], y, label=display_name, linewidth=2.5)

@@ -28,7 +28,7 @@ d_max = 600
 default_a = 1
 
 # TODO: change descrition for general propourse.
-ALPHA = 0.0
+ALPHA = 0.5
 """
     ALPHA is a weighting factor that scales how much impact fairness has on the algorithm. If ALPHA is low it will only
     be used for tie breaking when multiple options have the same change in capacity. If ALPHA is high then increasing
