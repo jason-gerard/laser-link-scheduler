@@ -33,8 +33,18 @@ class BaseScheduler:
 
         # Remove directionality
         sym_weights = W_k + W_k.T
-        # Consider only available contacts and edges with positive weight.
-        positive_weights_mask = np.triu(P_k >= 1, k=1) & (sym_weights >= 0)
+        # Consider only available contacts and edges with a finite, non-negative
+        # weight. The np.isfinite() guard drops edges whose weight is inf/NaN —
+        # this happens in the energy/battery/lifespan schedulers for GS↔GS
+        # contacts, where both endpoints have inf initial power/battery and the
+        # weight degenerates to inf. Feeding inf weights to nx.max_weight_matching
+        # propagates NaN through its dual-variable update and corrupts the
+        # matching (capacity collapses to 0).
+        positive_weights_mask = (
+            np.triu(P_k >= 1, k=1)
+            & (sym_weights >= 0)
+            & np.isfinite(sym_weights)
+        )
 
         tx_idx, rx_idx = np.where(positive_weights_mask)
         edges = list(zip(tx_idx, rx_idx, sym_weights[tx_idx, rx_idx]))

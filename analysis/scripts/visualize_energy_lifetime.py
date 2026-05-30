@@ -301,7 +301,10 @@ def run_analysis(report_id: int, plain_progress: bool = False) -> None:
         return
 
     plot_dir = os.path.join(PLOTS_ROOT, str(report_id))
-    os.makedirs(plot_dir, exist_ok=True)
+    pdf_dir = os.path.join(plot_dir, "pdf")
+    png_dir = os.path.join(plot_dir, "png")
+    os.makedirs(pdf_dir, exist_ok=True)
+    os.makedirs(png_dir, exist_ok=True)
 
     # Save aggregated CSV inside the report folder
     csv_path = os.path.join(plot_dir, "energy_lifetime.csv")
@@ -361,12 +364,12 @@ def run_analysis(report_id: int, plain_progress: bool = False) -> None:
 
         file_name = metric_key
         plt.savefig(
-            os.path.join(plot_dir, f"{file_name}.pdf"),
+            os.path.join(pdf_dir, f"{file_name}.pdf"),
             format="pdf",
             bbox_inches="tight",
         )
         plt.savefig(
-            os.path.join(plot_dir, f"{file_name}.png"),
+            os.path.join(png_dir, f"{file_name}.png"),
             format="png",
             bbox_inches="tight",
             dpi=300,

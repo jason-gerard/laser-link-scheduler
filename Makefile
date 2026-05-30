@@ -1,4 +1,5 @@
 MAKEFLAGS += --no-print-directory
+REPORT_ID ?= $(error REPORT_ID is required — usage: make visualize REPORT_ID=<id>)
 RUN_SCRIPTS := $(sort $(wildcard scripts/run_*.sh))
 RUN_NAMES   := $(patsubst scripts/run_%.sh,%,$(RUN_SCRIPTS))
 
@@ -75,3 +76,13 @@ run-help: # Show available RUN options for the run target
 	@echo "Available RUN options:"
 	@printf "  RUN=%s\n" "help"
 	@for n in $(RUN_NAMES); do printf "  RUN=%s\n" "$$n"; done
+
+# =================================================================================
+# Analysis / visualisation
+# =================================================================================
+.PHONY: visualize
+
+visualize: # Run all three visualisation scripts; usage: make visualize REPORT_ID=<id>
+	@uv run python analysis/scripts/visualize_cap_metrics.py $(REPORT_ID)
+	@uv run python analysis/scripts/visualize_energy_lifetime.py --report-id $(REPORT_ID)
+	@uv run python analysis/scripts/visualize_mission_lifetime.py --report-id $(REPORT_ID)

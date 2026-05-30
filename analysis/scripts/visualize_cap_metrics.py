@@ -101,17 +101,11 @@ _relay_ids = set(RELAY_NODES)
 _pkl_files = sorted(
     glob.glob(os.path.join(REPORTS_ROOT, str(report_id), "*.pkl"))
 )
-if _pkl_files:
-    with open(_pkl_files[0], "rb") as _f:
-        _sample_teg = pickle.load(_f)
-    _GS_COUNT = sum(1 for n in _sample_teg.nodes if n.id in _dest_ids)
-    del _sample_teg
-else:
-    _GS_COUNT = len(_dest_ids)  # fallback: assume all GS are in use
 
 # Build "source/relay" x-axis labels from actual TEG node counts.
 # Load one PKL per unique num_nodes to get the real counts.
 node_count_to_label: dict[int, str] = {}
+_DTE_CAPACITY_TB = []
 for _nk in x:
     _candidates = [
         p
@@ -121,20 +115,23 @@ for _nk in x:
     if _candidates:
         with open(_candidates[0], "rb") as _f:
             _teg = pickle.load(_f)
+        _gs = sum(1 for n in _teg.nodes if n.id in _dest_ids)
         _src = sum(1 for n in _teg.nodes if n.id in _source_ids)
         _rly = sum(1 for n in _teg.nodes if n.id in _relay_ids)
         node_count_to_label[_nk] = f"{_src}/{_rly}"
+        # _GS_COUNT ground stations × 86400 s/day × source bit rate (1000 internal units = 267 Mbps)
+        _DTE_CAPACITY_TB.append(
+            _gs * 86400 * 1000 * _BITS_PER_INTERNAL_UNIT / _BITS_PER_TERABIT
+        )
         del _teg
     else:
         node_count_to_label[_nk] = str(_nk)
 
-# _GS_COUNT ground stations × 86400 s/day × source bit rate (1000 internal units = 267 Mbps)
-_DTE_CAPACITY_TB = (
-    _GS_COUNT * 86400 * 1000 * _BITS_PER_INTERNAL_UNIT / _BITS_PER_TERABIT
-)
-
 plot_dir = os.path.join(PLOTS_ROOT, str(report_id))
-os.makedirs(plot_dir, exist_ok=True)
+pdf_dir = os.path.join(plot_dir, "pdf")
+png_dir = os.path.join(plot_dir, "png")
+os.makedirs(pdf_dir, exist_ok=True)
+os.makedirs(png_dir, exist_ok=True)
 
 for metric, unit, y_min, y_max, y_step in metrics:
     fig = plt.figure()
@@ -154,7 +151,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     if metric == "Capacity":
         plt.plot(
             x,
-            [_DTE_CAPACITY_TB] * len(x),
+            _DTE_CAPACITY_TB,
             label="DTE Capacity",
             linewidth=2.5,
             color="gold",
@@ -164,7 +161,7 @@ for metric, unit, y_min, y_max, y_step in metrics:
     if metric == "Capacity by node":
         plt.plot(
             x,
-            [_DTE_CAPACITY_TB / n for n in x],
+            [_DTE_CAPACITY_TB[i] / n for i, n in enumerate(x)],
             label="DTE Capacity",
             linewidth=2.5,
             color="gold",
@@ -182,10 +179,11 @@ for metric, unit, y_min, y_max, y_step in metrics:
     elif metric == "Jain's fairness index":
         plt.ylim(y_min, y_max)
     else:
-        plt.ylim(max(y_min - y_step, 0), y_max)
-        # ax.set_yticks(
-        #     [y_min] + np.arange(y_step, y_max + 0.01, y_step).tolist()
-        # )
+        ax.relim()
+        ax.autoscale_view()
+        _, auto_top = ax.get_ylim()
+        top = (math.floor(auto_top / y_step) + 1) * y_step
+        plt.ylim(max(y_min - y_step, 0), top)
 
     # Thin ticks when there are too many x values (keep ≤ 12)
     x_ticks = x if len(x) <= 12 else x[:: math.ceil(len(x) / 12)]
@@ -195,12 +193,12 @@ for metric, unit, y_min, y_max, y_step in metrics:
 
     file_name = label.replace(" ", "_").replace("/", "_")
     plt.savefig(
-        os.path.join(plot_dir, f"{file_name}.pdf"),
+        os.path.join(pdf_dir, f"{file_name}.pdf"),
         format="pdf",
         bbox_inches="tight",
     )
     plt.savefig(
-        os.path.join(plot_dir, f"{file_name}.png"),
+        os.path.join(png_dir, f"{file_name}.png"),
         format="png",
         bbox_inches="tight",
         dpi=300,

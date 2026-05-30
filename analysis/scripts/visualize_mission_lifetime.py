@@ -317,7 +317,10 @@ def run_analysis(report_id: int, plain_progress: bool = False) -> None:
         return
 
     plot_dir = os.path.join(PLOTS_ROOT, str(report_id))
-    os.makedirs(plot_dir, exist_ok=True)
+    pdf_dir = os.path.join(plot_dir, "pdf")
+    png_dir = os.path.join(plot_dir, "png")
+    os.makedirs(pdf_dir, exist_ok=True)
+    os.makedirs(png_dir, exist_ok=True)
 
     # Save aggregated CSV
     csv_path = os.path.join(plot_dir, "relay_lifetime.csv")
@@ -370,7 +373,10 @@ def run_analysis(report_id: int, plain_progress: bool = False) -> None:
         plt.xlabel("Source/relay node counts")
         plt.legend()
         plt.grid(linestyle="-", color="0.95")
-        ax.autoscale(axis="y")
+        ax.relim()
+        ax.autoscale_view()
+        y_bot, y_top = ax.get_ylim()
+        ax.set_ylim(bottom=y_bot, top=y_top * 1.05)
 
         # Thin ticks when there are too many x values (keep ≤ 12)
         x_ticks = x if len(x) <= 12 else x[:: math.ceil(len(x) / 12)]
@@ -380,12 +386,12 @@ def run_analysis(report_id: int, plain_progress: bool = False) -> None:
 
         file_name = metric_key
         plt.savefig(
-            os.path.join(plot_dir, f"{file_name}.pdf"),
+            os.path.join(pdf_dir, f"{file_name}.pdf"),
             format="pdf",
             bbox_inches="tight",
         )
         plt.savefig(
-            os.path.join(plot_dir, f"{file_name}.png"),
+            os.path.join(png_dir, f"{file_name}.png"),
             format="png",
             bbox_inches="tight",
             dpi=300,

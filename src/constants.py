@@ -28,7 +28,7 @@ d_max = 600
 default_a = 1
 
 # TODO: change descrition for general propourse.
-ALPHA = 0.5
+ALPHA = 0
 """
     ALPHA is a weighting factor that scales how much impact fairness has on the algorithm. If ALPHA is low it will only
     be used for tie breaking when multiple options have the same change in capacity. If ALPHA is high then increasing
@@ -99,8 +99,8 @@ RELAY_NODES = [str(i) for i in range(1001, 1013)]
 # Source nodes from 2001 to 2064 (MARS)
 # Ground stations, destination nodes, from 9001 to 9012 (EARTH)
 NODE_TO_PLANET_MAP = {
-    # **{str(i): EARTH for i in range(1001, 1013)},
-    **{str(i): MARS for i in range(1001, 1013)},
+    **{str(i): EARTH for i in range(1001, 1013)},
+    # **{str(i): MARS for i in range(1001, 1013)},
     **{str(i): MARS for i in range(2001, 2065)},
     **{str(i): EARTH for i in range(9001, 9013)},
 }
@@ -126,7 +126,8 @@ NODE_TO_PLANET_MAP = {
 
 # SOURCE_NODE_BIT_RATE = 187  # DSOC Psyche @ 100 million km 50 mbps
 SOURCE_NODE_BIT_RATE = 1000  # DSOC Psyche @ 33 million km 267 mbps
-RELAY_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
+# RELAY_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
+RELAY_NODE_BIT_RATE = 1000  # DSOC Psyche @ 33 million km 267 mbps
 GS_NODE_BIT_RATE = 4495  # LCRD @ 1.2 gbps
 BIT_RATES = {
     node_id: SOURCE_NODE_BIT_RATE

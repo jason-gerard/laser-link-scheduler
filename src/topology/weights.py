@@ -445,6 +445,15 @@ def compute_jains_fairness_index(
         ]
     )
 
+    # If no source→relay contact was scheduled the index is 0/0 — surface the
+    # scheduling failure to the caller instead of silently returning NaN.
+    if np.sum(enabled_contact_time_by_node**2) == 0:
+        raise RuntimeError(
+            "Jain's fairness index is undefined: no source→relay contacts "
+            "were scheduled. This usually means the scheduler returned an "
+            "empty matching for every state."
+        )
+
     # Solve for the network level Jain's fairness index with x as the throughput of the Mars orbiter nodes
     return (np.sum(enabled_contact_time_by_node) ** 2) / (
         len(source_nodes) * np.sum(enabled_contact_time_by_node**2)
