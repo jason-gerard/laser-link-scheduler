@@ -250,7 +250,6 @@ def compute_lifetime_metrics(
                     "total_consumed_energy",
                     "net_energy",
                     "average_power_load",
-                    "final_generated_power",
                     "estimated_lifetime",
                     "estimated_lifetime_years",
                     "depleted_within_horizon",
@@ -275,9 +274,6 @@ def compute_lifetime_metrics(
         mission_duration > 0,
         total_df["total_consumed_energy"] / mission_duration,
         0.0,
-    )
-    total_df["final_generated_power"] = total_df["initial_power"] * np.exp(
-        -MLConfig.DECAY_RATE * mission_duration
     )
     total_df["estimated_lifetime"] = total_df.apply(
         lambda row: estimate_lifetime_from_average_load(
