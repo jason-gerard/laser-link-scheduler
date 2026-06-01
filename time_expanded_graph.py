@@ -308,8 +308,12 @@ def convert_time_expanded_graph_to_contact_plan(teg: TimeExpandedGraph) -> Conta
     return ContactPlan(sorted(contacts, key=lambda c: c.end_time))
 
 
-def write_time_expanded_graph(experiment_name: str, time_expanded_graph: TimeExpandedGraph, file_type: FileType):
-    path = get_experiment_file(experiment_name, file_type)
+def write_time_expanded_graph(
+        experiment_name: str,
+        time_expanded_graph: TimeExpandedGraph,
+        file_type: FileType,
+        scheduler_name: str | None = None):
+    path = get_experiment_file(experiment_name, file_type, scheduler_name)
     with open(path, "w") as f:
         f.write(str(time_expanded_graph))
 

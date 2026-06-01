@@ -75,7 +75,12 @@ class IONContactPlanParser:
 
         return ContactPlan(contacts)
 
-    def write(self, experiment_name: str, contact_plan: ContactPlan, file_type: FileType):
+    def write(
+            self,
+            experiment_name: str,
+            contact_plan: ContactPlan,
+            file_type: FileType,
+            scheduler_name: str | None = None):
         contact_rows = []
         range_rows = []
         position_rows = []
@@ -119,7 +124,7 @@ class IONContactPlanParser:
                 contact.rx_z,
             ])
 
-        path = get_experiment_file(experiment_name, file_type)
+        path = get_experiment_file(experiment_name, file_type, scheduler_name)
         with open(path, "w") as f:
             writer = csv.writer(f, delimiter=" ", lineterminator="\n")
             writer.writerows(contact_rows)
@@ -131,7 +136,7 @@ class IONContactPlanParser:
 
 class IPNDContactPlanParser:
 
-    def write(self, experiment_name: str, contact_plan: ContactPlan):
+    def write(self, experiment_name: str, contact_plan: ContactPlan, scheduler_name: str | None = None):
         contact_plan_json = {
             "ContactPlan": []
         }
@@ -148,6 +153,7 @@ class IPNDContactPlanParser:
             }
             contact_plan_json["ContactPlan"].append(contact_json)
 
-        path = os.path.join(SOURCES_ROOT, experiment_name, "contactPlan.json")
+        file_name = "contactPlan.json" if scheduler_name is None else f"contactPlan_{scheduler_name}.json"
+        path = os.path.join(SOURCES_ROOT, experiment_name, file_name)
         with open(path, "w") as f:
             json.dump(contact_plan_json, f, indent=4)
