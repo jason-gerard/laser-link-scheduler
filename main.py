@@ -114,7 +114,11 @@ def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[s
                 experiment_driver(experiment_name, scheduler_name, reporter)
                 print("\n\n")
         except Exception as e:
-            print(f"Error executing scenario {experiment_name}, with scheduler: {scheduler_name}, {e}, \n\n{e.with_traceback()}")
+            print(
+                f"Error executing scenario {experiment_name}, "
+                f"with scheduler: {scheduler_name}, {e}"
+            )
+            traceback.print_exc()
             break
 
     reporter.write_report()

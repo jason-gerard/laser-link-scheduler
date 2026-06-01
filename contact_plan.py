@@ -78,6 +78,7 @@ class IONContactPlanParser:
     def write(self, experiment_name: str, contact_plan: ContactPlan, file_type: FileType):
         contact_rows = []
         range_rows = []
+        position_rows = []
 
         for contact in contact_plan.contacts:
             ion_start_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.start_time}"
@@ -103,12 +104,29 @@ class IONContactPlanParser:
                 contact.range,
             ])
 
+            position_rows.append([
+                "a",
+                "position",
+                ion_start_time,
+                ion_end_time,
+                contact.tx_node,
+                contact.rx_node,
+                contact.tx_x,
+                contact.tx_y,
+                contact.tx_z,
+                contact.rx_x,
+                contact.rx_y,
+                contact.rx_z,
+            ])
+
         path = get_experiment_file(experiment_name, file_type)
         with open(path, "w") as f:
             writer = csv.writer(f, delimiter=" ", lineterminator="\n")
             writer.writerows(contact_rows)
             writer.writerow("")
             writer.writerows(range_rows)
+            writer.writerow("")
+            writer.writerows(position_rows)
 
 
 class IPNDContactPlanParser:

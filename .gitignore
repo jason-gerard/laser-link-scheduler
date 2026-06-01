@@ -4,3 +4,4 @@ venv
 reports/**
 analysis/*.json
 gurobi.log
+.venv
