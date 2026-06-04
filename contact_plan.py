@@ -75,9 +75,15 @@ class IONContactPlanParser:
 
         return ContactPlan(contacts)
 
-    def write(self, experiment_name: str, contact_plan: ContactPlan, file_type: FileType):
+    def write(
+            self,
+            experiment_name: str,
+            contact_plan: ContactPlan,
+            file_type: FileType,
+            scheduler_name: str | None = None):
         contact_rows = []
         range_rows = []
+        position_rows = []
 
         for contact in contact_plan.contacts:
             ion_start_time = f"{IONContactPlanParser.TIMESTAMP_PREFIX}{contact.start_time}"
@@ -103,17 +109,34 @@ class IONContactPlanParser:
                 contact.range,
             ])
 
-        path = get_experiment_file(experiment_name, file_type)
+            position_rows.append([
+                "a",
+                "position",
+                ion_start_time,
+                ion_end_time,
+                contact.tx_node,
+                contact.rx_node,
+                contact.tx_x,
+                contact.tx_y,
+                contact.tx_z,
+                contact.rx_x,
+                contact.rx_y,
+                contact.rx_z,
+            ])
+
+        path = get_experiment_file(experiment_name, file_type, scheduler_name)
         with open(path, "w") as f:
             writer = csv.writer(f, delimiter=" ", lineterminator="\n")
             writer.writerows(contact_rows)
             writer.writerow("")
             writer.writerows(range_rows)
+            writer.writerow("")
+            writer.writerows(position_rows)
 
 
 class IPNDContactPlanParser:
 
-    def write(self, experiment_name: str, contact_plan: ContactPlan):
+    def write(self, experiment_name: str, contact_plan: ContactPlan, scheduler_name: str | None = None):
         contact_plan_json = {
             "ContactPlan": []
         }
@@ -130,6 +153,7 @@ class IPNDContactPlanParser:
             }
             contact_plan_json["ContactPlan"].append(contact_json)
 
-        path = os.path.join(SOURCES_ROOT, experiment_name, "contactPlan.json")
+        file_name = "contactPlan.json" if scheduler_name is None else f"contactPlan_{scheduler_name}.json"
+        path = os.path.join(SOURCES_ROOT, experiment_name, file_name)
         with open(path, "w") as f:
             json.dump(contact_plan_json, f, indent=4)

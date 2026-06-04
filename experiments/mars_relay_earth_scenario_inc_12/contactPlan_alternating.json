@@ -1,0 +1,92 @@
+{
+    "ContactPlan": [
+        {
+            "SourceID": 2007,
+            "DestinationID": 1001,
+            "StartTime": 725806864.184,
+            "EndTime": 725807464.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2005,
+            "DestinationID": 1002,
+            "StartTime": 725817664.184,
+            "EndTime": 725818264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2012,
+            "DestinationID": 1002,
+            "StartTime": 725822464.184,
+            "EndTime": 725823064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2007,
+            "DestinationID": 1002,
+            "StartTime": 725833264.184,
+            "EndTime": 725833864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2009,
+            "DestinationID": 1001,
+            "StartTime": 725835664.184,
+            "EndTime": 725836264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2007,
+            "DestinationID": 1002,
+            "StartTime": 725839264.184,
+            "EndTime": 725839864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2009,
+            "DestinationID": 1001,
+            "StartTime": 725841664.184,
+            "EndTime": 725842264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2007,
+            "DestinationID": 1002,
+            "StartTime": 725853664.184,
+            "EndTime": 725854264.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2008,
+            "DestinationID": 1001,
+            "StartTime": 725869264.184,
+            "EndTime": 725869864.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2012,
+            "DestinationID": 1002,
+            "StartTime": 725870464.184,
+            "EndTime": 725871064.184,
+            "Duration": 600.0,
+            "Color": []
+        },
+        {
+            "SourceID": 2005,
+            "DestinationID": 1001,
+            "StartTime": 725878864.184,
+            "EndTime": 725879464.184,
+            "Duration": 600.0,
+            "Color": []
+        }
+    ]
+}

@@ -80,17 +80,21 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
             raise Exception("No scheduler selected")
 
-        write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED)
+        write_time_expanded_graph(
+            experiment_name,
+            scheduled_time_expanded_graph,
+            FileType.TEG_SCHEDULED,
+            scheduler_name)
         print("Finished contact scheduling")
 
         # Convert the TEG back to a contact plan
         scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_time_expanded_graph)
-        contact_plan_parser.write(experiment_name, scheduled_contact_plan, FileType.SCHEDULED)
+        contact_plan_parser.write(experiment_name, scheduled_contact_plan, FileType.SCHEDULED, scheduler_name)
         print("Finished converting time expanded graph to contact plan")
         
         # Write contact plan to disk as IPN-D contact plan, so we can visualize the output
         ipnd_contact_plan_parser = IPNDContactPlanParser()
-        ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
+        ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan, scheduler_name)
 
         reporter.generate_report(
             experiment_name,
@@ -114,7 +118,11 @@ def multi_experiment_driver(experiment_names: list[str], scheduler_names: list[s
                 experiment_driver(experiment_name, scheduler_name, reporter)
                 print("\n\n")
         except Exception as e:
-            print(f"Error executing scenario {experiment_name}, with scheduler: {scheduler_name}, {e}, \n\n{e.with_traceback()}")
+            print(
+                f"Error executing scenario {experiment_name}, "
+                f"with scheduler: {scheduler_name}, {e}"
+            )
+            traceback.print_exc()
             break
 
     reporter.write_report()

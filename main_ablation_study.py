@@ -81,21 +81,26 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
             print(f"No scheduler selected, scheduler with name {scheduler_name} is unknown")
             raise Exception("No scheduler selected")
 
-        write_time_expanded_graph(experiment_name, scheduled_time_expanded_graph, FileType.TEG_SCHEDULED)
+        output_name = f"{scheduler_name}_{parameter}_{parameter_value}"
+        write_time_expanded_graph(
+            experiment_name,
+            scheduled_time_expanded_graph,
+            FileType.TEG_SCHEDULED,
+            output_name)
         print("Finished contact scheduling")
 
         # Convert the TEG back to a contact plan
         scheduled_contact_plan = convert_time_expanded_graph_to_contact_plan(scheduled_time_expanded_graph)
-        contact_plan_parser.write(experiment_name, scheduled_contact_plan, FileType.SCHEDULED)
+        contact_plan_parser.write(experiment_name, scheduled_contact_plan, FileType.SCHEDULED, output_name)
         print("Finished converting time expanded graph to contact plan")
         
         # Write contact plan to disk as IPN-D contact plan, so we can visualize the output
         ipnd_contact_plan_parser = IPNDContactPlanParser()
-        ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan)
+        ipnd_contact_plan_parser.write(experiment_name, scheduled_contact_plan, output_name)
 
         reporter.generate_report(
             experiment_name,
-            f"{scheduler_name}_{parameter}_{parameter_value}",
+            output_name,
             timer() - start,
             scheduled_time_expanded_graph)
     except Exception as e:

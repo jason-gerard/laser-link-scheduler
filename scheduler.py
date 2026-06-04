@@ -64,7 +64,13 @@ class LaserLinkScheduler:
             matched_edges = blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
-            L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
+            L_k, contacts = build_graph(
+                matched_edges,
+                teg.graphs[k],
+                teg.contacts[k],
+                teg.node_map,
+                teg.optical_interfaces_to_node,
+            )
             scheduled_graphs[k] = L_k
             scheduled_contacts.append(contacts)
 
@@ -154,7 +160,13 @@ class FairContactPlan:
             matched_edges = blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
-            L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
+            L_k, contacts = build_graph(
+                matched_edges,
+                teg.graphs[k],
+                teg.contacts[k],
+                teg.node_map,
+                teg.optical_interfaces_to_node,
+            )
             scheduled_graphs[k] = L_k
             scheduled_contacts.append(contacts)
 
@@ -181,39 +193,53 @@ class FairContactPlan:
 class RandomScheduler:
     def schedule(self, teg: TimeExpandedGraph) -> TimeExpandedGraph:
         """
-        Apply blossom algorithm with random weights
+        Apply blossom algorithm with random weights.
         """
         rng = np.random.default_rng(seed=42)
 
-        # Since we are assigning the weights at random we have to do multiple iterations to avoid skewing the results
-        # based on a single good or bad selection of weights. Generally 21 iterations is seen as statistically
-        # significant.
         num_iters = 5
 
         all_scheduled_graphs = np.zeros((teg.K * num_iters, teg.N, teg.N), dtype='int64')
-        scheduled_contacts = [[] for _ in range(teg.K)]
+        all_scheduled_contacts = [[] for _ in range(teg.K * num_iters)]
         all_weights = np.empty((teg.K * num_iters, teg.N, teg.N), dtype="int64")
 
         for i in range(num_iters):
             for k in tqdm(range(teg.K)):
-                # Get an N x N matrix of weights randomly assigned between [0, 1], this will be used to compute the
-                # matching.
-                all_weights[k * i] = rng.integers(low=0, high=1, size=(teg.N, teg.N), endpoint=True)
+                # Correct flat index
+                idx = i * teg.K + k
 
-                # Compute max weight maximal matching using the blossom algorithm but with the weights as a random
-                # matrix. This gives the matching as if no real network information is known.
-                matched_edges = blossom(teg.graphs[k], all_weights[k * i])
+                # Random weights in {0, 1}
+                all_weights[idx] = rng.integers(
+                    low=0,
+                    high=1,
+                    size=(teg.N, teg.N),
+                    endpoint=True
+                )
 
-                # Compute L_k from the matched edges
-                L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
-                all_scheduled_graphs[k * i] = L_k
+                # Compute matching
+                matched_edges = blossom(teg.graphs[k], all_weights[idx])
+
+                # Build scheduled graph and contact list
+                L_k, contacts = build_graph(
+                    matched_edges,
+                    teg.graphs[k],
+                    teg.contacts[k],
+                    teg.node_map,
+                    teg.optical_interfaces_to_node,
+                )
+
+                all_scheduled_graphs[idx] = L_k
+                all_scheduled_contacts[idx] = contacts
 
         scheduled_graphs = np.zeros((teg.K, teg.N, teg.N), dtype='int64')
+        scheduled_contacts = [[] for _ in range(teg.K)]
         weights = np.empty((teg.K, teg.N, teg.N), dtype="int64")
 
         selected_ks = rng.choice(teg.K * num_iters, teg.K, replace=False)
+
         for k, selected_k in enumerate(selected_ks):
             scheduled_graphs[k] = all_scheduled_graphs[selected_k]
+            scheduled_contacts[k] = all_scheduled_contacts[selected_k]
             weights[k] = all_weights[selected_k]
 
         return TimeExpandedGraph(
@@ -269,7 +295,13 @@ class AlternatingScheduler:
             matched_edges = blossom(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
-            L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
+            L_k, contacts = build_graph(
+                matched_edges,
+                teg.graphs[k],
+                teg.contacts[k],
+                teg.node_map,
+                teg.optical_interfaces_to_node,
+            )
             scheduled_graphs[k] = L_k
             scheduled_contacts.append(contacts)
 
@@ -326,7 +358,13 @@ class OpticalTrunkLinkScheduler:
             matched_edges = max_weight_hungarian(teg.graphs[k], weights[k])
 
             # Compute L_k from the matched edges
-            L_k, contacts = build_graph(matched_edges, teg.graphs[k], teg.contacts[k], teg.node_map)
+            L_k, contacts = build_graph(
+                matched_edges,
+                teg.graphs[k],
+                teg.contacts[k],
+                teg.node_map,
+                teg.optical_interfaces_to_node,
+            )
             scheduled_graphs[k] = L_k
             scheduled_contacts.append(contacts)
 
@@ -463,7 +501,8 @@ def build_graph(
         matched_edges: set,
         contact_topology_k: np.ndarray,
         contacts_k: list[Contact],
-        node_map: dict[str, int]
+        node_map: dict[str, int],
+        optical_interfaces_to_node: dict[int, int]
 ) -> tuple[np.ndarray, list[Contact]]:
     num_nodes = len(contact_topology_k)
     # Build adj_matrix from matched edges list. nx.max_weight_matching works on an undirected graph so when we see
@@ -475,13 +514,29 @@ def build_graph(
         contact_plan_k[tx_idx][rx_idx] = contact_topology_k[tx_idx][rx_idx]
         contact_plan_k[rx_idx][tx_idx] = contact_topology_k[rx_idx][tx_idx]
 
-    contacts = [contact for contact in contacts_k if should_keep_contact(matched_edges, node_map, contact)]
+    contacts = [
+        contact
+        for contact in contacts_k
+        if should_keep_contact(matched_edges, node_map, optical_interfaces_to_node, contact)
+    ]
 
     return contact_plan_k, contacts
 
 
-def should_keep_contact(matched_edges: set, node_map: dict[str, int], contact: Contact) -> bool:
+def should_keep_contact(
+        matched_edges: set,
+        node_map: dict[str, int],
+        optical_interfaces_to_node: dict[int, int],
+        contact: Contact) -> bool:
     node1_idx = node_map[contact.tx_node]
     node2_idx = node_map[contact.rx_node]
 
-    return (node1_idx, node2_idx) in matched_edges or (node2_idx, node1_idx) in matched_edges
+    matched_node_edges = {
+        (
+            optical_interfaces_to_node[tx_oi_idx],
+            optical_interfaces_to_node[rx_oi_idx],
+        )
+        for tx_oi_idx, rx_oi_idx in matched_edges
+    }
+
+    return (node1_idx, node2_idx) in matched_node_edges or (node2_idx, node1_idx) in matched_node_edges
