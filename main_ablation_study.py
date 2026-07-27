@@ -22,6 +22,8 @@ def experiment_driver(experiment_name: str, scheduler_name: str, reporter: Repor
         constants.lls_alpha = parameter_value
     elif parameter == "alpha" and "otls" in scheduler_name:
         constants.otls_alpha = parameter_value
+    elif parameter == "fou":
+        constants.fou = np.degrees(parameter_value / 1000)
 
     # Clear all caches
     weights.effective_contact_time_cache = {}
@@ -130,6 +132,9 @@ def get_args():
     parser.add_argument('--alpha_min', type=int)
     parser.add_argument('--alpha_max', type=int)
     parser.add_argument('--alpha_step', type=int)
+    parser.add_argument('--fou_min', type=int)
+    parser.add_argument('--fou_max', type=int)
+    parser.add_argument('--fou_step', type=int)
     return parser.parse_args()
 
 
@@ -138,6 +143,7 @@ if __name__ == "__main__":
     args = get_args()
     print(args)
     parameters = {
-        "alpha": [x / 100.0 for x in range(args.alpha_min, args.alpha_max + args.alpha_step, args.alpha_step)]
+        # "alpha": [x / 100.0 for x in range(args.alpha_min, args.alpha_max + args.alpha_step, args.alpha_step)]
+        "fou": [x / 100 for x in range(args.fou_min, args.fou_max + args.fou_step, args.fou_step)]
     }
     multi_experiment_driver(args.experiment_names, args.scheduler_names, parameters)

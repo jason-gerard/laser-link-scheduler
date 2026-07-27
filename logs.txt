@@ -1,0 +1,1579 @@
+Starting execution of experiment: mars_earth_relay_scenario_inc_4, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 55, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/d670eb1fd99640e6a56de9a1aaa10f86-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/d670eb1fd99640e6a56de9a1aaa10f86-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 7529 COLUMNS
+At line 35427 RHS
+At line 42952 BOUNDS
+At line 44978 ENDATA
+Problem MODEL has 7524 rows, 6079 columns and 23843 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 2.19818e+09 - 0.32 seconds
+Cgl0008I 357 inequality constraints converted to equality constraints
+Cgl0004I processed model has 6597 rows, 6154 columns (2382 integer (2382 of which binary)) and 23327 elements
+Cbc0038I Initial state - 834 integers unsatisfied sum - 224.305
+Cbc0038I Pass   1: (0.52 seconds) suminf.    0.70000 (2) obj. -1.58591e+09 iterations 1439
+Cbc0038I Pass   2: (0.53 seconds) suminf.    0.00000 (0) obj. -1.58595e+09 iterations 186
+Cbc0038I Solution found of -1.58595e+09
+Cbc0038I Relaxing continuous gives -1.58595e+09
+Cbc0038I Before mini branch and bound, 1191 integers at bound fixed and 1547 continuous
+Cbc0038I Full problem 6597 rows 6154 columns, reduced to 1963 rows 1728 columns
+Cbc0038I Mini branch and bound improved solution from -1.58595e+09 to -1.81158e+09 (1.26 seconds)
+Cbc0038I Round again with cutoff of -1.84908e+09
+Cbc0038I Pass   3: (1.44 seconds) suminf.   52.39603 (187) obj. -1.84908e+09 iterations 2219
+Cbc0038I Pass   4: (1.45 seconds) suminf.   51.17344 (163) obj. -1.84908e+09 iterations 121
+Cbc0038I Pass   5: (1.46 seconds) suminf.   48.15196 (154) obj. -1.84908e+09 iterations 76
+Cbc0038I Pass   6: (1.48 seconds) suminf.   47.40150 (149) obj. -1.84908e+09 iterations 178
+Cbc0038I Pass   7: (1.49 seconds) suminf.   44.86382 (143) obj. -1.84908e+09 iterations 150
+Cbc0038I Pass   8: (1.50 seconds) suminf.   44.15031 (141) obj. -1.84908e+09 iterations 26
+Cbc0038I Pass   9: (1.51 seconds) suminf.   38.91069 (125) obj. -1.84908e+09 iterations 58
+Cbc0038I Pass  10: (1.52 seconds) suminf.   38.91069 (125) obj. -1.84908e+09 iterations 4
+Cbc0038I Pass  11: (1.53 seconds) suminf.   36.41929 (115) obj. -1.84908e+09 iterations 181
+Cbc0038I Pass  12: (1.54 seconds) suminf.   35.83997 (117) obj. -1.84908e+09 iterations 93
+Cbc0038I Pass  13: (1.56 seconds) suminf.   30.66214 (105) obj. -1.84908e+09 iterations 177
+Cbc0038I Pass  14: (1.57 seconds) suminf.   28.86568 (91) obj. -1.84908e+09 iterations 48
+Cbc0038I Pass  15: (1.58 seconds) suminf.   27.26606 (84) obj. -1.84908e+09 iterations 94
+Cbc0038I Pass  16: (1.59 seconds) suminf.   25.42233 (78) obj. -1.84908e+09 iterations 46
+Cbc0038I Pass  17: (1.60 seconds) suminf.   24.56306 (76) obj. -1.84908e+09 iterations 55
+Cbc0038I Pass  18: (1.61 seconds) suminf.   24.72033 (76) obj. -1.84908e+09 iterations 30
+Cbc0038I Pass  19: (1.61 seconds) suminf.   24.56306 (78) obj. -1.84908e+09 iterations 84
+Cbc0038I Pass  20: (1.62 seconds) suminf.   23.84956 (76) obj. -1.84908e+09 iterations 8
+Cbc0038I Pass  21: (1.63 seconds) suminf.   23.84956 (76) obj. -1.84908e+09 iterations 4
+Cbc0038I Pass  22: (1.64 seconds) suminf.   23.84956 (76) obj. -1.84908e+09 iterations 7
+Cbc0038I Pass  23: (1.64 seconds) suminf.   23.84956 (76) obj. -1.84908e+09 iterations 6
+Cbc0038I Pass  24: (1.65 seconds) suminf.   23.84956 (76) obj. -1.84908e+09 iterations 16
+Cbc0038I Pass  25: (1.70 seconds) suminf.   51.01953 (146) obj. -1.84908e+09 iterations 820
+Cbc0038I Pass  26: (1.72 seconds) suminf.   26.56248 (95) obj. -1.84908e+09 iterations 425
+Cbc0038I Pass  27: (1.74 seconds) suminf.   25.58930 (80) obj. -1.84908e+09 iterations 100
+Cbc0038I Pass  28: (1.75 seconds) suminf.   18.38872 (54) obj. -1.84908e+09 iterations 91
+Cbc0038I Pass  29: (1.76 seconds) suminf.   17.20045 (69) obj. -1.84908e+09 iterations 123
+Cbc0038I Pass  30: (1.77 seconds) suminf.   17.28778 (69) obj. -1.84908e+09 iterations 22
+Cbc0038I Pass  31: (1.78 seconds) suminf.   17.20045 (69) obj. -1.84908e+09 iterations 7
+Cbc0038I Pass  32: (1.79 seconds) suminf.   16.95882 (70) obj. -1.84908e+09 iterations 69
+Cbc0038I No solution found this major pass
+Cbc0038I Before mini branch and bound, 1057 integers at bound fixed and 1278 continuous
+Cbc0038I Full problem 6597 rows 6154 columns, reduced to 2940 rows 2437 columns
+Cbc0038I Mini branch and bound did not improve solution (3.12 seconds)
+Cbc0038I After 3.12 seconds - Feasibility pump exiting with objective of -1.81158e+09 - took 2.61 seconds
+Cbc0012I Integer solution of -1.8115842e+09 found by feasibility pump after 0 iterations and 0 nodes (3.17 seconds)
+Cbc0038I Full problem 6597 rows 6154 columns, reduced to 1963 rows 1728 columns
+Cbc0031I 353 added rows had average density of 4.8101983
+Cbc0013I At root node, 688 cuts changed objective from -2.1865391e+09 to 0 in 7 passes
+Cbc0014I Cut generator 0 (Probing) - 784 row cuts average 3.9 elements, 0 column cuts (205 active)  in 0.013 seconds - new frequency is 1
+Cbc0014I Cut generator 1 (Gomory) - 2265 row cuts average 8.4 elements, 0 column cuts (0 active)  in 0.103 seconds - new frequency is 1
+Cbc0014I Cut generator 2 (Knapsack) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.009 seconds - new frequency is -100
+Cbc0014I Cut generator 3 (Clique) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.019 seconds - new frequency is -100
+Cbc0014I Cut generator 4 (MixedIntegerRounding2) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.077 seconds - new frequency is -100
+Cbc0014I Cut generator 5 (FlowCover) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.008 seconds - new frequency is -100
+Cbc0001I Search completed - best objective -1811584188.774157, took 6410 iterations and 0 nodes (6.16 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -2.18654e+09 to 0
+Probing was tried 7 times and created 784 cuts of which 205 were active after adding rounds of cuts (0.013 seconds)
+Gomory was tried 7 times and created 2265 cuts of which 0 were active after adding rounds of cuts (0.103 seconds)
+Knapsack was tried 7 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.009 seconds)
+Clique was tried 7 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.019 seconds)
+MixedIntegerRounding2 was tried 7 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.077 seconds)
+FlowCover was tried 7 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.008 seconds)
+TwoMirCuts was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.034 seconds)
+ZeroHalf was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.027 seconds)
+
+Result - Optimal solution found
+
+Objective value:                1811584188.77415657
+Enumerated nodes:               0
+Total iterations:               6410
+Time (CPU seconds):             6.24
+Time (Wallclock seconds):       6.37
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       6.25   (Wallclock seconds):       6.39
+
+Percent of edges removed = 73.592%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 2025 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 6.6551 seconds
+Scheduled network capacity: 1,745,294,034
+Scheduled network wasted capacity: 287,178,903.6272967
+Wasted buffer capacity: 287,178,903
+Jain's fairness index: 0.9971658317954126
+Average delay: 1389.9942163100059
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_8, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 85, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/0462cf6df0ef4337b4217d1a5d8141a4-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/0462cf6df0ef4337b4217d1a5d8141a4-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 12510 COLUMNS
+At line 74185 RHS
+At line 86691 BOUNDS
+At line 90184 ENDATA
+Problem MODEL has 12505 rows, 10480 columns and 54686 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 2.19818e+09 - 0.37 seconds
+Cgl0008I 378 inequality constraints converted to equality constraints
+Cgl0004I processed model has 11515 rows, 10588 columns (3870 integer (3870 of which binary)) and 54227 elements
+Cbc0038I Initial state - 830 integers unsatisfied sum - 239.208
+Cbc0038I Pass   1: (0.84 seconds) suminf.    2.80000 (8) obj. -1.50238e+09 iterations 2131
+Cbc0038I Pass   2: (0.86 seconds) suminf.    2.40000 (8) obj. -1.49947e+09 iterations 313
+Cbc0038I Pass   3: (0.89 seconds) suminf.    1.20000 (4) obj. -1.49732e+09 iterations 383
+Cbc0038I Pass   4: (0.91 seconds) suminf.    0.80000 (2) obj. -1.4969e+09 iterations 277
+Cbc0038I Pass   5: (0.93 seconds) suminf.    0.80000 (2) obj. -1.4969e+09 iterations 261
+Cbc0038I Pass   6: (1.05 seconds) suminf.    1.45000 (4) obj. -1.27812e+09 iterations 1704
+Cbc0038I Pass   7: (1.07 seconds) suminf.    0.93548 (2) obj. -1.27978e+09 iterations 225
+Cbc0038I Pass   8: (1.08 seconds) suminf.    0.00000 (0) obj. -1.28083e+09 iterations 30
+Cbc0038I Solution found of -1.28083e+09
+Cbc0038I Relaxing continuous gives -1.3816e+09
+Cbc0038I Before mini branch and bound, 2557 integers at bound fixed and 2943 continuous
+Cbc0038I Full problem 11515 rows 10588 columns, reduced to 1855 rows 1866 columns
+Cbc0038I Mini branch and bound improved solution from -1.3816e+09 to -1.71228e+09 (1.84 seconds)
+Cbc0038I Round again with cutoff of -1.75962e+09
+Cbc0038I Pass   9: (2.03 seconds) suminf.   49.03410 (162) obj. -1.75962e+09 iterations 1803
+Cbc0038I Pass  10: (2.07 seconds) suminf.   46.67619 (160) obj. -1.75962e+09 iterations 414
+Cbc0038I Pass  11: (2.12 seconds) suminf.   40.29252 (136) obj. -1.75962e+09 iterations 455
+Cbc0038I Pass  12: (2.14 seconds) suminf.   38.97844 (130) obj. -1.75962e+09 iterations 97
+Cbc0038I Pass  13: (2.15 seconds) suminf.   35.89699 (122) obj. -1.75962e+09 iterations 122
+Cbc0038I Pass  14: (2.17 seconds) suminf.   34.77131 (118) obj. -1.75962e+09 iterations 109
+Cbc0038I Pass  15: (2.19 seconds) suminf.   28.68518 (96) obj. -1.75962e+09 iterations 68
+Cbc0038I Pass  16: (2.20 seconds) suminf.   27.93473 (94) obj. -1.75962e+09 iterations 7
+Cbc0038I Pass  17: (2.22 seconds) suminf.   24.10283 (82) obj. -1.75962e+09 iterations 178
+Cbc0038I Pass  18: (2.24 seconds) suminf.   23.72761 (80) obj. -1.75962e+09 iterations 9
+Cbc0038I Pass  19: (2.27 seconds) suminf.   20.65024 (68) obj. -1.75962e+09 iterations 269
+Cbc0038I Pass  20: (2.29 seconds) suminf.   19.92106 (66) obj. -1.75962e+09 iterations 54
+Cbc0038I Pass  21: (2.32 seconds) suminf.   14.78746 (52) obj. -1.75962e+09 iterations 336
+Cbc0038I Pass  22: (2.35 seconds) suminf.    9.61607 (34) obj. -1.75962e+09 iterations 398
+Cbc0038I Pass  23: (2.40 seconds) suminf.    5.50369 (24) obj. -1.75962e+09 iterations 530
+Cbc0038I Pass  24: (2.42 seconds) suminf.    4.81419 (22) obj. -1.75962e+09 iterations 4
+Cbc0038I Pass  25: (2.45 seconds) suminf.    5.08313 (18) obj. -1.75962e+09 iterations 573
+Cbc0038I Pass  26: (2.47 seconds) suminf.    3.62177 (14) obj. -1.75962e+09 iterations 97
+Cbc0038I Pass  27: (2.51 seconds) suminf.    1.51799 (6) obj. -1.75962e+09 iterations 328
+Cbc0038I Pass  28: (2.53 seconds) suminf.    0.58841 (2) obj. -1.75962e+09 iterations 277
+Cbc0038I Pass  29: (2.55 seconds) suminf.    0.06252 (2) obj. -1.75962e+09 iterations 54
+Cbc0038I Pass  30: (2.63 seconds) suminf.    1.45970 (6) obj. -1.75962e+09 iterations 405
+Cbc0038I Pass  31: (2.66 seconds) suminf.    0.48485 (2) obj. -1.75962e+09 iterations 473
+Cbc0038I Pass  32: (2.67 seconds) suminf.    0.48485 (2) obj. -1.75962e+09 iterations 1
+Cbc0038I Pass  33: (2.69 seconds) suminf.    0.01563 (2) obj. -1.75962e+09 iterations 262
+Cbc0038I Pass  34: (2.70 seconds) suminf.    0.23807 (2) obj. -1.75962e+09 iterations 34
+Cbc0038I Pass  35: (2.79 seconds) suminf.   72.89276 (220) obj. -1.75962e+09 iterations 735
+Cbc0038I Pass  36: (2.89 seconds) suminf.   15.73859 (50) obj. -1.75962e+09 iterations 743
+Cbc0038I Pass  37: (2.92 seconds) suminf.   10.25409 (38) obj. -1.75962e+09 iterations 219
+Cbc0038I Pass  38: (2.94 seconds) suminf.    5.20613 (25) obj. -1.75962e+09 iterations 163
+Cbc0038I No solution found this major pass
+Cbc0038I Before mini branch and bound, 2363 integers at bound fixed and 2553 continuous
+Cbc0038I Full problem 11515 rows 10588 columns, reduced to 2738 rows 2630 columns
+Cbc0038I Mini branch and bound did not improve solution (4.31 seconds)
+Cbc0038I After 4.31 seconds - Feasibility pump exiting with objective of -1.71228e+09 - took 3.70 seconds
+Cbc0012I Integer solution of -1.7122777e+09 found by feasibility pump after 0 iterations and 0 nodes (4.45 seconds)
+Cbc0038I Full problem 11515 rows 10588 columns, reduced to 1640 rows 1624 columns
+Cbc0031I 982 added rows had average density of 3.9307536
+Cbc0013I At root node, 982 cuts changed objective from -2.1857345e+09 to -2.1849627e+09 in 10 passes
+Cbc0014I Cut generator 0 (Probing) - 2505 row cuts average 3.7 elements, 0 column cuts (686 active)  in 0.047 seconds - new frequency is 1
+Cbc0014I Cut generator 1 (Gomory) - 3836 row cuts average 7.7 elements, 0 column cuts (0 active)  in 0.343 seconds - new frequency is 1
+Cbc0014I Cut generator 2 (Knapsack) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.022 seconds - new frequency is -100
+Cbc0014I Cut generator 3 (Clique) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.040 seconds - new frequency is -100
+Cbc0014I Cut generator 4 (MixedIntegerRounding2) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.223 seconds - new frequency is -100
+Cbc0014I Cut generator 5 (FlowCover) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.020 seconds - new frequency is -100
+Cbc0010I After 0 nodes, 1 on tree, -1.7122777e+09 best solution, best possible -2.1849627e+09 (8.80 seconds)
+Cbc0038I Full problem 11515 rows 10588 columns, reduced to 2818 rows 2565 columns
+Cbc0038I Full problem 11515 rows 10588 columns, reduced to 3383 rows 3021 columns
+Cbc0010I After 100 nodes, 59 on tree, -1.7122777e+09 best solution, best possible -2.1849627e+09 (56.88 seconds)
+Cbc0038I Full problem 11515 rows 10588 columns, reduced to 2678 rows 2477 columns
+Cbc0010I After 200 nodes, 110 on tree, -1.7122777e+09 best solution, best possible -2.1849627e+09 (89.92 seconds)
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective -1.7122777e+09 (best possible -2.1849627e+09), took 239371 iterations and 282 nodes (119.90 seconds)
+Cbc0032I Strong branching done 5352 times (228423 iterations), fathomed 0 nodes and fixed 0 variables
+Cbc0035I Maximum depth 51, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -2.18573e+09 to -2.18496e+09
+Probing was tried 239 times and created 9900 cuts of which 686 were active after adding rounds of cuts (0.398 seconds)
+Gomory was tried 239 times and created 50782 cuts of which 0 were active after adding rounds of cuts (4.587 seconds)
+Knapsack was tried 10 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.022 seconds)
+Clique was tried 10 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.040 seconds)
+MixedIntegerRounding2 was tried 10 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.223 seconds)
+FlowCover was tried 10 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.020 seconds)
+TwoMirCuts was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.076 seconds)
+ZeroHalf was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.034 seconds)
+
+Result - Stopped on time limit
+
+Objective value:                1712277687.79679585
+Upper bound:                    2184962675.415
+Gap:                            -0.22
+Enumerated nodes:               282
+Total iterations:               239371
+Time (CPU seconds):             117.61
+Time (Wallclock seconds):       120.33
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       117.63   (Wallclock seconds):       120.35
+
+Percent of edges removed = 77.141%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 3492 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 120.8864 seconds
+Scheduled network capacity: 1,689,424,709
+Scheduled network wasted capacity: 116,811,577.73798227
+Wasted buffer capacity: 116,811,577
+Jain's fairness index: 0.9948034113905753
+Average delay: 2556.0892127196475
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_12, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 132, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/4f1f12a2730c4206a8df0a599628d0d4-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/4f1f12a2730c4206a8df0a599628d0d4-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 32775 COLUMNS
+At line 247042 RHS
+At line 279813 BOUNDS
+At line 289723 ENDATA
+Problem MODEL has 32770 rows, 29732 columns and 194443 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 4.36364e+09 - 2.46 seconds
+Cgl0004I processed model has 31615 rows, 29252 columns (9909 integer (9909 of which binary)) and 192925 elements
+Cbc0038I Initial state - 1661 integers unsatisfied sum - 471.959
+Cbc0038I Pass   1: (3.60 seconds) suminf.    0.00000 (0) obj. -2.99843e+09 iterations 3702
+Cbc0038I Solution found of -2.99843e+09
+Cbc0038I Relaxing continuous gives -3.01001e+09
+Cbc0038I Before mini branch and bound, 8245 integers at bound fixed and 8246 continuous
+Cbc0038I Full problem 31615 rows 29252 columns, reduced to 3666 rows 3697 columns
+Cbc0038I Mini branch and bound did not improve solution (5.48 seconds)
+Cbc0038I Freeing continuous variables gives a solution of -3.01001e+09
+Cbc0038I Round again with cutoff of -3.14242e+09
+Cbc0038I Pass   2: (6.70 seconds) suminf.   19.63593 (61) obj. -3.14242e+09 iterations 2083
+Cbc0038I Pass   3: (6.80 seconds) suminf.   17.33083 (52) obj. -3.14242e+09 iterations 370
+Cbc0038I Pass   4: (6.88 seconds) suminf.   13.64384 (42) obj. -3.14242e+09 iterations 302
+Cbc0038I Pass   5: (6.95 seconds) suminf.    8.95353 (28) obj. -3.14242e+09 iterations 177
+Cbc0038I Pass   6: (7.01 seconds) suminf.    5.04485 (16) obj. -3.14242e+09 iterations 193
+Cbc0038I Pass   7: (7.07 seconds) suminf.    2.64284 (10) obj. -3.14242e+09 iterations 156
+Cbc0038I Pass   8: (7.21 seconds) suminf.    0.01338 (2) obj. -3.14242e+09 iterations 1038
+Cbc0038I Pass   9: (7.31 seconds) suminf.    0.00000 (0) obj. -3.14242e+09 iterations 637
+Cbc0038I Solution found of -3.14242e+09
+Cbc0038I Relaxing continuous gives -3.1445e+09
+Cbc0038I Before mini branch and bound, 8195 integers at bound fixed and 8155 continuous
+Cbc0038I Full problem 31615 rows 29252 columns, reduced to 3840 rows 3855 columns
+Cbc0038I Mini branch and bound did not improve solution (9.21 seconds)
+Cbc0038I Round again with cutoff of -3.38243e+09
+Cbc0038I Pass  10: (9.93 seconds) suminf.   77.45829 (229) obj. -3.38243e+09 iterations 705
+Cbc0038I Pass  11: (10.08 seconds) suminf.   72.34878 (215) obj. -3.38243e+09 iterations 748
+Cbc0038I Pass  12: (10.13 seconds) suminf.   67.13589 (204) obj. -3.38243e+09 iterations 123
+Cbc0038I Pass  13: (10.19 seconds) suminf.   61.88275 (186) obj. -3.38243e+09 iterations 106
+Cbc0038I Pass  14: (10.24 seconds) suminf.   57.66698 (172) obj. -3.38243e+09 iterations 121
+Cbc0038I Pass  15: (10.31 seconds) suminf.   50.16248 (152) obj. -3.38243e+09 iterations 166
+Cbc0038I Pass  16: (10.39 seconds) suminf.   44.78697 (136) obj. -3.38243e+09 iterations 303
+Cbc0038I Pass  17: (10.45 seconds) suminf.   41.40995 (128) obj. -3.38243e+09 iterations 103
+Cbc0038I Pass  18: (10.52 seconds) suminf.   35.24128 (110) obj. -3.38243e+09 iterations 164
+Cbc0038I Pass  19: (10.57 seconds) suminf.   26.63790 (82) obj. -3.38243e+09 iterations 122
+Cbc0038I Pass  20: (10.59 seconds) suminf.   25.73679 (80) obj. -3.38243e+09 iterations 18
+Cbc0038I Pass  21: (10.63 seconds) suminf.   24.08234 (72) obj. -3.38243e+09 iterations 62
+Cbc0038I Pass  22: (10.66 seconds) suminf.   22.05555 (68) obj. -3.38243e+09 iterations 22
+Cbc0038I Pass  23: (10.74 seconds) suminf.   16.41566 (48) obj. -3.38243e+09 iterations 306
+Cbc0038I Pass  24: (10.79 seconds) suminf.   11.53774 (38) obj. -3.38243e+09 iterations 85
+Cbc0038I Pass  25: (10.89 seconds) suminf.    7.40450 (26) obj. -3.38243e+09 iterations 490
+Cbc0038I Pass  26: (10.92 seconds) suminf.    6.27883 (22) obj. -3.38243e+09 iterations 15
+Cbc0038I Pass  27: (11.13 seconds) suminf.    2.10602 (8) obj. -3.38243e+09 iterations 890
+Cbc0038I Pass  28: (11.22 seconds) suminf.    2.91636 (10) obj. -3.38243e+09 iterations 397
+Cbc0038I Pass  29: (11.31 seconds) suminf.    0.28690 (2) obj. -3.38243e+09 iterations 446
+Cbc0038I Pass  30: (11.39 seconds) suminf.    0.00000 (0) obj. -3.38243e+09 iterations 393
+Cbc0038I Solution found of -3.38243e+09
+Cbc0038I Relaxing continuous gives -3.3834e+09
+Cbc0038I Before mini branch and bound, 8082 integers at bound fixed and 7956 continuous
+Cbc0038I Full problem 31615 rows 29252 columns, reduced to 4251 rows 4216 columns
+Cbc0038I Mini branch and bound did not improve solution (13.81 seconds)
+Cbc0038I Round again with cutoff of -3.66861e+09
+Cbc0038I Pass  31: (14.90 seconds) suminf.  147.19813 (483) obj. -3.66861e+09 iterations 1119
+Cbc0038I Pass  32: (15.04 seconds) suminf.  142.67294 (474) obj. -3.66861e+09 iterations 756
+Cbc0038I Pass  33: (15.10 seconds) suminf.  142.29711 (472) obj. -3.66861e+09 iterations 114
+Cbc0038I Pass  34: (15.16 seconds) suminf.  136.58332 (452) obj. -3.66861e+09 iterations 245
+Cbc0038I Pass  35: (15.21 seconds) suminf.  132.83108 (446) obj. -3.66861e+09 iterations 94
+Cbc0038I Pass  36: (15.29 seconds) suminf.  128.47040 (431) obj. -3.66861e+09 iterations 186
+Cbc0038I Pass  37: (15.36 seconds) suminf.  124.94271 (415) obj. -3.66861e+09 iterations 120
+Cbc0038I Pass  38: (15.43 seconds) suminf.  122.01026 (410) obj. -3.66861e+09 iterations 269
+Cbc0038I Pass  39: (15.52 seconds) suminf.  114.73032 (388) obj. -3.66861e+09 iterations 168
+Cbc0038I Pass  40: (15.57 seconds) suminf.  111.12010 (376) obj. -3.66861e+09 iterations 64
+Cbc0038I Pass  41: (15.64 seconds) suminf.  107.93068 (365) obj. -3.66861e+09 iterations 145
+Cbc0038I Pass  42: (15.71 seconds) suminf.   99.78563 (340) obj. -3.66861e+09 iterations 173
+Cbc0038I Pass  43: (15.80 seconds) suminf.   94.44514 (322) obj. -3.66861e+09 iterations 265
+Cbc0038I Pass  44: (15.85 seconds) suminf.   94.25752 (324) obj. -3.66861e+09 iterations 24
+Cbc0038I Pass  45: (15.92 seconds) suminf.   91.17319 (312) obj. -3.66861e+09 iterations 162
+Cbc0038I Pass  46: (15.99 seconds) suminf.   87.42094 (302) obj. -3.66861e+09 iterations 108
+Cbc0038I Pass  47: (16.05 seconds) suminf.   84.41050 (292) obj. -3.66861e+09 iterations 103
+Cbc0038I Pass  48: (16.14 seconds) suminf.   79.53258 (276) obj. -3.66861e+09 iterations 247
+Cbc0038I Pass  49: (16.21 seconds) suminf.   75.38099 (264) obj. -3.66861e+09 iterations 216
+Cbc0038I Pass  50: (16.30 seconds) suminf.   72.69600 (262) obj. -3.66861e+09 iterations 317
+Cbc0038I Pass  51: (16.38 seconds) suminf.   66.82579 (246) obj. -3.66861e+09 iterations 211
+Cbc0038I Pass  52: (16.48 seconds) suminf.   57.44517 (208) obj. -3.66861e+09 iterations 376
+Cbc0038I Pass  53: (16.55 seconds) suminf.   53.16127 (190) obj. -3.66861e+09 iterations 224
+Cbc0038I Pass  54: (16.59 seconds) suminf.   51.66037 (182) obj. -3.66861e+09 iterations 105
+Cbc0038I Pass  55: (16.70 seconds) suminf.   43.47854 (159) obj. -3.66861e+09 iterations 407
+Cbc0038I Pass  56: (16.79 seconds) suminf.   41.66844 (154) obj. -3.66861e+09 iterations 343
+Cbc0038I Pass  57: (16.85 seconds) suminf.   34.68330 (134) obj. -3.66861e+09 iterations 263
+Cbc0038I Pass  58: (16.93 seconds) suminf.   27.99528 (108) obj. -3.66861e+09 iterations 307
+Cbc0038I Pass  59: (16.98 seconds) suminf.   23.41005 (90) obj. -3.66861e+09 iterations 101
+Cbc0038I Pass  60: (17.02 seconds) suminf.   21.15870 (84) obj. -3.66861e+09 iterations 69
+Cbc0038I No solution found this major pass
+Cbc0038I Before mini branch and bound, 7890 integers at bound fixed and 7755 continuous
+Cbc0038I Full problem 31615 rows 29252 columns, reduced to 4943 rows 4819 columns
+Cbc0038I Mini branch and bound did not improve solution (20.32 seconds)
+Cbc0038I After 20.32 seconds - Feasibility pump exiting with objective of -3.3834e+09 - took 17.25 seconds
+Cbc0012I Integer solution of -3.3833984e+09 found by feasibility pump after 0 iterations and 0 nodes (21.06 seconds)
+Cbc0038I Full problem 31615 rows 29252 columns, reduced to 4136 rows 4106 columns
+Cbc0031I 5076 added rows had average density of 5.6952325
+Cbc0013I At root node, 5076 cuts changed objective from -4.3341108e+09 to -4.3280384e+09 in 50 passes
+Cbc0014I Cut generator 0 (Probing) - 7864 row cuts average 3.6 elements, 0 column cuts (0 active)  in 0.678 seconds - new frequency is 1
+Cbc0014I Cut generator 1 (Gomory) - 24598 row cuts average 8.8 elements, 0 column cuts (0 active)  in 10.973 seconds - new frequency is 1
+Cbc0014I Cut generator 2 (Knapsack) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.283 seconds - new frequency is -100
+Cbc0014I Cut generator 3 (Clique) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.997 seconds - new frequency is -100
+Cbc0014I Cut generator 4 (MixedIntegerRounding2) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 5.340 seconds - new frequency is -100
+Cbc0014I Cut generator 5 (FlowCover) - 60 row cuts average 9.3 elements, 0 column cuts (0 active)  in 0.293 seconds - new frequency is -100
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective -3.3833984e+09 (best possible -4.3280384e+09), took 146030 iterations and 0 nodes (120.72 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -4.33411e+09 to -4.32804e+09
+Probing was tried 50 times and created 7864 cuts of which 0 were active after adding rounds of cuts (0.678 seconds)
+Gomory was tried 50 times and created 24598 cuts of which 0 were active after adding rounds of cuts (10.973 seconds)
+Knapsack was tried 50 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.283 seconds)
+Clique was tried 50 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.997 seconds)
+MixedIntegerRounding2 was tried 50 times and created 0 cuts of which 0 were active after adding rounds of cuts (5.340 seconds)
+FlowCover was tried 50 times and created 60 cuts of which 0 were active after adding rounds of cuts (0.293 seconds)
+TwoMirCuts was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.386 seconds)
+ZeroHalf was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.179 seconds)
+
+Result - Stopped on time limit
+
+Objective value:                3383398433.39867687
+Upper bound:                    4328038374.685
+Gap:                            -0.22
+Enumerated nodes:               0
+Total iterations:               146030
+Time (CPU seconds):             122.08
+Time (Wallclock seconds):       123.06
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       122.13   (Wallclock seconds):       123.12
+
+Percent of edges removed = 77.066%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 9909 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 124.7088 seconds
+Scheduled network capacity: 3,543,700,481
+Scheduled network wasted capacity: 199,317,477.22557378
+Wasted buffer capacity: 0
+Jain's fairness index: 0.9931037669587076
+Average delay: 2006.4639249639247
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_16, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 137, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/16fc23ba62d34749ab15a23f6921712e-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/16fc23ba62d34749ab15a23f6921712e-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 42229 COLUMNS
+At line 371471 RHS
+At line 413696 BOUNDS
+At line 426564 ENDATA
+Problem MODEL has 42224 rows, 38606 columns and 303502 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 4.36364e+09 - 3.77 seconds
+Cgl0004I processed model has 40784 rows, 37991 columns (12867 integer (12867 of which binary)) and 301579 elements
+Cbc0038I Initial state - 1611 integers unsatisfied sum - 465.919
+Cbc0038I Pass   1: (6.27 seconds) suminf.    1.70968 (6) obj. -3.0096e+09 iterations 4388
+Cbc0038I Pass   2: (6.37 seconds) suminf.    0.29139 (1) obj. -3.00959e+09 iterations 493
+Cbc0038I Pass   3: (6.49 seconds) suminf.    0.00000 (0) obj. -3.00959e+09 iterations 760
+Cbc0038I Solution found of -3.00959e+09
+Cbc0038I Relaxing continuous gives -3.02117e+09
+Cbc0038I Before mini branch and bound, 11245 integers at bound fixed and 11219 continuous
+Cbc0038I Full problem 40784 rows 37991 columns, reduced to 3431 rows 3561 columns
+Cbc0038I Mini branch and bound did not improve solution (8.67 seconds)
+Cbc0038I Round again with cutoff of -3.15246e+09
+Cbc0038I Pass   4: (10.28 seconds) suminf.   29.37596 (92) obj. -3.15246e+09 iterations 1778
+Cbc0038I Pass   5: (10.42 seconds) suminf.   25.77830 (80) obj. -3.15246e+09 iterations 305
+Cbc0038I Pass   6: (10.55 seconds) suminf.   19.75742 (58) obj. -3.15246e+09 iterations 493
+Cbc0038I Pass   7: (10.66 seconds) suminf.    9.80381 (30) obj. -3.15246e+09 iterations 184
+Cbc0038I Pass   8: (10.74 seconds) suminf.    8.90269 (28) obj. -3.15246e+09 iterations 152
+Cbc0038I Pass   9: (10.95 seconds) suminf.    5.71551 (18) obj. -3.15246e+09 iterations 756
+Cbc0038I Pass  10: (11.09 seconds) suminf.    4.16968 (14) obj. -3.15246e+09 iterations 439
+Cbc0038I Pass  11: (11.26 seconds) suminf.    0.00000 (0) obj. -3.15246e+09 iterations 834
+Cbc0038I Solution found of -3.15246e+09
+Cbc0038I Relaxing continuous gives -3.15261e+09
+Cbc0038I Before mini branch and bound, 11182 integers at bound fixed and 11062 continuous
+Cbc0038I Full problem 40784 rows 37991 columns, reduced to 3653 rows 3759 columns
+Cbc0038I Mini branch and bound did not improve solution (13.43 seconds)
+Cbc0038I Round again with cutoff of -3.38891e+09
+Cbc0038I Pass  12: (14.66 seconds) suminf.   86.28967 (260) obj. -3.38891e+09 iterations 623
+Cbc0038I Pass  13: (14.81 seconds) suminf.   80.92281 (246) obj. -3.38891e+09 iterations 311
+Cbc0038I Pass  14: (14.90 seconds) suminf.   79.04380 (238) obj. -3.38891e+09 iterations 137
+Cbc0038I Pass  15: (14.98 seconds) suminf.   78.29335 (238) obj. -3.38891e+09 iterations 53
+Cbc0038I Pass  16: (15.07 seconds) suminf.   73.65814 (226) obj. -3.38891e+09 iterations 131
+Cbc0038I Pass  17: (15.16 seconds) suminf.   66.78021 (202) obj. -3.38891e+09 iterations 138
+Cbc0038I Pass  18: (15.23 seconds) suminf.   65.87910 (200) obj. -3.38891e+09 iterations 13
+Cbc0038I Pass  19: (15.33 seconds) suminf.   60.46088 (184) obj. -3.38891e+09 iterations 185
+Cbc0038I Pass  20: (15.44 seconds) suminf.   52.58116 (156) obj. -3.38891e+09 iterations 186
+Cbc0038I Pass  21: (15.59 seconds) suminf.   47.72139 (146) obj. -3.38891e+09 iterations 411
+Cbc0038I Pass  22: (15.70 seconds) suminf.   43.21869 (130) obj. -3.38891e+09 iterations 179
+Cbc0038I Pass  23: (15.82 seconds) suminf.   35.39558 (104) obj. -3.38891e+09 iterations 180
+Cbc0038I Pass  24: (15.96 seconds) suminf.   26.39018 (82) obj. -3.38891e+09 iterations 308
+Cbc0038I Pass  25: (16.06 seconds) suminf.   23.07841 (68) obj. -3.38891e+09 iterations 168
+Cbc0038I Pass  26: (16.16 seconds) suminf.   17.45004 (52) obj. -3.38891e+09 iterations 177
+Cbc0038I Pass  27: (16.23 seconds) suminf.   13.68627 (40) obj. -3.38891e+09 iterations 251
+Cbc0038I Pass  28: (16.32 seconds) suminf.    6.93222 (22) obj. -3.38891e+09 iterations 167
+Cbc0038I Pass  29: (16.45 seconds) suminf.    0.62153 (2) obj. -3.38891e+09 iterations 310
+Cbc0038I Pass  30: (16.52 seconds) suminf.    0.09564 (2) obj. -3.38891e+09 iterations 231
+Cbc0038I Pass  31: (16.59 seconds) suminf.    0.00000 (0) obj. -3.38891e+09 iterations 273
+Cbc0038I Solution found of -3.38891e+09
+Cbc0038I Relaxing continuous gives -3.39066e+09
+Cbc0038I Before mini branch and bound, 11077 integers at bound fixed and 11019 continuous
+Cbc0038I Full problem 40784 rows 37991 columns, reduced to 4019 rows 4083 columns
+Cbc0038I Mini branch and bound did not improve solution (19.06 seconds)
+Cbc0038I Round again with cutoff of -3.6737e+09
+Cbc0038I Pass  32: (20.63 seconds) suminf.  150.94233 (497) obj. -3.6737e+09 iterations 1250
+Cbc0038I Pass  33: (20.86 seconds) suminf.  143.01601 (468) obj. -3.6737e+09 iterations 518
+Cbc0038I Pass  34: (20.93 seconds) suminf.  139.85778 (462) obj. -3.6737e+09 iterations 139
+Cbc0038I Pass  35: (21.05 seconds) suminf.  137.23121 (448) obj. -3.6737e+09 iterations 151
+Cbc0038I Pass  36: (21.17 seconds) suminf.  132.78359 (433) obj. -3.6737e+09 iterations 278
+Cbc0038I Pass  37: (21.26 seconds) suminf.  129.86874 (422) obj. -3.6737e+09 iterations 202
+Cbc0038I Pass  38: (21.35 seconds) suminf.  127.37114 (417) obj. -3.6737e+09 iterations 178
+Cbc0038I Pass  39: (21.44 seconds) suminf.  121.45449 (402) obj. -3.6737e+09 iterations 149
+Cbc0038I Pass  40: (21.54 seconds) suminf.  115.74070 (382) obj. -3.6737e+09 iterations 238
+Cbc0038I Pass  41: (21.62 seconds) suminf.  111.98845 (370) obj. -3.6737e+09 iterations 136
+Cbc0038I Pass  42: (21.72 seconds) suminf.  104.24499 (352) obj. -3.6737e+09 iterations 244
+Cbc0038I Pass  43: (21.86 seconds) suminf.   99.57264 (332) obj. -3.6737e+09 iterations 229
+Cbc0038I Pass  44: (21.96 seconds) suminf.   94.59135 (320) obj. -3.6737e+09 iterations 208
+Cbc0038I Pass  45: (22.10 seconds) suminf.   89.90104 (304) obj. -3.6737e+09 iterations 256
+Cbc0038I Pass  46: (22.20 seconds) suminf.   84.93770 (288) obj. -3.6737e+09 iterations 236
+Cbc0038I Pass  47: (22.30 seconds) suminf.   80.81023 (278) obj. -3.6737e+09 iterations 143
+Cbc0038I Pass  48: (22.37 seconds) suminf.   77.27390 (270) obj. -3.6737e+09 iterations 95
+Cbc0038I Pass  49: (22.49 seconds) suminf.   72.39597 (254) obj. -3.6737e+09 iterations 184
+Cbc0038I Pass  50: (22.59 seconds) suminf.   69.45943 (250) obj. -3.6737e+09 iterations 169
+Cbc0038I Pass  51: (22.72 seconds) suminf.   63.45583 (222) obj. -3.6737e+09 iterations 340
+Cbc0038I Pass  52: (22.78 seconds) suminf.   61.12483 (216) obj. -3.6737e+09 iterations 114
+Cbc0038I Pass  53: (22.84 seconds) suminf.   59.24870 (210) obj. -3.6737e+09 iterations 79
+Cbc0038I Pass  54: (22.93 seconds) suminf.   54.13182 (200) obj. -3.6737e+09 iterations 125
+Cbc0038I Pass  55: (23.10 seconds) suminf.   46.68963 (174) obj. -3.6737e+09 iterations 366
+Cbc0038I Pass  56: (23.27 seconds) suminf.   41.49182 (158) obj. -3.6737e+09 iterations 435
+Cbc0038I Pass  57: (23.41 seconds) suminf.   35.79311 (127) obj. -3.6737e+09 iterations 252
+Cbc0038I Pass  58: (23.63 seconds) suminf.   29.96605 (113) obj. -3.6737e+09 iterations 470
+Cbc0038I Pass  59: (23.75 seconds) suminf.   25.54845 (98) obj. -3.6737e+09 iterations 241
+Cbc0038I Pass  60: (23.81 seconds) suminf.   25.41588 (96) obj. -3.6737e+09 iterations 37
+Cbc0038I Pass  61: (23.91 seconds) suminf.   23.88305 (92) obj. -3.6737e+09 iterations 202
+Cbc0038I No solution found this major pass
+Cbc0038I Before mini branch and bound, 10860 integers at bound fixed and 10763 continuous
+Cbc0038I Full problem 40784 rows 37991 columns, reduced to 4736 rows 4734 columns
+Cbc0038I Mini branch and bound did not improve solution (27.44 seconds)
+Cbc0038I After 27.44 seconds - Feasibility pump exiting with objective of -3.39066e+09 - took 22.82 seconds
+Cbc0012I Integer solution of -3.390663e+09 found by feasibility pump after 0 iterations and 0 nodes (28.33 seconds)
+Cbc0038I Full problem 40784 rows 37991 columns, reduced to 3883 rows 3950 columns
+Cbc0031I 2443 added rows had average density of 3.6397871
+Cbc0013I At root node, 2443 cuts changed objective from -4.3341108e+09 to -4.3299344e+09 in 28 passes
+Cbc0014I Cut generator 0 (Probing) - 5424 row cuts average 3.0 elements, 0 column cuts (1708 active)  in 0.663 seconds - new frequency is 1
+Cbc0014I Cut generator 1 (Gomory) - 18429 row cuts average 8.2 elements, 0 column cuts (0 active)  in 9.367 seconds - new frequency is 1
+Cbc0014I Cut generator 2 (Knapsack) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.204 seconds - new frequency is -100
+Cbc0014I Cut generator 3 (Clique) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.612 seconds - new frequency is -100
+Cbc0014I Cut generator 4 (MixedIntegerRounding2) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 4.040 seconds - new frequency is -100
+Cbc0014I Cut generator 5 (FlowCover) - 12 row cuts average 10.7 elements, 0 column cuts (0 active)  in 0.229 seconds - new frequency is -100
+Cbc0010I After 0 nodes, 1 on tree, -3.390663e+09 best solution, best possible -4.3299344e+09 (78.61 seconds)
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective -3.390663e+09 (best possible -4.3299344e+09), took 71140 iterations and 8 nodes (119.90 seconds)
+Cbc0032I Strong branching done 200 times (14224 iterations), fathomed 0 nodes and fixed 0 variables
+Cbc0035I Maximum depth 8, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -4.33411e+09 to -4.32993e+09
+Probing was tried 41 times and created 5704 cuts of which 1708 were active after adding rounds of cuts (0.716 seconds)
+Gomory was tried 41 times and created 23159 cuts of which 0 were active after adding rounds of cuts (12.219 seconds)
+Knapsack was tried 28 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.204 seconds)
+Clique was tried 28 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.612 seconds)
+MixedIntegerRounding2 was tried 28 times and created 0 cuts of which 0 were active after adding rounds of cuts (4.040 seconds)
+FlowCover was tried 28 times and created 12 cuts of which 0 were active after adding rounds of cuts (0.229 seconds)
+TwoMirCuts was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.552 seconds)
+ZeroHalf was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.180 seconds)
+
+Result - Stopped on time limit
+
+Objective value:                3390663020.10629559
+Upper bound:                    4329934413.874
+Gap:                            -0.22
+Enumerated nodes:               8
+Total iterations:               71140
+Time (CPU seconds):             123.29
+Time (Wallclock seconds):       123.81
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       123.36   (Wallclock seconds):       123.90
+
+Percent of edges removed = 78.625%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 12867 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 126.2391 seconds
+Scheduled network capacity: 3,471,260,338
+Scheduled network wasted capacity: 321,105,367.68438387
+Wasted buffer capacity: 0
+Jain's fairness index: 0.9927046488125316
+Average delay: 2682.1197522284483
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_20, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/43c6fd79432b4912addcfa02e649f49d-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/43c6fd79432b4912addcfa02e649f49d-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 75895 COLUMNS
+At line 778442 RHS
+At line 854333 BOUNDS
+At line 878085 ENDATA
+Problem MODEL has 75890 rows, 71259 columns and 655038 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 6.57273e+09 - 14.38 seconds
+Cgl0004I processed model has 73348 rows, 70086 columns (23751 integer (23751 of which binary)) and 651414 elements
+Cbc0038I Initial state - 2482 integers unsatisfied sum - 707.087
+Cbc0038I Pass   1: (24.42 seconds) suminf.    0.06569 (8) obj. -4.50557e+09 iterations 6813
+Cbc0038I Pass   2: (24.57 seconds) suminf.    0.05109 (7) obj. -4.50552e+09 iterations 142
+Cbc0038I Pass   3: (24.91 seconds) suminf.    0.92000 (3) obj. -4.52666e+09 iterations 918
+Cbc0038I Pass   4: (25.26 seconds) suminf.    0.50549 (2) obj. -4.52452e+09 iterations 1084
+Cbc0038I Pass   5: (25.38 seconds) suminf.    0.00000 (0) obj. -4.52452e+09 iterations 366
+Cbc0038I Solution found of -4.52452e+09
+Cbc0038I Relaxing continuous gives -4.53609e+09
+Cbc0038I Before mini branch and bound, 21250 integers at bound fixed and 21158 continuous
+Cbc0038I Full problem 73348 rows 70086 columns, reduced to 5268 rows 5468 columns
+Cbc0038I Mini branch and bound did not improve solution (30.93 seconds)
+Cbc0038I Round again with cutoff of -4.7356e+09
+Cbc0038I Pass   6: (38.53 seconds) suminf.   43.73086 (132) obj. -4.7356e+09 iterations 3043
+Cbc0038I Pass   7: (38.86 seconds) suminf.   37.07939 (112) obj. -4.7356e+09 iterations 390
+Cbc0038I Pass   8: (39.07 seconds) suminf.   36.17828 (110) obj. -4.7356e+09 iterations 87
+Cbc0038I Pass   9: (39.39 seconds) suminf.   28.81891 (88) obj. -4.7356e+09 iterations 499
+Cbc0038I Pass  10: (39.66 seconds) suminf.   26.81581 (82) obj. -4.7356e+09 iterations 246
+Cbc0038I Pass  11: (40.04 seconds) suminf.   22.90425 (72) obj. -4.7356e+09 iterations 399
+Cbc0038I Pass  12: (40.55 seconds) suminf.   18.40155 (56) obj. -4.7356e+09 iterations 503
+Cbc0038I Pass  13: (41.20 seconds) suminf.   15.24045 (48) obj. -4.7356e+09 iterations 676
+Cbc0038I Pass  14: (41.55 seconds) suminf.    9.98730 (32) obj. -4.7356e+09 iterations 236
+Cbc0038I Pass  15: (42.17 seconds) suminf.    7.42886 (24) obj. -4.7356e+09 iterations 895
+Cbc0038I Pass  16: (42.44 seconds) suminf.    3.67661 (14) obj. -4.7356e+09 iterations 158
+Cbc0038I Pass  17: (43.20 seconds) suminf.    3.70723 (14) obj. -4.7356e+09 iterations 1072
+Cbc0038I Pass  18: (43.84 seconds) suminf.    2.00000 (8) obj. -4.7356e+09 iterations 696
+Cbc0038I Pass  19: (44.49 seconds) suminf.    1.63647 (6) obj. -4.7356e+09 iterations 1080
+Cbc0038I Pass  20: (44.96 seconds) suminf.    1.04716 (6) obj. -4.7356e+09 iterations 694
+Cbc0038I Pass  21: (45.45 seconds) suminf.    0.00000 (0) obj. -4.7356e+09 iterations 588
+Cbc0038I Solution found of -4.7356e+09
+Cbc0038I Relaxing continuous gives -4.73776e+09
+Cbc0038I Before mini branch and bound, 21138 integers at bound fixed and 20967 continuous
+Cbc0038I Full problem 73348 rows 70086 columns, reduced to 5631 rows 5804 columns
+Cbc0038I Mini branch and bound did not improve solution (52.01 seconds)
+Cbc0038I Round again with cutoff of -5.09643e+09
+Cbc0038I Pass  22: (59.07 seconds) suminf.  129.31997 (393) obj. -5.09643e+09 iterations 1058
+Cbc0038I Pass  23: (59.64 seconds) suminf.  120.49583 (363) obj. -5.09643e+09 iterations 595
+Cbc0038I Pass  24: (60.05 seconds) suminf.  118.69360 (363) obj. -5.09643e+09 iterations 77
+Cbc0038I Pass  25: (60.43 seconds) suminf.  115.77477 (356) obj. -5.09643e+09 iterations 230
+Cbc0038I Pass  26: (60.79 seconds) suminf.  113.14820 (346) obj. -5.09643e+09 iterations 101
+Cbc0038I Pass  27: (61.16 seconds) suminf.  107.13020 (324) obj. -5.09643e+09 iterations 297
+Cbc0038I Pass  28: (61.58 seconds) suminf.  100.00093 (308) obj. -5.09643e+09 iterations 253
+Cbc0038I Pass  29: (62.21 seconds) suminf.   97.47216 (300) obj. -5.09643e+09 iterations 586
+Cbc0038I Pass  30: (62.55 seconds) suminf.   94.84558 (286) obj. -5.09643e+09 iterations 177
+Cbc0038I Pass  31: (62.87 seconds) suminf.   92.46748 (276) obj. -5.09643e+09 iterations 253
+Cbc0038I Pass  32: (63.14 seconds) suminf.   90.21613 (272) obj. -5.09643e+09 iterations 114
+Cbc0038I Pass  33: (63.51 seconds) suminf.   85.40346 (262) obj. -5.09643e+09 iterations 187
+Cbc0038I Pass  34: (63.93 seconds) suminf.   81.27599 (248) obj. -5.09643e+09 iterations 263
+Cbc0038I Pass  35: (64.23 seconds) suminf.   79.91999 (248) obj. -5.09643e+09 iterations 131
+Cbc0038I Pass  36: (64.69 seconds) suminf.   76.54297 (236) obj. -5.09643e+09 iterations 212
+Cbc0038I Pass  37: (65.00 seconds) suminf.   73.91063 (228) obj. -5.09643e+09 iterations 95
+Cbc0038I Pass  38: (65.36 seconds) suminf.   71.28406 (218) obj. -5.09643e+09 iterations 211
+Cbc0038I Pass  39: (65.82 seconds) suminf.   67.06829 (212) obj. -5.09643e+09 iterations 311
+Cbc0038I Pass  40: (66.37 seconds) suminf.   59.18857 (186) obj. -5.09643e+09 iterations 374
+Cbc0038I Pass  41: (66.88 seconds) suminf.   55.95357 (180) obj. -5.09643e+09 iterations 338
+Cbc0038I Pass  42: (67.24 seconds) suminf.   51.82610 (168) obj. -5.09643e+09 iterations 189
+Cbc0038I Pass  43: (67.58 seconds) suminf.   50.09488 (164) obj. -5.09643e+09 iterations 238
+Cbc0038I Pass  44: (68.06 seconds) suminf.   47.09308 (154) obj. -5.09643e+09 iterations 304
+Cbc0038I Pass  45: (68.40 seconds) suminf.   45.58642 (142) obj. -5.09643e+09 iterations 213
+Cbc0038I Pass  46: (68.88 seconds) suminf.   41.83417 (132) obj. -5.09643e+09 iterations 275
+Cbc0038I Pass  47: (69.25 seconds) suminf.   38.70274 (120) obj. -5.09643e+09 iterations 264
+Cbc0038I Pass  48: (69.67 seconds) suminf.   34.04938 (112) obj. -5.09643e+09 iterations 252
+Cbc0038I Pass  49: (70.07 seconds) suminf.   28.26170 (97) obj. -5.09643e+09 iterations 305
+Cbc0038I Pass  50: (70.35 seconds) suminf.   25.63512 (82) obj. -5.09643e+09 iterations 126
+Cbc0038I Pass  51: (70.75 seconds) suminf.   21.57290 (69) obj. -5.09643e+09 iterations 279
+Cbc0038I No solution found this major pass
+Cbc0038I Before mini branch and bound, 20972 integers at bound fixed and 20893 continuous
+Cbc0038I Full problem 73348 rows 70086 columns, reduced to 6231 rows 6327 columns
+Cbc0038I Mini branch and bound did not improve solution (76.64 seconds)
+Cbc0038I After 76.65 seconds - Feasibility pump exiting with objective of -4.73776e+09 - took 59.39 seconds
+Cbc0012I Integer solution of -4.7377566e+09 found by feasibility pump after 0 iterations and 0 nodes (79.20 seconds)
+Cbc0038I Full problem 73348 rows 70086 columns, reduced to 5516 rows 5682 columns
+Cbc0031I 4613 added rows had average density of 5.1044873
+Cbc0013I At root node, 4613 cuts changed objective from -6.5311239e+09 to -6.5303367e+09 in 7 passes
+Cbc0014I Cut generator 0 (Probing) - 3084 row cuts average 3.0 elements, 0 column cuts (1992 active)  in 0.428 seconds - new frequency is 1
+Cbc0014I Cut generator 1 (Gomory) - 10898 row cuts average 8.5 elements, 0 column cuts (0 active)  in 11.712 seconds - new frequency is 1
+Cbc0014I Cut generator 2 (Knapsack) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.087 seconds - new frequency is -100
+Cbc0014I Cut generator 3 (Clique) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.283 seconds - new frequency is -100
+Cbc0014I Cut generator 4 (MixedIntegerRounding2) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 2.307 seconds - new frequency is -100
+Cbc0014I Cut generator 5 (FlowCover) - 1 row cuts average 11.0 elements, 0 column cuts (0 active)  in 0.105 seconds - new frequency is -100
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective -4.7377566e+09 (best possible -6.5303367e+09), took 20620 iterations and 0 nodes (119.46 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -6.53112e+09 to -6.53034e+09
+Probing was tried 7 times and created 3084 cuts of which 1992 were active after adding rounds of cuts (0.428 seconds)
+Gomory was tried 7 times and created 10898 cuts of which 0 were active after adding rounds of cuts (11.712 seconds)
+Knapsack was tried 7 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.087 seconds)
+Clique was tried 7 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.283 seconds)
+MixedIntegerRounding2 was tried 7 times and created 0 cuts of which 0 were active after adding rounds of cuts (2.307 seconds)
+FlowCover was tried 7 times and created 1 cuts of which 0 were active after adding rounds of cuts (0.105 seconds)
+TwoMirCuts was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (1.920 seconds)
+ZeroHalf was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.503 seconds)
+
+Result - Stopped on time limit
+
+Objective value:                4737756618.26339340
+Upper bound:                    6530336655.885
+Gap:                            -0.27
+Enumerated nodes:               0
+Total iterations:               20620
+Time (CPU seconds):             137.36
+Time (Wallclock seconds):       138.08
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       137.51   (Wallclock seconds):       138.28
+
+Percent of edges removed = 77.252%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 23751 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 143.8317 seconds
+Scheduled network capacity: 4,898,994,954
+Scheduled network wasted capacity: 951,808,482.2356858
+Wasted buffer capacity: 0
+Jain's fairness index: 0.9899856002094515
+Average delay: 1923.9783003095004
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_24, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/ca761791a5d54938979bd3001a3b73df-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/ca761791a5d54938979bd3001a3b73df-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 89813 COLUMNS
+At line 1036284 RHS
+At line 1126093 BOUNDS
+At line 1154291 ENDATA
+Problem MODEL has 89808 rows, 84597 columns and 890070 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 6.57273e+09 - 25.48 seconds
+Cgl0004I processed model has 86904 rows, 83250 columns (28197 integer (28197 of which binary)) and 885924 elements
+Cbc0038I Initial state - 2455 integers unsatisfied sum - 731.587
+Cbc0038I Pass   1: (40.00 seconds) suminf.    1.73846 (7) obj. -4.4151e+09 iterations 6710
+Cbc0038I Pass   2: (40.23 seconds) suminf.    0.20779 (1) obj. -4.41444e+09 iterations 542
+Cbc0038I Pass   3: (40.36 seconds) suminf.    0.00000 (0) obj. -4.41444e+09 iterations 251
+Cbc0038I Solution found of -4.41444e+09
+Cbc0038I Relaxing continuous gives -4.42602e+09
+Cbc0038I Before mini branch and bound, 25728 integers at bound fixed and 25720 continuous
+Cbc0038I Full problem 86904 rows 83250 columns, reduced to 5039 rows 5331 columns
+Cbc0038I Mini branch and bound did not improve solution (47.47 seconds)
+Cbc0038I Round again with cutoff of -4.63653e+09
+Cbc0038I Pass   4: (60.09 seconds) suminf.   41.81974 (127) obj. -4.63653e+09 iterations 3218
+Cbc0038I Pass   5: (60.75 seconds) suminf.   35.14623 (108) obj. -4.63653e+09 iterations 511
+Cbc0038I Pass   6: (61.08 seconds) suminf.   34.24512 (104) obj. -4.63653e+09 iterations 143
+Cbc0038I Pass   7: (61.42 seconds) suminf.   32.28646 (98) obj. -4.63653e+09 iterations 261
+Cbc0038I Pass   8: (61.84 seconds) suminf.   27.40854 (84) obj. -4.63653e+09 iterations 270
+Cbc0038I Pass   9: (62.19 seconds) suminf.   25.14855 (80) obj. -4.63653e+09 iterations 126
+Cbc0038I Pass  10: (62.63 seconds) suminf.   19.52018 (62) obj. -4.63653e+09 iterations 136
+Cbc0038I Pass  11: (63.01 seconds) suminf.   15.83606 (50) obj. -4.63653e+09 iterations 195
+Cbc0038I Pass  12: (63.31 seconds) suminf.   13.20949 (44) obj. -4.63653e+09 iterations 48
+Cbc0038I Pass  13: (64.64 seconds) suminf.    6.14018 (22) obj. -4.63653e+09 iterations 2678
+Cbc0038I Pass  14: (65.07 seconds) suminf.    4.94467 (18) obj. -4.63653e+09 iterations 466
+Cbc0038I Pass  15: (65.46 seconds) suminf.    3.32112 (14) obj. -4.63653e+09 iterations 347
+Cbc0038I Pass  16: (66.33 seconds) suminf.    2.10146 (10) obj. -4.63653e+09 iterations 1383
+Cbc0038I Pass  17: (66.72 seconds) suminf.    1.40000 (8) obj. -4.63653e+09 iterations 479
+Cbc0038I Pass  18: (67.60 seconds) suminf.    0.70000 (6) obj. -4.63653e+09 iterations 1884
+Cbc0038I Pass  19: (68.90 seconds) suminf.    1.05000 (8) obj. -4.63653e+09 iterations 2974
+Cbc0038I Pass  20: (69.83 seconds) suminf.    1.05000 (8) obj. -4.63653e+09 iterations 1533
+Cbc0038I Pass  21: (70.78 seconds) suminf.    0.70000 (4) obj. -4.63653e+09 iterations 1840
+Cbc0038I Pass  22: (71.63 seconds) suminf.    0.70000 (6) obj. -4.63653e+09 iterations 2182
+Cbc0038I Pass  23: (72.88 seconds) suminf.    2.12701 (8) obj. -4.63653e+09 iterations 2537
+Cbc0038I Pass  24: (73.44 seconds) suminf.    1.05000 (5) obj. -4.63653e+09 iterations 923
+Cbc0038I Pass  25: (74.10 seconds) suminf.    0.35000 (2) obj. -4.63653e+09 iterations 1484
+Cbc0038I Pass  26: (74.40 seconds) suminf.    0.35000 (2) obj. -4.63653e+09 iterations 536
+Cbc0038I Pass  27: (74.96 seconds) suminf.    0.35000 (2) obj. -4.63653e+09 iterations 1256
+Cbc0038I Pass  28: (78.26 seconds) suminf.   68.80575 (204) obj. -4.63653e+09 iterations 2376
+Cbc0038I Pass  29: (79.84 seconds) suminf.   17.20113 (53) obj. -4.63653e+09 iterations 2137
+Cbc0038I Pass  30: (80.27 seconds) suminf.   13.01015 (42) obj. -4.63653e+09 iterations 144
+Cbc0038I Pass  31: (80.55 seconds) suminf.   12.78716 (44) obj. -4.63653e+09 iterations 31
+Cbc0038I Pass  32: (81.11 seconds) suminf.    8.95238 (30) obj. -4.63653e+09 iterations 288
+Cbc0038I Pass  33: (81.54 seconds) suminf.    5.95058 (24) obj. -4.63653e+09 iterations 120
+Cbc0038I No solution found this major pass
+Cbc0038I Before mini branch and bound, 25366 integers at bound fixed and 25055 continuous
+Cbc0038I Full problem 86904 rows 83250 columns, reduced to 5835 rows 6216 columns
+Cbc0038I Mini branch and bound did not improve solution (86.90 seconds)
+Cbc0038I After 86.91 seconds - Feasibility pump exiting with objective of -4.42602e+09 - took 57.80 seconds
+Cbc0012I Integer solution of -4.4260195e+09 found by feasibility pump after 0 iterations and 0 nodes (90.13 seconds)
+Cbc0038I Full problem 86904 rows 83250 columns, reduced to 5036 rows 5328 columns
+Cbc0031I 3952 added rows had average density of 5.6163968
+Cbc0013I At root node, 3952 cuts changed objective from -6.5311239e+09 to -6.5303521e+09 in 3 passes
+Cbc0014I Cut generator 0 (Probing) - 1510 row cuts average 3.0 elements, 0 column cuts (1627 active)  in 0.222 seconds - new frequency is 1
+Cbc0014I Cut generator 1 (Gomory) - 5676 row cuts average 7.9 elements, 0 column cuts (0 active)  in 5.735 seconds - new frequency is 1
+Cbc0014I Cut generator 2 (Knapsack) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.042 seconds - new frequency is -100
+Cbc0014I Cut generator 3 (Clique) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.102 seconds - new frequency is -100
+Cbc0014I Cut generator 4 (MixedIntegerRounding2) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 1.110 seconds - new frequency is -100
+Cbc0014I Cut generator 5 (FlowCover) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.052 seconds - new frequency is -100
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective -4.4260195e+09 (best possible -6.5303521e+09), took 9774 iterations and 0 nodes (118.84 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -6.53112e+09 to -6.53035e+09
+Probing was tried 3 times and created 1510 cuts of which 1627 were active after adding rounds of cuts (0.222 seconds)
+Gomory was tried 3 times and created 5676 cuts of which 0 were active after adding rounds of cuts (5.735 seconds)
+Knapsack was tried 3 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.042 seconds)
+Clique was tried 3 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.102 seconds)
+MixedIntegerRounding2 was tried 3 times and created 0 cuts of which 0 were active after adding rounds of cuts (1.110 seconds)
+FlowCover was tried 3 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.052 seconds)
+TwoMirCuts was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (2.286 seconds)
+ZeroHalf was tried 1 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.550 seconds)
+
+Result - Stopped on time limit
+
+Objective value:                4426019539.23523712
+Upper bound:                    6530352108.349
+Gap:                            -0.32
+Enumerated nodes:               0
+Total iterations:               9774
+Time (CPU seconds):             145.74
+Time (Wallclock seconds):       146.59
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       145.97   (Wallclock seconds):       146.88
+
+Percent of edges removed = 80.012%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 28197 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 155.1675 seconds
+Scheduled network capacity: 4,575,830,112
+Scheduled network wasted capacity: 1,452,723,078.6729665
+Wasted buffer capacity: 0
+Jain's fairness index: 0.9834636039772425
+Average delay: 2067.2314833414853
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_28, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/d72acac4d7eb4a59b38a2b4c6fbb2334-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/d72acac4d7eb4a59b38a2b4c6fbb2334-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 137051 COLUMNS
+At line 1773828 RHS
+At line 1910875 BOUNDS
+At line 1954481 ENDATA
+Problem MODEL has 137046 rows, 130822 columns and 1549559 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 8.78182e+09 - 73.94 seconds
+Cgl0004I processed model has 132410 rows, 128638 columns (43605 integer (43605 of which binary)) and 1542863 elements
+Cbc0038I Initial state - 3315 integers unsatisfied sum - 977.547
+Cbc0038I Pass   1: (120.50 seconds) suminf.    4.93684 (15) obj. -5.87003e+09 iterations 12362
+Cbc0038I No solution found this major pass
+Cbc0038I After 120.52 seconds - Feasibility pump exiting - took 37.11 seconds
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective 1e+50 (best possible -8.7250498e+09), took 0 iterations and 0 nodes (121.02 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -8.72505e+09 to -8.72505e+09
+Probing was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Gomory was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Knapsack was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Clique was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+MixedIntegerRounding2 was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+FlowCover was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+TwoMirCuts was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+ZeroHalf was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+
+Result - Stopped on time limit
+
+No feasible solution found
+Upper bound:                    8725049772.283
+Enumerated nodes:               0
+Total iterations:               0
+Time (CPU seconds):             119.71
+Time (Wallclock seconds):       121.06
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       120.06   (Wallclock seconds):       121.49
+
+Percent of edges removed = 77.468%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 43605 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for node 1004
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 134.4703 seconds
+Scheduled network capacity: 143,189,807
+Scheduled network wasted capacity: 2,807,580,192.683608
+Wasted buffer capacity: 0
+Jain's fairness index: 0.4834004024144869
+Average delay: 73639.28571428571
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_32, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/c3af61d70b7f4f5fb0e2dc84349eab2e-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/c3af61d70b7f4f5fb0e2dc84349eab2e-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 155667 COLUMNS
+At line 2216344 RHS
+At line 2372007 BOUNDS
+At line 2421625 ENDATA
+Problem MODEL has 155662 rows, 148858 columns and 1961435 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 8.78182e+09 - 98.23 seconds
+Cgl0004I processed model has 150563 rows, 146446 columns (49617 integer (49617 of which binary)) and 1954055 elements
+Cbc0038I Initial state - 3370 integers unsatisfied sum - 998.148
+Cbc0038I Pass   1: (165.66 seconds) suminf.    6.30000 (29) obj. -5.84868e+09 iterations 14298
+Cbc0038I No solution found this major pass
+Cbc0038I After 165.72 seconds - Feasibility pump exiting - took 55.46 seconds
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective 1e+50 (best possible -8.7250498e+09), took 0 iterations and 0 nodes (166.55 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -8.72505e+09 to -8.72505e+09
+Probing was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Gomory was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Knapsack was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Clique was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+MixedIntegerRounding2 was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+FlowCover was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+TwoMirCuts was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+ZeroHalf was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+
+Result - Stopped on time limit
+
+No feasible solution found
+Upper bound:                    8725049772.283
+Enumerated nodes:               0
+Total iterations:               0
+Time (CPU seconds):             164.63
+Time (Wallclock seconds):       166.57
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       165.09   (Wallclock seconds):       167.11
+
+Percent of edges removed = 78.575%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 49617 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for node 1004
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 183.8052 seconds
+Scheduled network capacity: 109,751,845
+Scheduled network wasted capacity: 2,797,998,154.1468863
+Wasted buffer capacity: 0
+Jain's fairness index: 0.45
+Average delay: 77531.25
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_36, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/bc7bdecad0eb4579ad37b16d554064fa-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/bc7bdecad0eb4579ad37b16d554064fa-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 215757 COLUMNS
+At line 3371521 RHS
+At line 3587274 BOUNDS
+At line 3656584 ENDATA
+Problem MODEL has 215752 rows, 207935 columns and 3017137 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 1.09691e+10 - 201.83 seconds
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective 1e+50 (best possible -1.0969091e+10), took 0 iterations and 0 nodes (208.01 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -1.09691e+10 to -1.09691e+10
+Probing was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Gomory was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Knapsack was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Clique was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+MixedIntegerRounding2 was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+FlowCover was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+TwoMirCuts was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+ZeroHalf was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+
+Result - Stopped on time limit
+
+No feasible solution found
+Upper bound:                    10969090909.091
+Enumerated nodes:               0
+Total iterations:               0
+Time (CPU seconds):             205.87
+Time (Wallclock seconds):       208.04
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       206.52   (Wallclock seconds):       208.83
+
+Percent of edges removed = 77.810%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 69309 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for node 1004
+Setting up inflow and outflow capacity constraints for node 1005
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 234.5123 seconds
+Scheduled network capacity: 168,487,259
+Scheduled network wasted capacity: 3,948,892,740.85451
+Wasted buffer capacity: 0
+Jain's fairness index: 0.4371008939974457
+Average delay: 76480.0
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_40, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/8f00a55b73ac4dabb3e2ca4900263ee4-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/8f00a55b73ac4dabb3e2ca4900263ee4-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 238639 COLUMNS
+At line 4039481 RHS
+At line 4278116 BOUNDS
+At line 4354860 ENDATA
+Problem MODEL has 238634 rows, 230237 columns and 3647347 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 1.09691e+10 - 268.06 seconds
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective 1e+50 (best possible -1.0969091e+10), took 0 iterations and 0 nodes (277.17 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -1.09691e+10 to -1.09691e+10
+Probing was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Gomory was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Knapsack was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Clique was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+MixedIntegerRounding2 was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+FlowCover was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+TwoMirCuts was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+ZeroHalf was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+
+Result - Stopped on time limit
+
+No feasible solution found
+Upper bound:                    10969090909.091
+Enumerated nodes:               0
+Total iterations:               0
+Time (CPU seconds):             274.46
+Time (Wallclock seconds):       277.19
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       275.18   (Wallclock seconds):       278.09
+
+Percent of edges removed = 78.587%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 76743 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for node 1004
+Setting up inflow and outflow capacity constraints for node 1005
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 308.9282 seconds
+Scheduled network capacity: 249,925,220
+Scheduled network wasted capacity: 3,447,454,779.3912315
+Wasted buffer capacity: 0
+Jain's fairness index: 0.41728395061728396
+Average delay: 71335.0
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_44, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/cf74632311b74261a7347b7216a05ea9-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/cf74632311b74261a7347b7216a05ea9-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 312814 COLUMNS
+At line 5725325 RHS
+At line 6038135 BOUNDS
+At line 6139266 ENDATA
+Problem MODEL has 312809 rows, 303399 columns and 5210241 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 1.31727e+10 - 592.22 seconds
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective 1e+50 (best possible -1.3172727e+10), took 0 iterations and 0 nodes (609.80 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -1.31727e+10 to -1.31727e+10
+Probing was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Gomory was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Knapsack was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Clique was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+MixedIntegerRounding2 was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+FlowCover was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+TwoMirCuts was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+ZeroHalf was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+
+Result - Stopped on time limit
+
+No feasible solution found
+Upper bound:                    13172727272.727
+Enumerated nodes:               0
+Total iterations:               0
+Time (CPU seconds):             604.18
+Time (Wallclock seconds):       609.82
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       605.22   (Wallclock seconds):       611.08
+
+Percent of edges removed = 77.948%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 101130 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for node 1004
+Setting up inflow and outflow capacity constraints for node 1005
+Setting up inflow and outflow capacity constraints for node 1006
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 657.0551 seconds
+Scheduled network capacity: 179,189,807
+Scheduled network wasted capacity: 4,144,230,192.683608
+Wasted buffer capacity: 0
+Jain's fairness index: 0.3495914198161389
+Average delay: 79022.72727272728
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_48, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/cdbf96de9594412a9d648c1e0b0d79ad-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/cdbf96de9594412a9d648c1e0b0d79ad-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 340025 COLUMNS
+At line 6667239 RHS
+At line 7007260 BOUNDS
+At line 7117268 ENDATA
+Problem MODEL has 340020 rows, 330030 columns and 6107190 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 1.31727e+10 - 757.23 seconds
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective 1e+50 (best possible -1.3172727e+10), took 0 iterations and 0 nodes (779.95 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -1.31727e+10 to -1.31727e+10
+Probing was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Gomory was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Knapsack was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Clique was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+MixedIntegerRounding2 was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+FlowCover was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+TwoMirCuts was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+ZeroHalf was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+
+Result - Stopped on time limit
+
+No feasible solution found
+Upper bound:                    13172727272.727
+Enumerated nodes:               0
+Total iterations:               0
+Time (CPU seconds):             773.27
+Time (Wallclock seconds):       779.98
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       774.51   (Wallclock seconds):       781.49
+
+Percent of edges removed = 79.252%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 110007 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for node 1004
+Setting up inflow and outflow capacity constraints for node 1005
+Setting up inflow and outflow capacity constraints for node 1006
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 839.1524 seconds
+Scheduled network capacity: 206,206,239
+Scheduled network wasted capacity: 4,331,743,760.122871
+Wasted buffer capacity: 0
+Jain's fairness index: 0.3201058201058201
+Average delay: 75731.25
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_52, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/e7bf88f29d3a4209b0203e95cf18600d-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/e7bf88f29d3a4209b0203e95cf18600d-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 427781 COLUMNS
+At line 8973459 RHS
+At line 9401236 BOUNDS
+At line 9540158 ENDATA
+Problem MODEL has 427776 rows, 416773 columns and 8267825 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 1.53818e+10 - 1323.11 seconds
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective 1e+50 (best possible -1.5381818e+10), took 0 iterations and 0 nodes (1354.93 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -1.53818e+10 to -1.53818e+10
+Probing was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Gomory was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Knapsack was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Clique was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+MixedIntegerRounding2 was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+FlowCover was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+TwoMirCuts was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+ZeroHalf was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+
+Result - Stopped on time limit
+
+No feasible solution found
+Upper bound:                    15381818181.818
+Enumerated nodes:               0
+Total iterations:               0
+Time (CPU seconds):             1344.24
+Time (Wallclock seconds):       1354.97
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       1345.88   (Wallclock seconds):       1356.93
+
+Percent of edges removed = 78.003%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 138921 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for node 1004
+Setting up inflow and outflow capacity constraints for node 1005
+Setting up inflow and outflow capacity constraints for node 1006
+Setting up inflow and outflow capacity constraints for node 1007
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 1432.7424 seconds
+Scheduled network capacity: 351,958,085
+Scheduled network wasted capacity: 3,310,891,914.2697573
+Wasted buffer capacity: 0
+Jain's fairness index: 0.37343153300600107
+Average delay: 70412.91208791209
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_56, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/jason/Code/laser-link-scheduler/venv/lib/python3.10/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/71a36fc2963c4314b056708cd90866ed-pulp.mps -max -sec 120 -timeMode elapsed -branch -printingOptions all -solution /tmp/71a36fc2963c4314b056708cd90866ed-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 459222 COLUMNS
+At line 10233928 RHS
+At line 10693146 BOUNDS
+At line 10842355 ENDATA
+Problem MODEL has 459217 rows, 447634 columns and 9476279 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 120
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 1.53818e+10 - 1810.76 seconds
+Cbc0020I Exiting on maximum time
+Cbc0005I Partial search - best objective 1e+50 (best possible -1.5381818e+10), took 0 iterations and 0 nodes (1859.99 seconds)
+Cbc0035I Maximum depth 0, 0 variables fixed on reduced cost
+Cuts at root node changed objective from -1.53818e+10 to -1.53818e+10
+Probing was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Gomory was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Knapsack was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+Clique was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+MixedIntegerRounding2 was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+FlowCover was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+TwoMirCuts was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+ZeroHalf was tried 0 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.000 seconds)
+
+Result - Stopped on time limit
+
+No feasible solution found
+Upper bound:                    15381818181.818
+Enumerated nodes:               0
+Total iterations:               0
+Time (CPU seconds):             1844.95
+Time (Wallclock seconds):       1860.05
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       1846.79   (Wallclock seconds):       1862.26
+
+Percent of edges removed = 78.511%
+Finished converting contact plan to time expanded graph
+Starting contact scheduling
+Creating binary variables for 149208 number of edges
+Creating variables for retargeting time
+Pre-computing edge dictionary
+Initializing the capacity variables
+Initializing single hop capacity variables
+Initializing the objective function
+Setting up per edge capacity constraints
+Setting up inflow and outflow capacity constraints for node 1001
+Setting up inflow and outflow capacity constraints for node 1002
+Setting up inflow and outflow capacity constraints for node 1003
+Setting up inflow and outflow capacity constraints for node 1004
+Setting up inflow and outflow capacity constraints for node 1005
+Setting up inflow and outflow capacity constraints for node 1006
+Setting up inflow and outflow capacity constraints for node 1007
+Setting up inflow and outflow capacity constraints for ground station node 9001
+Setting up inflow and outflow capacity constraints for ground station node 9002
+Setting up inflow and outflow capacity constraints for ground station node 9003
+Setting up fairness constraints based on ECT for source nodes
+Setting up 1 to 1 relationship between nodes per state k
+Create approximate effective contact time constraints for tx and rx...
+Starting solve using cbc...
+Generating adjacency matrix from the scheduled contact plan
+Finished contact scheduling
+Finished converting time expanded graph to contact plan
+Elapsed time: 1954.5754 seconds
+Scheduled network capacity: 308,239,104
+Scheduled network wasted capacity: 5,266,690,895.001396
+Wasted buffer capacity: 0
+Jain's fairness index: 0.5117481203007519
+Average delay: 72312.5
+
+
+
+Starting execution of experiment: mars_earth_relay_scenario_inc_60, with scheduler: lls_mip
+Finished reading contact plan
+Starting contact plan to time expanded graph conversion
+Finished graph fractionation, old k count: 144, new k count: 144
+Starting the DAG topology reduction algorithm

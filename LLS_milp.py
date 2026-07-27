@@ -13,6 +13,7 @@ from utils import FileType
 
 # MAX_TIME = 2.5 * 60 * 60  # seconds
 MAX_TIME = 120 * 60  # seconds
+MAX_TIME = 2 * 60  # seconds
 MAX_EDGES_PER_LASER = 1
 EPSILON = 0.9
 
@@ -23,7 +24,7 @@ class LLSModel:
         teg: TimeExpandedGraph,
         is_mip: bool = False,
         approx_eff_ct: bool = True,
-        use_gurobi: bool = True,
+        use_gurobi: bool = False,
         use_convex_penalty: bool = False,
     ):
         self.teg = teg

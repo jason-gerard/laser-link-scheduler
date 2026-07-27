@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import constants
 
 IPN_CPA_SLEW_AZ = 0.0
 IPN_CPA_SLEW_EL = 0.0
@@ -25,6 +26,8 @@ LEO_QC_FOV = 0.0
 
 
 def link_acq_delay(R: float, d: float, tip_rate: float, tilt_rate: float, dwell_time: float) -> float:
+    R = constants.fou
+
     def seek_stare_arch_hex_spiral_acq_delay() -> float:
         N = (2 * math.pi * math.pow(R, 2)) / (math.sqrt(3) * math.pow(d, 2))
         N = math.ceil(N)

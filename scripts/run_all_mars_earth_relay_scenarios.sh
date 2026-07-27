@@ -5,4 +5,4 @@ python3 main.py \
 mars_earth_relay_scenario_inc_20 mars_earth_relay_scenario_inc_24 mars_earth_relay_scenario_inc_28 mars_earth_relay_scenario_inc_32 \
 mars_earth_relay_scenario_inc_36 mars_earth_relay_scenario_inc_40 mars_earth_relay_scenario_inc_44 mars_earth_relay_scenario_inc_48 \
 mars_earth_relay_scenario_inc_52 mars_earth_relay_scenario_inc_56 mars_earth_relay_scenario_inc_60 mars_earth_relay_scenario_inc_64 \
--s fcp otls otls_pat_unaware otls_mip lls lls_pat_unaware lls_mip
+-s lls_mip

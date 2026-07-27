@@ -282,3 +282,6 @@ def get_num_lasers(node_id: str):
     else:
         print(f"Node id not mapped {node_id}")
         return None
+
+
+fou = 1
